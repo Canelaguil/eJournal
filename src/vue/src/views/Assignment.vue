@@ -35,20 +35,18 @@
             </b-button>
         </b-card>
 
+        <!--
+            The student-cards will be loaded asynchronous once the
+            heavy querie that loads in all the student data is finished.
+        -->
         <div v-if="filteredJournals" v-for="journal in filteredJournals" :key="journal.student.id" slot="main-content-column">
-            <b-link tag="b-button" :to="{ name: 'Journal',
-                                          params: {
-                                              cID: cID,
-                                              aID: aID,
-                                              jID: journal.id
-                                          }, query: query
-                                        }">
-
-                <student-card
-                    :student="journal.student"
-                    :stats="journal.stats">
-                </student-card>
-            </b-link>
+            <student-Linkcard
+                :cID="cID"
+                :aID="aID"
+                :jID="journal.id"
+                :query="query"
+                :jStudent="journal.student"
+                :jStats="journal.stats"/>
         </div>
         <main-card v-if="assignmentJournals.length === 0" slot="main-content-column" class="no-hover" :line1="'No participants with a journal'"/>
         <main-card v-else-if="filteredJournals.length === 0" slot="main-content-column" class="no-hover" :line1="'No journals found'"/>
@@ -64,7 +62,6 @@
 
 <script>
 import contentColumns from '@/components/columns/ContentColumns.vue'
-import studentCard from '@/components/assignment/StudentCard.vue'
 import mainCard from '@/components/assets/MainCard.vue'
 import statisticsCard from '@/components/assignment/StatisticsCard.vue'
 import breadCrumb from '@/components/assets/BreadCrumb.vue'
@@ -99,7 +96,7 @@ export default {
     },
     components: {
         'content-columns': contentColumns,
-        'student-card': studentCard,
+        'student-Linkcard': () => import('@/components/assignment/StudentLinkCard.vue'),
         'statistics-card': statisticsCard,
         'bread-crumb': breadCrumb,
         store,
