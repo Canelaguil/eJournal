@@ -3,6 +3,7 @@
 source settings/deploy.conf
 source settings/secrets.conf
 source settings/database.conf
+source settings/email.conf
 source settings/variables.conf
 
 ###########
@@ -10,10 +11,16 @@ source settings/variables.conf
 ###########
 
 # Sync django to the target directory
-sudo rsync -a --exclude='VLE.db' --exclude='settings/development.py' --exclude='test/' --exclude="__pycache__"
+sudo rsync -a --exclude='VLE.db' --exclude='settings/development.py' --exclude='test/' --exclude="__pycache__" ./src/django ${TARGET}
 sudo rsync -a --exclude='example_current_lti_params' ./lti ${TARGET}
 # Set variables in the target directory
 sudo sed -i "s@{{DIR}}@${TARGET}/django@g" ${TARGET}/django/VLE/wsgi.py
+
+# Email variables
+sudo sed -i "s@{{SMTP_HOST}}@${SMTP_HOST}@g" ${TARGET}/django/VLE/settings/production.py
+sudo sed -i "s@{{SMTP_LOGIN_MAIL}}@${SMTP_LOGIN_MAIL}@g" ${TARGET}/django/VLE/settings/production.py
+sudo sed -i "s@{{SMTP_LOGIN_PASSWORD}}@${SMTP_LOGIN_PASSWORD}@g" ${TARGET}/django/VLE/settings/production.py
+sudo sed -i "s@{{SMTP_PORT}}@${SMTP_PORT}@g" ${TARGET}/django/VLE/settings/production.py
 
 # DB variables
 sudo sed -i "s@{{DATABASE_TYPE}}@${DATABASE_TYPE}@g" ${TARGET}/django/VLE/settings/production.py

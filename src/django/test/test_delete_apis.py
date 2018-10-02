@@ -37,8 +37,9 @@ class DeleteApiTests(TestCase):
         rein = factory.make_user("Rein", "123", "r@r.com")
         lars = factory.make_user("Lars", "123", "l@l.com")
 
-        factory.make_participation(rein, course)
-        factory.make_participation(lars, course)
+        role = factory.make_role_default_no_perms("test", course)
+        factory.make_participation(rein, course, role=role)
+        factory.make_participation(lars, course, role=role)
 
         test.api_del_call(self,
                           '/participations/' + course.pk + '/',

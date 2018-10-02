@@ -8,7 +8,7 @@ This includes:
 from rest_framework.decorators import api_view
 
 import VLE.views.responses as response
-from VLE.models import Course, Journal, Assignment, Template
+from VLE.models import Course, Journal, Assignment, Template, Participation
 import VLE.permissions as permissions
 
 
@@ -33,13 +33,12 @@ def names(request, course_id, assignment_id, journal_id):
     try:
         if course_id:
             course = Course.objects.get(pk=course_id)
-            role = permissions.get_role(request.user, course)
-            if role is None:
-                return response.forbidden('You are not allowed to view this course.')
+            if not Participation.objects.filter(user=request.user, course=course).exists():
+                return response.forbidden('You are not a particpant of this course.')
             result['course'] = course.name
         if assignment_id:
             assignment = Assignment.objects.get(pk=assignment_id)
-            if not (assignment.courses.all() & request.user.participations.all()):
+            if not Assignment.objects.filter(courses__users=request.user, pk=assignment.pk).exists():
                 return response.forbidden('You are not allowed to view this assignment.')
             result['assignment'] = assignment.name
         if journal_id:

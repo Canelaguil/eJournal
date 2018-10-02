@@ -23,24 +23,21 @@
             <b-row>
                 <b-col xl="4">
                     <h2 class="field-heading">Unlock date</h2>
-                    <b-input class="multi-form theme-input"
-                    :value="form.unlockDate && form.unlockDate.replace(' ', 'T')"
-                    @input="form.unlockDate = $event && $event.replace('T', ' ')"
-                    type="datetime-local"/>
+                    <flat-pickr class="multi-form theme-input full-width"
+                    v-model="form.unlockDate"
+                    :config="$root.flatPickrTimeConfig"/>
                 </b-col>
                 <b-col xl="4">
                     <h2 class="field-heading">Due date</h2>
-                    <b-input class="multi-form theme-input"
-                    :value="form.dueDate && form.dueDate.replace(' ', 'T')"
-                    @input="form.dueDate = $event && $event.replace('T', ' ')"
-                    type="datetime-local"/>
+                    <flat-pickr class="multi-form theme-input full-width"
+                    v-model="form.dueDate"
+                    :config="$root.flatPickrTimeConfig"/>
                 </b-col>
                 <b-col xl="4">
                     <h2 class="field-heading">Lock date</h2>
-                    <b-input class="multi-form theme-input"
-                    :value="form.lockDate && form.lockDate.replace(' ', 'T')"
-                    @input="form.lockDate = $event && $event.replace('T', ' ')"
-                    type="datetime-local"/>
+                    <flat-pickr class="multi-form theme-input full-width"
+                    v-model="form.lockDate"
+                    :config="$root.flatPickrTimeConfig"/>
                 </b-col>
             </b-row>
             <b-button class="float-left change-button mt-2" type="reset">

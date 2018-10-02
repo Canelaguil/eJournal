@@ -23,27 +23,24 @@
             <b-row>
                 <b-col xl="4">
                     <h2 class="field-heading">Unlock date</h2>
-                    <b-input class="multi-form theme-input"
-                    :value="assignmentDetails.unlock_date && assignmentDetails.unlock_date.replace(' ', 'T')"
-                    @input="assignmentDetails.unlock_date = $event && $event.replace('T', ' ')"
-                    @change="$emit('changed')"
-                    type="datetime-local"/>
+                    <flat-pickr class="multi-form theme-input full-width"
+                    v-model="assignmentDetails.unlock_date"
+                    @on-change="$emit('changed')"
+                    :config="$root.flatPickrTimeConfig"/>
                 </b-col>
                 <b-col xl="4">
                     <h2 class="field-heading">Due date</h2>
-                    <b-input class="multi-form theme-input"
-                    :value="assignmentDetails.due_date && assignmentDetails.due_date.replace(' ', 'T')"
-                    @input="assignmentDetails.due_date = $event && $event.replace('T', ' ')"
-                    @change="$emit('changed')"
-                    type="datetime-local"/>
+                    <flat-pickr class="multi-form theme-input full-width"
+                    v-model="assignmentDetails.due_date"
+                    @on-change="$emit('changed')"
+                    :config="$root.flatPickrTimeConfig"/>
                 </b-col>
                 <b-col xl="4">
                     <h2 class="field-heading">Lock date</h2>
-                    <b-input class="multi-form theme-input"
-                    :value="assignmentDetails.lock_date && assignmentDetails.lock_date.replace(' ', 'T')"
-                    @input="assignmentDetails.lock_date = $event && $event.replace('T', ' ')"
-                    @change="$emit('changed')"
-                    type="datetime-local"/>
+                    <flat-pickr class="multi-form theme-input full-width"
+                    v-model="assignmentDetails.lock_date"
+                    @on-change="$emit('changed')"
+                    :config="$root.flatPickrTimeConfig"/>
                 </b-col>
             </b-row>
         </b-form>

@@ -176,7 +176,7 @@ function testAssignments () {
 
 export default {
     created () {
-        auth.login('55555555', 'pass')
+        auth.login('Teacher', 'pass')
             .then(_ => {
                 testCourses()
             })

@@ -1,6 +1,6 @@
 <template>
     <b-row no-gutters>
-        <b-col cols="12" lg="8" xl="6" offset-lg="2" offset-xl="3" :class="'main-content ' + extraClasses">
+        <b-col lg="8" xl="6" offset-lg="2" offset-xl="3" :class="'main-content ' + extraClasses">
             <slot/>
         </b-col>
     </b-row>

@@ -162,8 +162,8 @@ def send_feedback(request):
     files = request.FILES.getlist('files')
     try:
         validators.validate_email_files(files)
-    except ValidationError:
-        return response.bad_request('The selected files exceeds the total file size limit.')
+    except ValidationError as e:
+        return response.bad_request(e.args[0])
 
     email_handling.send_email_feedback(request.user, files, **request.POST)
-    return response.success(description='Feedback received')
+    return response.success(description='Feedback was succesfully received, thank you!')

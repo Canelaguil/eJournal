@@ -6,6 +6,7 @@ import axios from 'axios'
 import BootstrapVue from 'bootstrap-vue'
 import '../node_modules/bootstrap/dist/css/bootstrap.css'
 import '../node_modules/bootstrap-vue/dist/bootstrap-vue.css'
+import '../node_modules/flatpickr/dist/flatpickr.css'
 
 import 'vue-awesome/icons/eye'
 import 'vue-awesome/icons/caret-up'
@@ -56,10 +57,12 @@ import 'vue-awesome/icons/cog'
 import 'vue-awesome/icons/clock-o'
 
 import Toasted from 'vue-toasted'
+import flatPickr from 'vue-flatpickr-component'
 
 Vue.config.productionTip = false
 Vue.use(Toasted, { position: 'top-center', duration: 4000 })
 Vue.use(BootstrapVue)
+Vue.use(flatPickr)
 
 /* Checks the store for for permissions according to the current route cID or aID. */
 Vue.prototype.$hasPermission = store.getters['permissions/hasPermission']
@@ -83,7 +86,12 @@ new Vue({
         previousPage: null,
         windowWidth: 0,
         maxFileSizeBytes: 2097152,
-        maxEmailFileSizeBytes: 10485760
+        maxEmailFileSizeBytes: 10485760,
+        flatPickrTimeConfig: {
+            enableTime: true,
+            time_24hr: true
+        }
+
     },
     mounted () {
         this.$nextTick(function () {

@@ -33,8 +33,9 @@ def validate_email_files(files):
     size = 0
     for file in files:
         size += file.size
-        if size > settings.USER_MAX_FILE_SIZE_BYTES * 5:
-            raise ValidationError("Max size of file is %s Bytes" % settings.USER_MAX_FILE_SIZE_BYTES)
+        if size > settings.USER_MAX_EMAIL_ATTACHMENT_BYTES:
+            raise ValidationError("Maximum email attachments size is %s Bytes." %
+                                  settings.USER_MAX_EMAIL_ATTACHMENT_BYTES)
 
 
 def validate_password(password):

@@ -47,8 +47,7 @@
             </b-col>
         </b-row>
         <h2 class="field-heading">Deadline</h2>
-        <b-input class="theme-input multi-form" v-model="deadlineDate" type="date" @change="$emit('changed')"/>
-        <b-input class="theme-input multi-form" v-model="deadlineTime" type="time" @change="$emit('changed')"/>
+        <flat-pickr class="theme-input multi-form full-width" v-model="currentPreset.deadline" :config="$root.flatPickrTimeConfig"/>
 
         <div v-if="currentPreset.type === 'd'">
             <h2 class="field-heading">Preset Template</h2>
@@ -79,17 +78,6 @@ export default {
     data () {
         return {
             templateNames: []
-        }
-    },
-    // Get/set for the preset deadline.
-    computed: {
-        deadlineDate: {
-            get: function () { return this.currentPreset.deadline.split(' ')[0] },
-            set: function (val) { this.currentPreset.deadline = val + ' ' + this.currentPreset.deadline.split(' ')[1]; this.$emit('deadline-changed') }
-        },
-        deadlineTime: {
-            get: function () { return this.currentPreset.deadline.split(' ')[1] },
-            set: function (val) { this.currentPreset.deadline = this.currentPreset.deadline.split(' ')[0] + ' ' + val; this.$emit('deadline-changed') }
         }
     },
     methods: {

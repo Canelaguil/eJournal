@@ -62,11 +62,19 @@ class CreateApiTests(TestCase):
 
     def test_create_entry(self):
         """"Test create entry."""
-        assignment = factory.make_assignment("Assignment", "Your favorite assignment")
-        journal = factory.make_journal(assignment, self.user)
+        _, _, user2 = test.set_up_user_and_auth('testh', 'test123h', 'testh@test.com')
+
+        course = factory.make_course('Portfolio', 'PAV', author=user2)
         template = factory.make_entry_template("some_template")
+        format = factory.make_format([template])
+        assignment = factory.make_assignment("Assignment", "Your favorite assignment", format=format, courses=[course])
+        journal = factory.make_journal(assignment, self.user)
         field = factory.make_field(template, 'Some field', 0)
         login = test.logging_in(self, self.username, self.password)
+        format.available_templates.add(template)
+
+        role = factory.make_role_default_no_perms("student", course, can_have_journal=True)
+        factory.make_participation(user=self.user, course=course, role=role)
 
         create_entry_dict = {
             'journal_id': journal.id,

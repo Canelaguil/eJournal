@@ -28,16 +28,10 @@ class OAuthRequestValidater(object):
 
     def parse_request(self, request):
         """
-        Parses een django request om de method, url header en post data terug
-        te geven.
+        Parses a django request to return the method, url, header and post data.
         """
-        headers = dict([(k, request.META[k])
-                        for k in request.META if
-                        k.upper().startswith('HTTP_') or
-                        k.upper().startswith('CONTENT_')])
-
-        return request.method, request.build_absolute_uri(), headers, \
-            request.POST
+        return request.method, request.build_absolute_uri(), request.META, \
+            request.POST.dict()
 
     def is_valid(self, request):
         """
@@ -48,12 +42,8 @@ class OAuthRequestValidater(object):
             method, url, head, param = self.parse_request(request)
 
             oauth_request = oauth2.Request.from_request(
-                method, url, headers=head, parameters=(param))
+                method, url, headers=head, parameters=param)
 
-            oauth_request = oauth2.Request.from_request(
-                request.method, request.build_absolute_uri(),
-                headers=request.META, parameters=request.POST.dict()
-            )
             self.oauth_server.verify_request(oauth_request,
                                              self.oauth_consumer, {})
 
@@ -92,22 +82,19 @@ def check_user_lti(request, roles):
     return None
 
 
-def create_lti_query_link(names, values):
+def create_lti_query_link(query):
     """
     Creates link to lti page with the given parameters
 
     Arguments
-    names -- names of the query variables
-    values -- values correnspanding to the names
+    query -- QueryDict of the query variables
 
     returns the link
     """
     link = settings.BASELINK
     link += '/LtiLogin'
-    start = '?'
-    for i, name in enumerate(names):
-        link += start + name + '={0}'.format(values[i])
-        start = '&'
+    link += '?'
+    link += query.urlencode()
     return link
 
 

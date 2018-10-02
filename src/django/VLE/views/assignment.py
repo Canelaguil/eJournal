@@ -49,25 +49,22 @@ class AssignmentView(viewsets.ViewSet):
         try:
             course_id = int(request.query_params['course_id'])
         except (KeyError, ValueError):
-            course_id = None
+            return response.keyerror('course_id')
+
         try:
-            if course_id:
-                course = Course.objects.get(pk=course_id)
+            course = Course.objects.get(pk=course_id)
         except Course.DoesNotExist:
             return response.not_found('Course does not exist.')
 
-        if course_id:
-            role = permissions.get_role(request.user, course)
-            if role is None:
-                return response.forbidden('You are not in this course.')
+        role = permissions.get_role(request.user, course)
+        if role is None:
+            return response.forbidden('You are not in this course.')
 
-            if role.can_grade:
-                queryset = course.assignment_set.all()
-            else:
-                queryset = Assignment.objects.filter(courses=course, journal__user=request.user)
-            serializer = AssignmentSerializer(queryset, many=True, context={'user': request.user, 'course': course})
+        if role.can_grade:
+            queryset = course.assignment_set.all()
         else:
-            return self.upcoming()
+            queryset = Assignment.objects.filter(courses=course, journal__user=request.user)
+        serializer = AssignmentSerializer(queryset, many=True, context={'user': request.user, 'course': course})
 
         data = serializer.data
         for i, assignment in enumerate(data):
@@ -175,6 +172,7 @@ class AssignmentView(viewsets.ViewSet):
             return response.forbidden("You cannot view this assignment.")
 
         get_journals = permissions.has_assignment_permission(request.user, assignment, 'can_grade')
+
         serializer = AssignmentSerializer(
             assignment,
             context={'user': request.user, 'course': course, 'journals': get_journals}
@@ -273,7 +271,7 @@ class AssignmentView(viewsets.ViewSet):
 
         # Assignments can only be deleted with can_delete_assignment permission.
         role = permissions.get_role(request.user, course)
-        if not role:
+        if role is None:
             return response.forbidden(description="You have no access to this course")
         if not role.can_delete_assignment:
             return response.forbidden(description="You have no permissions to delete this assignment.")
@@ -289,7 +287,7 @@ class AssignmentView(viewsets.ViewSet):
             assignment.delete()
             data['removed_completely'] = True
 
-        return response.success(data, description='Succesfully deleted the assignment.')
+        return response.success(data, description='Successfully deleted the assignment.')
 
     @action(methods=['get'], detail=False)
     def upcoming(self, request):
@@ -343,7 +341,11 @@ class AssignmentView(viewsets.ViewSet):
             return response.unauthorized()
 
         aID = kwargs.get('pk')
-        published, = utils.required_params(request.data, 'published')
+
+        try:
+            published, = utils.required_params(request.data, 'published')
+        except KeyError:
+            return response.bad_request('Publish state of the assignment expected.')
 
         try:
             assign = Assignment.objects.get(pk=aID)
@@ -351,18 +353,15 @@ class AssignmentView(viewsets.ViewSet):
             return response.not_found('Assignment does not exist.')
 
         if not permissions.has_assignment_permission(request.user, assign, 'can_publish_grades'):
-            return response.forbidden('You cannot publish assignments.')
+            return response.forbidden('You are not allowed to publish grades for this assignment.')
 
         utils.publish_all_assignment_grades(assign, published)
 
         for journ in Journal.objects.filter(assignment=assign):
             if journ.sourcedid is not None and journ.grade_url is not None:
-                payload = lti_grade.replace_result(journ)
-            else:
-                payload = dict()
+                lti_grade.replace_result(journ)
 
-        payload['new_published'] = published
-        return response.success(payload=payload)
+        return response.success(payload={'new_published': published})
 
     def publish(self, request, assignment, published=True):
         if permissions.has_assignment_permission(request.user, assignment, 'can_publish_grades'):

@@ -1,13 +1,13 @@
 <template>
     <div v-if="!displayMode">
         <div v-for="(field, i) in template.field_set" :key="'node-' + nodeID + '-field-' + field.id" class="multi-form">
-            <h2 v-if="field.title" class="field-heading">
-                {{ field.title }} <span v-if="field.required">*</span>
+            <h2 v-if="field.title" class="field-heading" :class="{ 'required': field.required }">
+                {{ field.title }}
             </h2>
             <p v-if="field.description">{{ field.description }}</p>
 
             <b-textarea v-if="field.type == 't'" class="theme-input" v-model="completeContent[i].data"/>
-            <b-input type="date" v-if="field.type == 'd'" class="theme-input" v-model="completeContent[i].data"/>
+            <flat-pickr v-if="field.type == 'd'" class="theme-input full-width" v-model="completeContent[i].data"/>
 
             <file-upload-input
                 v-else-if="field.type == 'i'"
@@ -57,8 +57,8 @@
     <!-- Display section -->
     <div v-else>
         <div v-for="(field, i) in template.field_set" v-if="field.required || completeContent[i].data" :key="'node-' + nodeID + '-field-' + field.id" class="multi-form">
-            <h2 v-if="field.title" class="field-heading">
-                {{ field.title }} <span v-if="field.required">*</span>
+            <h2 v-if="field.title" class="field-heading" :class="{ 'required': field.required }">
+                {{ field.title }}
             </h2>
             <span v-if="field.type == 't'" class="show-enters">{{ completeContent[i].data }}</span>
             <span v-if="field.type == 'd'" class="show-enters">{{ $root.beautifyDate(completeContent[i].data) }}</span>

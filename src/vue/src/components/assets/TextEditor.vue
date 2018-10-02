@@ -6,7 +6,7 @@
 
 <template>
     <div class="editor-container" >
-        <textarea :class="theme-input" :id="id"/>
+        <textarea :id="id"/>
     </div>
 </template>
 
@@ -146,15 +146,9 @@ export default {
             var vm = this
             this.editor = editor
 
-            /* Set default font in the editor instance */
-            editor.execCommand('fontName', false, 'roboto condensed', {skip_focus: true})
-
             this.content = this.givenContent
             /* set content resets the default font for some reason */
             editor.setContent(this.givenContent)
-
-            /* Set default font in the editor instance */
-            editor.execCommand('fontName', false, 'roboto condensed', {skip_focus: true})
 
             if (this.displayInline) {
                 this.setupInlineDisplay(editor)
@@ -171,8 +165,6 @@ export default {
         },
         setupInlineDisplay (editor) {
             var vm = this
-            /* Disables auto focus of the editor. */
-            editor.execCommand('mceInlineCommentIsDirty', false, {skip_focus: true})
 
             editor.theme.panel.find('toolbar')[0].$el.hide()
             if (!this.basic) { editor.theme.panel.find('menubar')[0].$el.hide() }

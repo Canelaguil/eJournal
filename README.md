@@ -1,4 +1,4 @@
-# eJournal [![Build Status](https://travis-ci.com/eJourn-al/eJournal.svg?branch=develop)](https://travis-ci.com/eJourn-al/eJournal)
+# eJournal [![Build Status](https://travis-ci.com/eJourn-al/eJournal.svg?branch=develop)](https://travis-ci.com/eJourn-al/eJournal) [![Coverage Status](https://codecov.io/gh/eJourn-al/eJournal/branch/develop/graph/badge.svg)](https://codecov.io/gh/eJourn-al/eJournal)
 
 eJournal is a platform for online journalling and long term assignments, especially developed for education. It can be easily connected to virtual learning environments through LTI.
 

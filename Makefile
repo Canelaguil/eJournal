@@ -5,13 +5,13 @@
 test-back:
 	pep8 ./src/django --max-line-length=120 --exclude='./src/django/VLE/migrations','./src/django/VLE/settings*'
 	bash -c 'source ./venv/bin/activate && flake8 --max-line-length=120 src/django --exclude="src/django/VLE/migrations/*","src/django/VLE/settings/*","src/django/VLE/settings.py" && deactivate'
-	bash -c "source ./venv/bin/activate && cd ./src/django/ && python3.6 manage.py test && deactivate"
+	bash -c "source ./venv/bin/activate && coverage run src/django/manage.py test src/django && coverage report && deactivate"
 
 test-front:
 	npm run lint --prefix ./src/vue
 	npm run test --prefix ./src/vue
 
-test: test-back test-front
+test: test-front test-back
 
 #
 # DATABSE COMMANDS
@@ -72,7 +72,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 install:
 	bash -c 'bash $(ROOT_DIR)/scripts/install.sh $(ROOT_DIR)'
 deploy:
-	bash -c 'bash $(ROOT_DIR)/scripts/build.sh $(ROOT_DIR)'
+	bash -c 'bash $(ROOT_DIR)/scripts/deploy.sh $(ROOT_DIR)'
 serve:
 	bash -c 'bash $(ROOT_DIR)/scripts/serve.sh $(ROOT_DIR)'
 

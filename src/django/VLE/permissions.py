@@ -212,6 +212,30 @@ def is_user_in_course(user, course):
     return Participation.objects.filter(user=user, course=course).exists()
 
 
+def is_user_supervisor(user, supervisor):
+    """Checks whether the user is a participant in any of the assignments where the supervisor has the permission of
+    can_view_course_users or where the supervisor is linked to the user through an assignment where the supervisor
+    has the permission can_view_assignment_journals."""
+    for course in supervisor.participations.all():
+        if get_permissions(supervisor, course.pk).can_view_course_users:
+            if course.participations.filter(user=user).exists():
+                return True
+            if course.assignment_set.filter(journal__user=user).exists() and \
+               has_permission(supervisor, course.pk, 'can_view_assignment_journals'):
+                return True
+
+    return False
+
+
+def can_add_users_to_a_course(user):
+    """Checks if the user can add users to one or more of his courses."""
+    for course in user.participations.all():
+        if get_permissions(user, course.pk).can_add_course_users:
+            return True
+
+    return False
+
+
 def get_all_user_permissions(user):
     """Returns a dictionary with all user permissions.
 
@@ -238,8 +262,6 @@ def get_all_user_permissions(user):
         if permissions['course' + str(course.id)]['can_grade']:
             assignments |= course.assignment_set.all()
         else:
-            # TODO does this not break if no journal is created yet? Why do we not work with an AssignmentParticipation
-            # model?
             assignments |= Assignment.objects.filter(courses=course, journal__user=user)
 
     assignments = assignments.distinct()

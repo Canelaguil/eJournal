@@ -218,9 +218,15 @@ export default {
             return new Date().toISOString().split('T')[0].slice(0, 10) + ' ' + new Date().toISOString().split('T')[1].slice(0, 5)
         },
         addNode () {
+            var deadline = this.assignmentDetails.due_date
+
+            if (!deadline) {
+                deadline = this.newDate()
+            }
+
             var newNode = {
                 'type': 'p',
-                'deadline': this.assignmentDetails.due_date,
+                'deadline': deadline,
                 'target': this.assignmentDetails.points_possible
             }
 

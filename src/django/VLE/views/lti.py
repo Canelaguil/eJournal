@@ -2,6 +2,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 from rest_framework.decorators import api_view
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.http import QueryDict
 
 import VLE.views.responses as response
 import VLE.lti_launch as lti
@@ -36,7 +37,7 @@ def get_lti_params_from_jwt(request, jwt_params):
 
     user = request.user
     try:
-        lti_params = jwt.decode(jwt_params, settings.LTI_SECRET, algorithms=['HS256'])
+        lti_params = jwt.decode(jwt_params, settings.SECRET_KEY, algorithms=['HS256'])
     except jwt.exceptions.ExpiredSignatureError:
         return response.forbidden(
             description='The canvas link has expired, 15 minutes have passed. Please retry from canvas.')
@@ -121,33 +122,32 @@ def lti_launch(request):
         user = lti.check_user_lti(params, roles)
 
         params['exp'] = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
-        lti_params = jwt.encode(params, secret, algorithm='HS256').decode('utf-8')
+        lti_params = jwt.encode(params, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
 
         if user is None:
-            q_names = ['state', 'lti_params']
-            q_values = [NO_USER, lti_params]
+            query = QueryDict(mutable=True)
+            query['state'] = NO_USER
+            query['lti_params'] = lti_params
 
             if 'custom_user_full_name' in params:
                 fullname = params['custom_user_full_name']
                 splitname = fullname.split(' ')
-                firstname = splitname[0]
-                lastname = fullname[len(splitname[0])+1:]
-                q_names += ['firstname', 'lastname']
-                q_values += [firstname, lastname]
+                query['firstname'] = splitname[0]
+                query['lastname'] = fullname[len(splitname[0])+1:]
 
             if 'custom_username' in params:
-                q_names.append('username')
-                q_values.append(params['custom_username'])
+                query['username'] = params['custom_username']
 
             if 'custom_user_email' in params:
-                q_names.append('email')
-                q_values.append(params['custom_user_email'])
+                query['email'] = params['custom_user_email']
 
-            return redirect(lti.create_lti_query_link(q_names, q_values))
+            return redirect(lti.create_lti_query_link(query))
 
         refresh = TokenObtainPairSerializer.get_token(user)
-        access = refresh.access_token
-        return redirect(lti.create_lti_query_link(['lti_params', 'jwt_access', 'jwt_refresh', 'state'],
-                                                  [lti_params, access, refresh, LOGGED_IN]))
+        query = QueryDict.fromkeys(['lti_params'], lti_params, mutable=True)
+        query['jwt_access'] = str(refresh.access_token)
+        query['jwt_refresh'] = str(refresh)
+        query['state'] = LOGGED_IN
+        return redirect(lti.create_lti_query_link(query))
 
-    return redirect(lti.create_lti_query_link(['state'], [BAD_AUTH]))
+    return redirect(lti.create_lti_query_link(QueryDict.fromkeys(['state'], BAD_AUTH, mutable=True)))

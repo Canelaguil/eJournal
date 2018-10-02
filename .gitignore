@@ -7,6 +7,9 @@ core
 
 .vscode/*
 
+# Coverage
+.coverage
+
 # Created by https://www.gitignore.io/intellij
 
 ### Intellij ###

@@ -54,23 +54,10 @@ class JournalView(viewsets.ViewSet):
         if not permissions.has_assignment_permission(request.user, assignment, 'can_view_assignment_journals'):
             return response.forbidden('You are not allowed to view assignment participants.')
 
-        journals = []
-
         queryset = assignment.journal_set.all()
         journals = JournalSerializer(queryset, many=True).data
 
-        stats = {}
-        if journals:
-            # TODO: Maybe make this efficient for minimal delay?
-            # TODO: Add real stats
-            stats['needsMarking'] = 5  # sum([x['stats']['submitted'] - x['stats']['graded'] for x in journals])
-            # points = [x['stats']['acquired_points'] for x in journals]
-            stats['avgPoints'] = 2  # round(st.mean(points), 2)
-
-        return response.success({
-            'stats': stats if stats else None,
-            'journals': journals
-        })
+        return response.success({'journals': journals})
 
     def retrieve(self, request, pk):
         """Get a student submitted journal.
@@ -132,10 +119,10 @@ class JournalView(viewsets.ViewSet):
             return response.keyerror("assignment_id")
 
         role = permissions.get_assignment_id_permissions(request.user, assignment_id)
-        if not role:
-            return response.forbidden("You have no permissions within this assignment.")
+        if role is None:
+            return response.forbidden("You are not a participant in this assignment.")
         elif not role["can_have_journal"]:
-            return response.forbidden("You have no permissions to create a journal.")
+            return response.forbidden("You are not allowed to create a journal.")
 
         try:
             assignment = Assignment.objects.get(pk=assignment_id)
@@ -178,16 +165,16 @@ class JournalView(viewsets.ViewSet):
         published, = utils.optional_params(request.data, 'published')
         if published:
             return self.publish(request, journal)
-        if permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
-            req_data = request.data
-            del req_data['published']
-            # TODO Check if a serializer is valid if we add an extra argument (published) to the request data.
-            serializer = JournalSerializer(journal, data=req_data, partial=True)
-            if not serializer.is_valid():
-                response.bad_request()
-            serializer.save()
-        else:
+
+        if not request.user.is_superuser:
             return response.forbidden('You are not allowed to edit this journal.')
+
+        req_data = request.data
+        del req_data['published']
+        serializer = JournalSerializer(journal, data=req_data, partial=True)
+        if not serializer.is_valid():
+            response.bad_request()
+        serializer.save()
 
         return response.success({'journal': serializer.data})
 
@@ -215,11 +202,8 @@ class JournalView(viewsets.ViewSet):
         except Journal.DoesNotExist:
             return response.not_found('Journal does not exist.')
 
-        role = permissions.get_assignment_id_permissions(request.user, journal.assignment.id)
-        if not role:
-            return response.forbidden("You have no permissions within this assignment.")
-        elif not role["can_edit_journal"]:
-            return response.forbidden("You have no permissions to create a journal.")
+        if not request.user.is_superuser:
+            return response.forbidden('You are not allowed to delete a journal.')
 
         journal.delete()
         return response.success(description='Sucesfully deleted journal.')

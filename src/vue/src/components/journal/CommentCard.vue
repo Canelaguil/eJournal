@@ -56,6 +56,7 @@
                 <text-editor
                     ref="comment-text-editor-ref"
                     :basic="true"
+                    :displayInline="true"
                     :id="'comment-text-editor'"
                     placeholder="Type your comment here..."
                     @content-update="tempComment = $event"

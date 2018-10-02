@@ -37,5 +37,6 @@ h6
 .field-heading
     font-size: 20px
     margin-bottom: 5px
-    span
+    &.required::after
+        content: " *"
         color: $theme-red

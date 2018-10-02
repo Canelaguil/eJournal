@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = src/django/VLE
+omit = src/django/VLE/settings/*
+
+[report]
+ignore_errors = True

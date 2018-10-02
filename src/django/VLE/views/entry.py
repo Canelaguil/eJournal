@@ -60,11 +60,15 @@ class EntryView(viewsets.ViewSet):
         except (Journal.DoesNotExist, Template.DoesNotExist):
             return response.not_found('Journal or Template does not exist.')
 
-        if ((journal.assignment.unlock_date and journal.assignment.unlock_date > datetime.now()) or
-            (journal.assignment.lock_date and journal.assignment.lock_date < datetime.now())) and \
-           not permissions.has_assignment_permission(request.user, journal.assignment,
-                                                     'can_view_assignment_journals'):
-            return response.bad_request('The assignment is locked and unavailable for students.')
+        if not journal.assignment.format.available_templates.all().filter(pk=template.pk).exists():
+            return response.forbidden('Entry template is not available.')
+
+        if not permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
+            return response.forbidden('You are not allowed to create an entry for this journal.')
+
+        if (journal.assignment.unlock_date and journal.assignment.unlock_date > datetime.now()) or \
+           (journal.assignment.lock_date and journal.assignment.lock_date < datetime.now()):
+            return response.forbidden('The assignment is locked, no entries can be added.')
 
         # If node id is passed, the entry should be attached to a pre-existing node (entrydeadline node)
         if node_id:
@@ -146,6 +150,7 @@ class EntryView(viewsets.ViewSet):
         grade, published, content_list = utils.optional_params(request.data, "grade", "published", "content")
 
         journal = entry.node.journal
+
         if grade and \
            not permissions.has_assignment_permission(request.user, journal.assignment, 'can_grade'):
             return response.forbidden('You cannot grade or publish entries.')
@@ -173,22 +178,27 @@ class EntryView(viewsets.ViewSet):
             if published:
                 Comment.objects.filter(entry=entry).update(published=True)
 
+        # Attempt to edit the entries content.
         if content_list:
+            if not (journal.user == request.user or request.user.is_superuser):
+                response.forbidden('You are not allowed to edit someone else\'s entry.')
+
+            if not permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
+                return response.forbidden('You are not allowed to have a journal.')
+
+            if entry.grade is not None:
+                return response.bad_request('You are not allowed to edit graded entries.')
+
+            if entry.node.type == Node.ENTRYDEADLINE and entry.node.preset.deadline < now() or \
+               (journal.assignment.due_date and journal.assignment.due_date < datetime.now()):
+                return response.bad_request('You are not allowed to edit entries past their due date.')
+
             try:
                 validators.validate_entry_content(content_list)
             except ValidationError as e:
                 return response.bad_request(e.args[0])
             except KeyError:
                 return response.keyerror('content.id', 'content.data')
-
-            if not permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
-                return response.forbidden('You cannot edit entries.')
-
-            if entry.grade is not None:
-                return response.bad_request('Cannot edit entry: it is already graded.')
-            if entry.node.type == Node.ENTRYDEADLINE and entry.node.preset.deadline < now() \
-               or (journal.assignment.due_date and journal.assignment.due_date < datetime.now()):
-                return response.bad_request('Cannot edit entry: the deadline has already passed.')
 
             Content.objects.filter(entry=entry).all().delete()
 
@@ -242,14 +252,28 @@ class EntryView(viewsets.ViewSet):
 
         try:
             entry = Entry.objects.get(pk=pk)
+            journal = entry.node.journal
         except Entry.DoesNotExist:
             return response.not_found('Entry does not exist.')
 
-        if not permissions.has_assignment_permission(request.user, entry.node.journal.assignment, 'can_edit_journal'):
-            return response.forbidden('You can only delete your own entries.')
+        if not (journal.user == request.user or request.user.is_superuser):
+            return response.forbidden('You are not allowed to delete someone else\'s entry.')
 
         if entry.grade:
             return response.forbidden('You cannot delete graded entries.')
+
+        if entry.node.type == Node.ENTRYDEADLINE and \
+           permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
+            return response.forbidden('You cannot delete deadlines.')
+
+        if journal.assignment.due_date and journal.assignment.due_date < datetime.now() and \
+           permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
+            return response.forbidden('You cannot delete an entry whose deadline deadline has already passed.')
+
+        if (journal.assignment.unlock_date and journal.assignment.unlock_date > datetime.now()) or \
+           (journal.assignment.lock_date and journal.assignment.lock_date < datetime.now()) and \
+           permissions.has_assignment_permission(request.user, journal.assignment, 'can_have_journal'):
+            return response.forbidden('You cannot delete a locked entry.')
 
         entry.node.delete()
         entry.delete()

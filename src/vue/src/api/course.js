@@ -26,11 +26,6 @@ export default {
             .then(response => response.data.courses)
     },
 
-    getAsTeacher () {
-        return auth.get('courses/is_teacher')
-            .then(response => response.data)
-    },
-
     getLinkable () {
         return auth.get('courses/linkable')
             .then(response => response.data.courses)

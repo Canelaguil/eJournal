@@ -158,7 +158,6 @@ def needs_grading(journal, nID):
     aID = str(journal.assignment.pk)
     cID = str(journal.assignment.courses.first().pk)
 
-    # TODO create custom link for submission
     result_data = {'url': '{0}/Home/Course/{1}/Assignment/{2}/Journal/{3}?nID={4}'.format(settings.BASELINK,
                                                                                           cID, aID, jID, nID)}
 
@@ -172,11 +171,10 @@ def replace_result(journal):
     """Replace a grade on the LTI instance based on the request.
 
     Arguments:
-        journal -- the journal of which the grade needs to be updated in lti
+        journal -- the journal of which the grade needs to be updated through lti.
 
-    returns de lti reponses
+    returns the lti reponse.
     """
-
     secret = settings.LTI_SECRET
     key = settings.LTI_KEY
 

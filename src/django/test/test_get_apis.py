@@ -193,8 +193,6 @@ class GetApiTests(TestCase):
         response = test.api_get_call(self, '/journals/', login, params={'assignment_id': assignment.pk})
         result = response.json()
         self.assertEquals(len(result['journals']), 2)
-        self.assertEquals(result['stats']['needsMarking'], 5)
-        self.assertEquals(result['stats']['avgPoints'], 2)
 
         # permissions and authorization check for the api call.
         login = test.logging_in(self, self.no_perm_user, self.no_perm_pass)

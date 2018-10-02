@@ -173,8 +173,6 @@ class Role(models.Model):
         on_delete=models.CASCADE
     )
 
-    can_add_course = models.BooleanField(default=False)
-
     can_edit_course_details = models.BooleanField(default=False)
     can_delete_course = models.BooleanField(default=False)
     can_edit_course_roles = models.BooleanField(default=False)
@@ -241,7 +239,6 @@ class Participation(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     role = models.ForeignKey(
         Role,
-        null=True,
         on_delete=models.CASCADE,
         related_name='role',
     )

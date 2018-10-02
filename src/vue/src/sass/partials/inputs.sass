@@ -20,8 +20,14 @@
     // TODO possible rewrite of the arias to .form-control with .is-valid and .is-invalid
 
 .fileinput
+    @extend .small-shadow
     font-family: 'Roboto Condensed', sans-serif
     font-size: 1.2em
     background-color: white !important
-    border-left: 15px solid $theme-dark-grey !important
     margin-bottom: 10px
+
+.flatpickr-day
+    &.selected, &.startRange, &.endRange
+        &, &.inRange, &:focus, &:hover, &.prevMonthDay, &.nextMonthDay
+            background: $theme-blue
+            border-color: $theme-blue

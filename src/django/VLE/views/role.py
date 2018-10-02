@@ -85,8 +85,8 @@ class RoleView(viewsets.ViewSet):
                 return response.not_found('Course does not exist.')
 
             perms = permissions.get_permissions(user, int(course_id))
-            if not perms:
-                return response.forbidden('You are not participating in this course')
+            if perms is None:
+                return response.forbidden('You are not a participant of this course.')
 
             return response.success({'role': perms})
         # Return assignment permissions if assignment_id is set
@@ -236,6 +236,9 @@ class RoleView(viewsets.ViewSet):
             return response.forbidden(description="You have no access to this course")
         elif not role.can_edit_course_roles:
             return response.forbidden(description="You have no permissions to delete this course role.")
+
+        if name in ['Student', 'TA', 'Teacher']:
+            return response.bad_request("Default roles 'Student', 'TA' and 'Teacher' cannot be deleted.")
 
         Role.objects.get(name=name, course=pk).delete()
         return response.success(description='Succesfully deleted role from course.')

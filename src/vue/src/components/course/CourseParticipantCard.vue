@@ -1,7 +1,7 @@
 <template>
     <b-card :class="$root.getBorderClass(user.id)" class="no-hover">
         <b-row>
-            <b-col sm="12" lg="8" class="d-flex mb-2">
+            <b-col sm="8" class="d-flex mb-2">
                 <b-col cols="3" class="text-center">
                     <img class="profile-picture" :src="user.profile_picture">
                 </b-col>
@@ -10,8 +10,8 @@
                     {{ user.username }}
                 </b-col>
             </b-col>
-            <b-col sm="12" lg="4">
-                <div class="shadow">
+            <b-col sm="4">
+                <div>
                     <b-form-select v-if="$hasPermission('can_edit_course_roles')"
                                    v-model="selectedRole"
                                    :select-size="1">
@@ -20,7 +20,7 @@
                         </option>
                     </b-form-select>
                 </div>
-                <div class="shadow" >
+                <div>
                     <b-form-select v-if="$hasPermission('can_edit_course_user_group')"
                                    v-model="selectedGroup"
                                    :select-size="1">

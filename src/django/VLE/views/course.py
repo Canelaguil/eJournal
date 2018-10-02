@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 
 import VLE.views.responses as response
 import VLE.serializers as serialize
-from VLE.models import Course, Lti_ids
+from VLE.models import Course, Lti_ids, Participation
 import VLE.permissions as permissions
 import VLE.utils.generic_utils as utils
 import VLE.factory as factory
@@ -60,7 +60,7 @@ class CourseView(viewsets.ViewSet):
         perm = permissions.get_permissions(request.user)
 
         if not perm['can_add_course']:
-            return response.forbidden('You have no permissions to create a course.')
+            return response.forbidden('You are not allowed to create a course.')
 
         try:
             name, abbr = utils.required_params(request.data, 'name', 'abbreviation')
@@ -97,7 +97,7 @@ class CourseView(viewsets.ViewSet):
             return response.not_found('Course does not exist.')
 
         if not permissions.is_user_in_course(request.user, course):
-            return response.forbidden('You are not in this course.')
+            return response.forbidden('You are not a participant of this course.')
 
         serializer = self.serializer_class(course, many=False)
         return response.success({'course': serializer.data})
@@ -130,10 +130,10 @@ class CourseView(viewsets.ViewSet):
         except Course.DoesNotExist:
             return response.not_found('Course does not exist.')
 
-        role = permissions.get_role(request.user, course)
-        if role is None:
-            return response.forbidden('You are not in this course.')
-        elif not role.can_edit_course_details:
+        if not Participation.objects.filter(user=request.user, course=course).exists():
+            return response.forbidden('You are not a participant of this course.')
+
+        if not permissions.get_role(request.user, course).can_edit_course_details:
             return response.unauthorized('You are unauthorized to edit this course.')
 
         data = request.data
@@ -170,10 +170,10 @@ class CourseView(viewsets.ViewSet):
         except Course.DoesNotExist:
             return response.not_found('Course does not exist.')
 
-        role = permissions.get_role(request.user, pk)
-        if role is None:
+        if not Participation.objects.filter(user=request.user, course=course).exists():
             return response.unauthorized(description="You are unauthorized to view this course.")
-        elif not role.can_delete_course:
+
+        if not permissions.get_role(request.user, pk).can_delete_course:
             return response.forbidden(description="You are unauthorized to delete this course.")
 
         course.delete()
@@ -183,7 +183,7 @@ class CourseView(viewsets.ViewSet):
     def linkable(self, request):
         """Get linkable courses.
 
-        Get all courses that the current user is connected to and where the lti_id equals to NULL.
+        Gets all courses that the current user either participates in or is allowed to edit the course details of.
         A user can then link this course to Canvas.
 
         Arguments:
@@ -200,7 +200,7 @@ class CourseView(viewsets.ViewSet):
         if not request.user.is_authenticated:
             return response.unauthorized()
 
-        if not request.user.is_teacher:
+        if not (request.user.is_teacher or request.user.is_superuser):
             return response.forbidden("You are not allowed to link courses.")
 
         unlinked_courses = Course.objects.filter(participation__user=request.user.id,
@@ -210,24 +210,3 @@ class CourseView(viewsets.ViewSet):
         for i, course in enumerate(data):
             data[i]['lti_couples'] = len(Lti_ids.objects.filter(course=course['id']))
         return response.success({'courses': data})
-
-    @action(methods=['get'], detail=False)
-    def is_teacher(self, request):
-        """Get all the courses where the user is a teacher.
-
-        Arguments:
-        request -- request data
-
-        Returns:
-        On failure:
-            unauthorized -- when the user is not logged in
-        On success:
-            success -- list of all the courses where the user is a teacher
-        """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
-        courses = Course.objects.filter(participation__user=request.user.id,
-                                        participation__role__can_edit_course_details=True)
-        serializer = serialize.CourseSerializer(courses, many=True)
-        return response.success({'courses': serializer.data})

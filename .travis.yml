@@ -6,7 +6,10 @@ before_install:
   - npm install -g npm@latest
 install:
   - make setup-no-input
+  - pip install codecov
 script: make test
+after_success:
+  - codecov
 branches:
   only:
     - master
