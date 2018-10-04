@@ -1,7 +1,7 @@
 <template>
     <div>
         <b-input-group class="multi-form">
-            <b-input readonly class="theme-input input-disabled" :value="$store.getters['user/email']" type="text"/>
+            <b-input readonly class="input-disabled" :value="$store.getters['user/email']" type="text"/>
             <b-input-group-text slot="append" class="input-append-icon">
                 <icon
                     v-if="!$store.getters['user/verifiedEmail']"
