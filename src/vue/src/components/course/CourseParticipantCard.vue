@@ -12,15 +12,6 @@
             </b-col>
             <b-col sm="4">
                 <div>
-                    <b-form-select v-if="$hasPermission('can_edit_course_roles')"
-                                   v-model="selectedRole"
-                                   :select-size="1">
-                        <option v-for="r in roles" :key="r.name" :value="r.name">
-                            {{ r.name }}
-                        </option>
-                    </b-form-select>
-                </div>
-                <div>
                     <b-form-select v-if="$hasPermission('can_edit_course_user_group')"
                                    v-model="selectedGroup"
                                    :select-size="1">
@@ -30,12 +21,21 @@
                         </option>
                     </b-form-select>
                 </div>
+                <div :class="{ 'input-disabled': numTeachers === 1 && selectedRole === 'Teacher'}">
+                    <b-form-select v-if="$hasPermission('can_edit_course_roles')"
+                                   v-model="selectedRole"
+                                   :select-size="1">
+                        <option v-for="r in roles" :key="r.name" :value="r.name">
+                            {{ r.name }}
+                        </option>
+                    </b-form-select>
                 <b-button v-if="$hasPermission('can_delete_course_users')"
                           @click.prevent.stop="removeFromCourse()"
                           class="delete-button full-width">
                     <icon name="user-times"/>
                     Remove
                 </b-button>
+                </div>
             </b-col>
         </b-row>
     </b-card>
@@ -61,6 +61,9 @@ export default {
             required: true
         },
         groups: {
+            required: true
+        },
+        numTeachers: {
             required: true
         }
     },
@@ -96,6 +99,7 @@ export default {
             } else {
                 this.selectedRole = val
                 this.$emit('update:role', val)
+                this.$emit('update-participants', val, this.user.id)
                 participationAPI.update(this.cID, {user_id: this.user.id, role: this.selectedRole, group: this.selectedGroup}).then(_ => {
                     if (this.$store.getters['user/uID'] === this.user.id) {
                         this.$store.dispatch('user/populateStore').then(_ => {

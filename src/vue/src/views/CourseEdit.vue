@@ -123,13 +123,14 @@
 
             <course-participant-card v-if="viewEnrolled"
                 @delete-participant="deleteParticipantLocally"
+                @update-participants="updateParticipants"
                 v-for="p in filteredUsers"
-                :class="{ 'input-disabled': p.role === 'Teacher' && numTeachers <= 1 }"
                 :key="p.id"
                 :cID="cID"
                 :group.sync="p.group"
                 :groups="groups"
                 :user="p"
+                :numTeachers="numTeachers"
                 :roles="roles"/>
 
             <add-user-card v-if="!viewEnrolled"
@@ -325,6 +326,14 @@ export default {
             }
 
             return false
+        },
+        updateParticipants (val, uID) {
+            for (var i = 0; i < this.participants.length; i++) {
+                if (uID === this.participants[i].id) {
+                    this.participants[i].role = val
+                }
+            }
+            this.numTeachers = this.participants.filter(p => p.role === 'Teacher').length
         }
     },
     computed: {
