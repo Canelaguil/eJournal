@@ -97,6 +97,8 @@ class User(AbstractUser):
     - USERNAME_FIELD: username of the username.
     - password: the hash of the password of the user.
     - lti_id: the DLO id of the user.
+    - lti_image: external/static profile picture url.
+    - profile_picture: profile picture in MEDIA_ROOT/uID/profile_picture
     """
 
     email = models.EmailField(
@@ -136,7 +138,7 @@ class User(AbstractUser):
 
 
 @receiver(models.signals.post_delete, sender=User)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
+def auto_delete_profile_picture_on_delete(sender, instance, **kwargs):
     """Deletes file from filesystem when corresponding `User` object is deleted."""
     if instance.profile_picture:
         if os.path.isfile(instance.profile_picture.path):

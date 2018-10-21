@@ -17,7 +17,7 @@ export default {
     },
     mounted () {
         if (!this.user.lti_image) {
-            userAPI.getProfilePicture(this.user.id)
+            userAPI.downloadProfilePicture(this.user.id)
                 .then(response => {
                     var reader = new FileReader()
                     var vm = this

@@ -77,7 +77,7 @@ def check_user_lti(request):
     if users.count() > 0:
         user = users[0]
         if 'custom_user_image' in request:
-            user.profile_picture = request['custom_user_image']
+            user.lti_image = request['custom_user_image']
             user.save()
 
         if 'roles' in request and settings.ROLES['Teacher'] in roles_to_list(request):

@@ -40,13 +40,13 @@ export default {
         return auth.uploadFile('/users/upload/', data)
     },
 
-    /* Upload an image that is base64 encoded. */
-    updateProfilePicture (data) {
+    /* Upload an image. */
+    uploadProfilePicture (data) {
         return auth.uploadProfilePicture('/users/upload_profile_picture/', data)
     },
 
-    /*  */
-    getProfilePicture (userID) {
+    /* Downloads a profile picture */
+    downloadProfilePicture (userID) {
         return auth.downloadFile('users/' + userID + '/download_profile_picture/', null, true)
     },
 

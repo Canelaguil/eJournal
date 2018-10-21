@@ -11,7 +11,7 @@ from VLE.models import (Assignment, Comment, Content, Course, Entry, Field,
                         PresetNode, Role, Template, User, UserFile)
 
 
-def make_user(username, password, email, lti_id=None, profile_picture=None,
+def make_user(username, password, email, lti_id=None, lti_image=None,
               is_superuser=False, is_teacher=False, first_name=None, last_name=None, verified_email=False):
     """Create a user.
 
@@ -20,7 +20,7 @@ def make_user(username, password, email, lti_id=None, profile_picture=None,
     password -- password of the user to login
     email -- mail of the user (default: none)
     lti_id -- to link the user to canvas (default: none)
-    profile_picture -- profile picture of the user (default: none)
+    lti_image -- external url for profile picture of the user (default: none)
     is_superuser -- if the user needs all permissions, set this true (default: False)
     """
     user = User(username=username, email=email, lti_id=lti_id, is_superuser=is_superuser,
@@ -33,8 +33,8 @@ def make_user(username, password, email, lti_id=None, profile_picture=None,
 
     user.save()
     user.set_password(password)
-    if profile_picture:
-        user.lti_image = profile_picture
+    if lti_image:
+        user.lti_image = lti_image
     else:
         user.lti_image = '/static/unknown-profile.png'
     user.save()

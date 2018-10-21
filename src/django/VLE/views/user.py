@@ -131,7 +131,7 @@ class UserView(viewsets.ViewSet):
         validators.validate_password(password)
 
         user = factory.make_user(username, password, email=email, lti_id=lti_id, is_teacher=is_teacher,
-                                 first_name=first_name, last_name=last_name, profile_picture=user_image,
+                                 first_name=first_name, last_name=last_name, lti_image=user_image,
                                  verified_email=True if lti_id else False)
 
         if lti_id is None:
@@ -405,14 +405,14 @@ class UserView(viewsets.ViewSet):
 
         Arguments:
         request -- request data
-            file -- a base64 encoded image
+            file -- jpeg/png/gif image data
 
         Returns
         On failure:
             unauthorized -- when the user is not logged in
             bad_request -- when the file is not valid
         On success:
-            success -- a zip file of all the userdata with all their files
+            success -- nothing
         """
         if not request.user.is_authenticated:
             return response.unauthorized()
@@ -427,10 +427,9 @@ class UserView(viewsets.ViewSet):
 
         return response.success(description='Succesfully updated profile picture')
 
-
     @action(methods=['get'], detail=True)
     def download_profile_picture(self, request, pk):
-        """
+        """Download a profile picture.
 
         Arguments:
         request -- the request that was sent
@@ -440,9 +439,8 @@ class UserView(viewsets.ViewSet):
         On failure:
             unauthorized -- when the user is not logged in
             bad_request -- when the file was not found
-            forbidden -- when its not a superuser nor their own data
         On success:
-            success --
+            success -- bytebuffer with image
         """
         if not request.user.is_authenticated:
             return response.unauthorized()

@@ -81,7 +81,7 @@ export default {
             let formData = new FormData()
             formData.append('file', files[0])
 
-            userAPI.updateProfilePicture(formData)
+            userAPI.uploadProfilePicture(formData)
                 .then(_ => {
                     var reader = new FileReader()
                     var vm = this

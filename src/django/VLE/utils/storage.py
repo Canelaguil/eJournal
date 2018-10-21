@@ -1,8 +1,9 @@
-# Modified from https://stackoverflow.com/a/9523400
+"""
+Storages fore django FileFields/ImageFields.
 
-import os
+Modified from https://stackoverflow.com/a/9523400
+"""
 
-from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 
 

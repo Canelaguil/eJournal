@@ -20,7 +20,8 @@ def validate_profile_picture(urlData):
 
     main, sub = urlData.content_type.split('/')
     if not (main == 'image' and sub in ['jpeg', 'pjpeg', 'gif', 'png']):
-        raise forms.ValidationError("Please use a JPEG, GIF or PNG image.")
+        raise ValidationError("Please use a JPEG, GIF or PNG image.")
+
 
 def validate_user_file(inMemoryUploadedFile, user):
     """Checks if size does not exceed 2MB. Or the user has reached his maximum storage space."""
