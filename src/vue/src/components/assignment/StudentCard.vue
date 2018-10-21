@@ -2,7 +2,7 @@
     <b-card :class="$root.getBorderClass($route.params.cID)">
         <b-row no-gutters class="multi-form">
             <b-col order="1" cols="3" class="d-flex align-items-center">
-                <img class="student-card-portrait" :src="student.profile_picture">
+                <profile-picture class="student-card-portrait" :user="student"/>
             </b-col>
             <b-col order="2" cols="9" class="pl-3">
                 <todo-square v-if="numMarkingNeeded > 0 && !hideTodo" class="float-right" :num="numMarkingNeeded"/>
@@ -21,6 +21,7 @@
 <script>
 import progressBar from '@/components/assets/ProgressBar.vue'
 import todoSquare from '@/components/assets/TodoSquare.vue'
+import profilePicture from '@/components/assets/ProfilePicture.vue'
 
 export default {
     props: {
@@ -44,7 +45,8 @@ export default {
     },
     components: {
         'progress-bar': progressBar,
-        'todo-square': todoSquare
+        'todo-square': todoSquare,
+        profilePicture
     },
     computed: {
         numMarkingNeeded () {
@@ -58,9 +60,10 @@ export default {
 @import '~sass/partials/shadows.sass'
 
 .student-card-portrait
-    @extend .shadow
-    border-radius: 50% !important
     display: block
     margin: auto
-    max-height: 100px
+    img
+        @extend .shadow
+        border-radius: 50% !important
+        max-height: 100px
 </style>

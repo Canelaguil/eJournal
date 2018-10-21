@@ -38,6 +38,7 @@
 
 <script>
 import email from '@/components/profile/Email.vue'
+import profilePicture from '@/components/assets/ProfilePicture.vue'
 
 import userAPI from '@/api/user'
 import icon from 'vue-awesome/components/Icon'
@@ -45,7 +46,8 @@ import icon from 'vue-awesome/components/Icon'
 export default {
     components: {
         icon,
-        email
+        email,
+        profilePicture
     },
     data () {
         return {
@@ -76,28 +78,20 @@ export default {
                 return
             }
 
-            var vm = this
+            let formData = new FormData()
+            formData.append('file', files[0])
 
-            var reader = new FileReader()
-            reader.onload = () => {
-                var dataURL = reader.result
-
-                var img = new Image()
-                img.onload = () => {
-                    if (img.width !== img.height) {
-                        this.$toasted.error('Please submit a square image.')
-                    } else {
-                        userAPI.updateProfilePictureBase64(dataURL)
-                            .then(_ => {
-                                vm.$store.commit('user/SET_PROFILE_PICTURE', dataURL)
-                                vm.profileImageDataURL = dataURL
-                            })
-                            .catch(error => { this.$toasted.error(error.response.data.description) })
+            userAPI.updateProfilePicture(formData)
+                .then(_ => {
+                    var reader = new FileReader()
+                    var vm = this
+                    reader.onload = () => {
+                        vm.$store.commit('user/SET_PROFILE_PICTURE', reader.result)
+                        vm.profileImageDataURL = reader.result
                     }
-                }
-                img.src = dataURL
-            }
-            reader.readAsDataURL(files[0])
+                    reader.readAsDataURL(files[0])
+                })
+                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         downloadUserData () {
             userAPI.GDPR()

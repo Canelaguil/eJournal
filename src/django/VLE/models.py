@@ -11,7 +11,8 @@ from django.db import models
 from django.dispatch import receiver
 from django.utils.timezone import now
 
-from VLE.utils.file_handling import get_path
+from VLE.utils.file_handling import get_path, get_profile_picture_path
+from VLE.utils.storage import OverwriteStorage
 
 
 class UserFile(models.Model):
@@ -28,7 +29,7 @@ class UserFile(models.Model):
     - content: The content that UserFile is linked to.
 
     Note that deleting the assignment, node or content will also delete the UserFile.
-    UserFiles uploaded initially have no node or content set, and are considered temporary untill the journal post
+    UserFiles uploaded initially have no node or content set, and are considered temporary until the journal post
     is made and the corresponding node and content are set.
     """
     file = models.FileField(
@@ -109,8 +110,13 @@ class User(AbstractUser):
         unique=True,
         blank=True,
     )
-    profile_picture = models.TextField(
+    lti_image = models.TextField(
         null=True
+    )
+    profile_picture = models.ImageField(
+        null=True,
+        upload_to=get_profile_picture_path,
+        storage=OverwriteStorage()
     )
     is_teacher = models.BooleanField(default=False)
     grade_notifications = models.BooleanField(
@@ -120,9 +126,21 @@ class User(AbstractUser):
         default=False
     )
 
+    def delete(self, *args, **kwargs):
+        self.profile_picture.delete()
+        super(User, self).delete(*args, **kwargs)
+
     def __str__(self):
         """toString."""
         return self.username + " (" + str(self.id) + ")"
+
+
+@receiver(models.signals.post_delete, sender=User)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """Deletes file from filesystem when corresponding `User` object is deleted."""
+    if instance.profile_picture:
+        if os.path.isfile(instance.profile_picture.path):
+            os.remove(instance.profile_picture.path)
 
 
 class Course(models.Model):

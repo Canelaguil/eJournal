@@ -6,7 +6,7 @@
     <div>
         <div v-if="commentObject">
             <div v-for="(comment, index) in commentObject" class="comment-section" :key="index">
-                <img class="profile-picture no-hover" :src="comment.author.profile_picture">
+                <profile-picture class="profile-picture no-hover" :user="comment.author"/>
                 <b-card class="no-hover comment-card" :class="$root.getBorderClass($route.params.cID)">
                     <div v-if="!editCommentStatus[index]">
                         <b-button v-if="$store.getters['user/uID'] == comment.author.id" class="ml-2 delete-button float-right multi-form" @click="deleteComment(comment.id)">
@@ -77,6 +77,7 @@
 <script>
 import icon from 'vue-awesome/components/Icon'
 import textEditor from '@/components/assets/TextEditor.vue'
+import profilePicture from '@/components/assets/ProfilePicture.vue'
 
 import commentAPI from '@/api/comment'
 
@@ -92,7 +93,8 @@ export default {
     },
     components: {
         'text-editor': textEditor,
-        icon
+        icon,
+        profilePicture
     },
     data () {
         return {

@@ -140,7 +140,7 @@ export default {
 
         participationAPI.get(this.cID)
             .then(participant => {
-                if (participant.group.name) {
+                if (participant.group && participant.group.name) {
                     this.selectedFilterGroupOption = participant.group.name
                 }
             })

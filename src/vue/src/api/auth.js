@@ -144,6 +144,9 @@ export default {
     downloadFile (url, data, noRedirect = false) {
         return validatedSend(connection.connFile.get, improveUrl(url, data), null, noRedirect)
     },
+    uploadProfilePicture (url, data, noRedirect = false) {
+        return validatedSend(connection.connFile.post, improveUrl(url), data, noRedirect)
+    },
 
     create (url, data, noRedirect = false) { return this.post(url, data, noRedirect) },
     update (url, data, noRedirect = false) { return this.patch(url, data, noRedirect) }

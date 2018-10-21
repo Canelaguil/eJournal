@@ -34,9 +34,9 @@ def make_user(username, password, email, lti_id=None, profile_picture=None,
     user.save()
     user.set_password(password)
     if profile_picture:
-        user.profile_picture = profile_picture
+        user.lti_image = profile_picture
     else:
-        user.profile_picture = '/static/unknown-profile.png'
+        user.lti_image = '/static/unknown-profile.png'
     user.save()
     return user
 

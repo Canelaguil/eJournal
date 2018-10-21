@@ -3,7 +3,7 @@
         <b-row>
             <b-col sm="8" class="d-flex mb-2">
                 <b-col cols="3" class="text-center">
-                    <img class="profile-picture" :src="user.profile_picture">
+                    <profile-picture class="profile-picture" :user="user"/>
                 </b-col>
                 <b-col cols="9">
                     <b>{{ user.name }}</b> ({{ user.role }})<br/>
@@ -43,6 +43,7 @@
 
 <script>
 import icon from 'vue-awesome/components/Icon'
+import profilePicture from '@/components/assets/ProfilePicture.vue'
 
 import participationAPI from '@/api/participation'
 
@@ -134,7 +135,8 @@ export default {
         this.selectedGroup = this.group
     },
     components: {
-        icon
+        icon,
+        profilePicture
     }
 }
 </script>

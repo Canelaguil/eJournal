@@ -39,7 +39,7 @@ const mutations = {
         state.username = userData.username
         state.email = userData.email
         state.verifiedEmail = userData.verified_email
-        state.profilePicture = userData.profile_picture
+        state.profilePicture = userData.lti_image
         state.firstName = userData.first_name
         state.lastName = userData.last_name
         state.ltiID = userData.lti_id
@@ -137,10 +137,25 @@ const actions = {
         return new Promise((resolve, reject) => {
             connection.conn.get('/users/0/').then(response => {
                 commit(types.HYDRATE_USER, response.data)
-                resolve('Store is populated succesfully')
             }, error => {
                 Vue.toasted.error(error.response.data.description)
                 reject(error)
+            }).then(() => {
+                if (this.getters['user/profilePicture']) {
+                    resolve('Store is populated succesfully')
+                } else {
+                    connection.connFile.get('/users/0/download_profile_picture/').then(response => {
+                        var reader = new FileReader()
+                        reader.onload = () => {
+                            commit(types.SET_PROFILE_PICTURE, reader.result)
+                            resolve('Store is populated succesfully')
+                        }
+                        reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
+                    }, error => {
+                        Vue.toasted.error(error.response.data.description)
+                        reject(error)
+                    })
+                }
             })
         })
     }

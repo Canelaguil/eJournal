@@ -40,14 +40,14 @@ export default {
         return auth.uploadFile('/users/upload/', data)
     },
 
-    /* Get user file. */
-    getUserFile (fileName, authorUID) {
-        return auth.downloadFile('/get_user_file/' + fileName + '/' + authorUID + '/')
+    /* Upload an image that is base64 encoded. */
+    updateProfilePicture (data) {
+        return auth.uploadProfilePicture('/users/upload_profile_picture/', data)
     },
 
-    /* Upload an image that is base64 encoded. */
-    updateProfilePictureBase64 (file) {
-        return auth.post('users/set_profile_picture/', { file: file })
+    /*  */
+    getProfilePicture (userID) {
+        return auth.downloadFile('users/' + userID + '/download_profile_picture/', null, true)
     },
 
     /* Verify email adress using a given token. */

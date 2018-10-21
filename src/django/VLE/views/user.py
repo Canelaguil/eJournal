@@ -189,7 +189,7 @@ class UserView(viewsets.ViewSet):
         else:
             lti_id, user_email, user_full_name, user_image, is_teacher = None, None, None, None, False
         if user_image is not None:
-            user.profile_picture = user_image
+            user.lti_image = user_image
         if user_email is not None:
             user.email = user_email
             user.verified_email = True
@@ -353,7 +353,7 @@ class UserView(viewsets.ViewSet):
 
     @action(methods=['post'], detail=False)
     def upload(self, request):
-        """Update user profile picture.
+        """Upload user file.
 
         No validation is performed beyond a size check of the file and the available space for the user.
         At the time of creation, the UserFile is uploaded but not attached to an entry yet. This UserFile is treated
@@ -399,8 +399,8 @@ class UserView(viewsets.ViewSet):
 
         return response.success(description='Succesfully uploaded {:s}.'.format(request.FILES['file'].name))
 
-    @action(['post'], detail=False)
-    def set_profile_picture(self, request):
+    @action(methods=['post'], detail=False)
+    def upload_profile_picture(self, request):
         """Update user profile picture.
 
         Arguments:
@@ -419,9 +419,36 @@ class UserView(viewsets.ViewSet):
 
         utils.required_params(request.data, 'file')
 
-        validators.validate_profile_picture_base64(request.data['file'])
+        validators.validate_profile_picture(request.data['file'])
 
         request.user.profile_picture = request.data['file']
+        request.user.lti_image = None
         request.user.save()
 
         return response.success(description='Succesfully updated profile picture')
+
+
+    @action(methods=['get'], detail=True)
+    def download_profile_picture(self, request, pk):
+        """
+
+        Arguments:
+        request -- the request that was sent
+        pk -- user ID
+
+        Returns
+        On failure:
+            unauthorized -- when the user is not logged in
+            bad_request -- when the file was not found
+            forbidden -- when its not a superuser nor their own data
+        On success:
+            success --
+        """
+        if not request.user.is_authenticated:
+            return response.unauthorized()
+        if int(pk) == 0:
+            pk = request.user.id
+
+        user = User.objects.get(pk=pk)
+
+        return response.file(user.profile_picture.path)

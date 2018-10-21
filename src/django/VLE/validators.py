@@ -13,12 +13,14 @@ PDF = 'p'
 URL = 'u'
 
 
-# Base 64 image is roughly 37% larger than a plain image
-def validate_profile_picture_base64(urlData):
-    """Checks if the original size does not exceed 2MB AFTER encoding."""
-    if len(urlData) > settings.USER_MAX_FILE_SIZE_BYTES * 1.37:
+def validate_profile_picture(urlData):
+    """Checks if size does not exceed 2MB. Checks if picture is a supported image type."""
+    if urlData.size > settings.USER_MAX_FILE_SIZE_BYTES:
         raise ValidationError("Max size of file is %s Bytes" % settings.USER_MAX_FILE_SIZE_BYTES)
 
+    main, sub = urlData.content_type.split('/')
+    if not (main == 'image' and sub in ['jpeg', 'pjpeg', 'gif', 'png']):
+        raise forms.ValidationError("Please use a JPEG, GIF or PNG image.")
 
 def validate_user_file(inMemoryUploadedFile, user):
     """Checks if size does not exceed 2MB. Or the user has reached his maximum storage space."""

@@ -11,7 +11,7 @@ import os
 from django.conf import settings
 from django.http import FileResponse, HttpResponse, JsonResponse
 
-from VLE.models import UserFile
+from VLE.models import UserFile, User
 
 
 def success(payload={}, description=''):
@@ -144,33 +144,6 @@ def value_error(message=None):
         return bad_request(description='One or more fields are invalid: {0}'.format(message))
     else:
         return bad_request(description='One or more fields are invalid.')
-
-
-def user_file_b64(user_file):
-    """Return a file as base64 encoded binary string if found, otherwise returns a not found response."""
-    file_path = os.path.join(settings.MEDIA_ROOT, user_file.file.name)
-    if os.path.exists(file_path):
-        with open(file_path, 'rb') as fp:
-            response = HttpResponse(base64.b64encode(fp.read()), content_type=user_file.content_type)
-            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
-            # Exposes headers to the response in javascript lowercase recommended
-            response['access-control-expose-headers'] = 'content-disposition, content-type'
-            return response
-    else:
-        return not_found(description='File not found.')
-
-
-def file_b64(file_path, content_type):
-    """Return a file as base64 encoded binary string if found, otherwise returns a not found response."""
-    if os.path.exists(file_path):
-        with open(file_path, 'rb') as fp:
-            response = HttpResponse(base64.b64encode(fp.read()), content_type=content_type)
-            response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(file_path)
-            # Exposes headers to the response in javascript lowercase recommended
-            response['access-control-expose-headers'] = 'content-disposition, content-type'
-            return response
-    else:
-        return not_found(description='File not found.')
 
 
 def file(file_path):
