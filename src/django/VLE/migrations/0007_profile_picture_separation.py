@@ -9,7 +9,7 @@ import VLE.utils.storage
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('VLE', '0006_auto_20181014_1458'),
+        ('VLE', '0005_presetnode_description'),
     ]
 
     operations = [
@@ -17,5 +17,10 @@ class Migration(migrations.Migration):
             model_name='user',
             name='profile_picture',
             field=models.ImageField(null=True, storage=VLE.utils.storage.OverwriteStorage(), upload_to=VLE.utils.file_handling.get_profile_picture_path),
+        ),
+        migrations.AddField(
+            model_name='user',
+            name='lti_image',
+            field=models.TextField(null=True),
         ),
     ]

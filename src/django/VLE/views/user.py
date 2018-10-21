@@ -417,8 +417,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- bytebuffer with image
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
         if int(pk) == 0:
             pk = request.user.id
 

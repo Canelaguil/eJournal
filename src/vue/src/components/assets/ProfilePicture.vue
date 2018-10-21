@@ -20,11 +20,14 @@ export default {
             userAPI.downloadProfilePicture(this.user.id)
                 .then(response => {
                     var reader = new FileReader()
-                    var vm = this
                     reader.onload = () => {
-                        vm.profilePicture = reader.result
+                        this.profilePicture = reader.result
                     }
-                    reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
+                    try {
+                        reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
+                    } catch (e) {
+                        this.$toasted.error('Failed to read profile picture data.')
+                    }
                 })
                 .catch(error => {
                     this.$toasted.error(error.response.data.description)

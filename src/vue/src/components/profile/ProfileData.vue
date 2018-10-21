@@ -102,10 +102,9 @@ export default {
             userAPI.uploadProfilePicture(formData)
                 .then(_ => {
                     var reader = new FileReader()
-                    var vm = this
                     reader.onload = () => {
-                        vm.$store.commit('user/SET_PROFILE_PICTURE', reader.result)
-                        vm.profileImageDataURL = reader.result
+                        this.$store.commit('user/SET_PROFILE_PICTURE', reader.result)
+                        this.profileImageDataURL = reader.result
                         this.$toasted.success('Profile picture updated.')
                         this.$refs['cropperModal'].hide()
                     }

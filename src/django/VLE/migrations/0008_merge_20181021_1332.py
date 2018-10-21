@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('VLE', '0006_can_view_assignment_journals_rename'),
-        ('VLE', '0008_user_lti_image'),
+        ('VLE', '0007_profile_picture_separation'),
     ]
 
     operations = [

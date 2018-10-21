@@ -42,7 +42,7 @@ export default {
 
     /* Upload an image. */
     uploadProfilePicture (data) {
-        return auth.uploadProfilePicture('/users/upload_profile_picture/', data)
+        return auth.uploadFile('/users/upload_profile_picture/', data)
     },
 
     /* Downloads a profile picture */
