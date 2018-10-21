@@ -45,7 +45,7 @@ export default {
                 .then(group => {
                     this.groupName = this.form.newGroupName
                     this.$emit('update-group', this.groupName, group.name)
-                    this.$toasted.success('Succesfully updated the group.')
+                    this.$toasted.success('Successfully updated the group.')
                     this.form.newGroupName = ''
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })

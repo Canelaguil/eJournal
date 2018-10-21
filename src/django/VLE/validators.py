@@ -16,7 +16,7 @@ URL = 'u'
 def validate_profile_picture(urlData):
     """Checks if size does not exceed 2MB. Checks if picture is a supported image type."""
     if urlData.size > settings.USER_MAX_FILE_SIZE_BYTES:
-        raise ValidationError("Max size of file is %s Bytes" % settings.USER_MAX_FILE_SIZE_BYTES)
+        raise ValidationError("Max size of file is {} Bytes".format(settings.USER_MAX_FILE_SIZE_BYTES))
 
     main, sub = urlData.content_type.split('/')
     if not (main == 'image' and sub in ['jpeg', 'pjpeg', 'gif', 'png']):
@@ -26,17 +26,14 @@ def validate_profile_picture(urlData):
 def validate_user_file(inMemoryUploadedFile, user):
     """Checks if size does not exceed 2MB. Or the user has reached his maximum storage space."""
     if inMemoryUploadedFile.size > settings.USER_MAX_FILE_SIZE_BYTES:
-        raise ValidationError("Max size of file is %s Bytes" % settings.USER_MAX_FILE_SIZE_BYTES)
+        raise ValidationError("Max size of file is {} Bytes".format(settings.USER_MAX_FILE_SIZE_BYTES))
 
     user_files = user.userfile_set.all()
     # Fast check for allowed user storage space
     if settings.USER_MAX_TOTAL_STORAGE_BYTES - len(user_files) * settings.USER_MAX_FILE_SIZE_BYTES <= \
        inMemoryUploadedFile.size:
         # Slow check for allowed user storage space
-        file_size_sum = 0
-        for user_file in user_files:
-            file_size_sum += user_file.file.size
-        if file_size_sum > settings.USER_MAX_TOTAL_STORAGE_BYTES:
+        if sum(user_file.file.size for user_file in user_files) > settings.USER_MAX_TOTAL_STORAGE_BYTES:
             raise ValidationError('Unsufficient storage space.')
 
 
@@ -46,8 +43,8 @@ def validate_email_files(files):
     for file in files:
         size += file.size
         if size > settings.USER_MAX_EMAIL_ATTACHMENT_BYTES:
-            raise ValidationError("Maximum email attachments size is %s Bytes." %
-                                  settings.USER_MAX_EMAIL_ATTACHMENT_BYTES)
+            raise ValidationError(
+                "Maximum email attachments size is {} Bytes.".format(settings.USER_MAX_EMAIL_ATTACHMENT_BYTES))
 
 
 def validate_password(password):

@@ -96,11 +96,7 @@ def create_lti_query_link(query):
 
     returns the link
     """
-    link = settings.BASELINK
-    link += '/LtiLogin'
-    link += '?'
-    link += query.urlencode()
-    return link
+    return ''.join((settings.BASELINK, '/LtiLogin', '?', query.urlencode()))
 
 
 def check_course_lti(request, user, role):

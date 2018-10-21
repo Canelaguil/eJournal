@@ -5,13 +5,11 @@
     margin-bottom: 8px
     text-align: left
     background-color: $theme-light-grey
-    border-width: 0px
-    border-left-width: 15px
+    border-width: 0px 0px 0px 15px !important
     transition: background-color 0.6s cubic-bezier(.25,.8,.25,1) !important
     border-radius: 0px
     .card
-        border-width: 2px
-        border-color: $theme-dark-grey !important
+        border: 2px solid $theme-dark-grey !important
         &.unselected
             opacity: 0.5
     &:hover:not(.no-hover)
@@ -31,6 +29,7 @@
         border-left-color: $theme-green
     &.orange-border
         border-left-color: $theme-orange
+
 .settings-card
     display: flex
     .btn, .theme-input, select

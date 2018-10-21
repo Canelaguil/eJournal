@@ -131,8 +131,8 @@ export default {
             .catch(error => { this.$toasted.error(error.response.data.description) })
 
         if (store.state.filteredJournals.length === 0) {
-            if (this.$hasPermission('can_view_assignment_journals')) {
-                journalAPI.getFromAssignment(this.aID)
+            if (this.$hasPermission('can_view_all_journals')) {
+                journalAPI.getFromAssignment(this.cID, this.aID)
                     .then(journals => { this.assignmentJournals = journals })
                     .catch(error => { this.$toasted.error(error.response.data.description) })
             }

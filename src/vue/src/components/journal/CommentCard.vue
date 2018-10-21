@@ -6,7 +6,7 @@
     <div>
         <div v-if="commentObject">
             <div v-for="(comment, index) in commentObject" class="comment-section" :key="index">
-                <profile-picture class="profile-picture no-hover" :user="comment.author"/>
+                <profile-picture class="profile-picture-sm no-hover" :user="comment.author"/>
                 <b-card class="no-hover comment-card" :class="$root.getBorderClass($route.params.cID)">
                     <div v-if="!editCommentStatus[index]">
                         <b-button v-if="$store.getters['user/uID'] == comment.author.id" class="ml-2 delete-button float-right multi-form" @click="deleteComment(comment.id)">
@@ -51,7 +51,7 @@
             </div>
         </div>
         <div v-if="$hasPermission('can_comment')" class="comment-section">
-            <img class="profile-picture no-hover" :src="$store.getters['user/profilePicture']">
+            <img class="profile-picture-sm no-hover" :src="$store.getters['user/profilePicture']">
             <b-card class="no-hover new-comment">
                 <text-editor
                     ref="comment-text-editor-ref"
@@ -195,7 +195,7 @@ export default {
 <style lang="sass">
 .comment-section
     display: flex
-    .profile-picture
+    .profile-picture-sm
         margin: 0px 12px
         display: inline
     .new-comment .card-body

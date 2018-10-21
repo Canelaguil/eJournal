@@ -40,7 +40,7 @@
         </div>
 
         <transition name="fade">
-            <b-button @click="update()" v-if="JSON.stringify(roleConfig) !== JSON.stringify(originalRoleConfig)" class="add-button fab">
+            <b-button @click="update()" v-if="isChanged" class="add-button fab">
                 <icon name="save" scale="1.5"/>
             </b-button>
         </transition>
@@ -96,7 +96,19 @@ export default {
             undeleteableRoles: ['Student', 'TA', 'Teacher'],
             modalShow: false,
             newRole: '',
-            essentialPermissions: {'Teacher': ['can_edit_course_roles', 'can_edit_course_details']}
+            essentialPermissions: {'Teacher': ['can_edit_course_roles', 'can_edit_course_details']},
+            setRoleConfig: false,
+            isChanged: false
+        }
+    },
+    watch: {
+        roleConfig: {
+            handler: function () {
+                if (this.setRoleConfig) {
+                    this.isChanged = true
+                }
+            },
+            deep: true
         }
     },
     methods: {
@@ -161,8 +173,11 @@ export default {
                 .then(_ => {
                     this.originalRoleConfig = this.deepCopyRoles(this.roleConfig)
                     this.defaultRoles = Array.from(this.roles)
-                    this.$toasted.success('Course roles succesfully updated.')
+                    this.$toasted.success('Course roles successfully updated.')
                     this.checkPermission()
+                    this.$nextTick(function () {
+                        this.isChanged = false
+                    })
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },
@@ -179,7 +194,7 @@ export default {
                         .then(_ => {
                             this.deleteRoleLocalConfig(role)
                             this.deleteRoleServerLoadedConfig(role)
-                            this.$toasted.success('Role deleted succesfully!')
+                            this.$toasted.success('Role deleted successfully!')
                         })
                         .catch(error => this.$toasted.error(error.response.data.description))
                 } else {
@@ -236,6 +251,10 @@ export default {
                 this.permissions.splice(this.permissions.indexOf('course'), 1)
 
                 this.originalRoleConfig = this.deepCopyRoles(roleConfig)
+
+                this.$nextTick(function () {
+                    this.setRoleConfig = true
+                })
             })
             .catch(error => { this.$toasted.error(error.response.data.description) })
     },

@@ -7,7 +7,6 @@
 <template>
     <b-card class="no-hover overflow-x-hidden" :class="$root.getBorderClass($route.params.cID)">
         <h2 class="d-inline multi-form">Preset</h2>
-
         <b-button @click.prevent="emitDeletePreset" class="delete-button float-right multi-form">
             <icon name="trash"/>
             Remove
@@ -55,7 +54,7 @@
 
         <div v-if="currentPreset.type === 'd'">
             <h2 class="field-heading">Preset Template</h2>
-            <b-form-select v-model="currentPreset.template" @change="$emit('changed')" class="multi-form">
+            <b-form-select v-model="currentPreset.template" class="multi-form">
                 <option disabled value="">Please select a template</option>
                 <option v-for="template in templates" :key="template.t.tID" :value="template.t">
                     {{ template.t.name }}
@@ -68,7 +67,7 @@
         </div>
         <div v-else-if="currentPreset.type === 'p'">
             <h2 class="field-heading">Point Target</h2>
-            <b-input type="number" class="theme-input" v-model="currentPreset.target" placeholder="Amount of points" @change="$emit('changed')"/>
+            <b-input type="number" class="theme-input" v-model="currentPreset.target" placeholder="Amount of points"/>
         </div>
     </b-card>
 </template>
@@ -81,7 +80,20 @@ export default {
     props: ['currentPreset', 'templates'],
     data () {
         return {
-            templateNames: []
+            templateNames: [],
+            prevID: this.currentPreset.id
+        }
+    },
+    watch: {
+        currentPreset: {
+            handler: function (newPreset) {
+                if (newPreset.id === this.prevID) {
+                    this.$emit('changed')
+                }
+
+                this.prevID = newPreset.id
+            },
+            deep: true
         }
     },
     methods: {
@@ -93,7 +105,6 @@ export default {
         },
         // Type-specific fields should be set or deleted
         changePresetType (type) {
-            this.$emit('changed')
             this.currentPreset.type = type
             if (type !== 'p') {
                 this.currentPreset.target = ''

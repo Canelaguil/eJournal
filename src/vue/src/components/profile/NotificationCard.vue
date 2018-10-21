@@ -36,7 +36,7 @@ export default {
             userAPI.update(0, {grade_notifications: isActive})
                 .then(user => {
                     this.$store.commit('user/SET_GRADE_NOTIFICATION', user.grade_notifications)
-                    this.$toasted.success('Grade notification setting updated succesfully.')
+                    this.$toasted.success('Grade notification setting updated successfully.')
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },
@@ -44,7 +44,7 @@ export default {
             userAPI.update(0, {comment_notifications: isActive})
                 .then(user => {
                     this.$store.commit('user/SET_COMMENT_NOTIFICATION', user.comment_notifications)
-                    this.$toasted.success('Comment notification setting updated succesfully.')
+                    this.$toasted.success('Comment notification setting updated successfully.')
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         }

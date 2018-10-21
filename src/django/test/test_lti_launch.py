@@ -189,7 +189,6 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.get('/get_lti_params_from_jwt/{0}/'.format(jwt_params))
         response = lti_view.get_lti_params_from_jwt(request, jwt_params)
         self.assertEquals(response.status_code, 401)
-        self.assertIn('not authenticated', response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_expired(self):
         """Hopefully returns the lti course and assignment data."""
@@ -247,8 +246,8 @@ class canEnterThroughLTI(TestCase):
 
     def test_get_lti_params_from_jwt_journal_teacher(self):
         """Hopefully returns the LTI assignment and course."""
-        factory.make_course('TestCourse', 'aaaa', lti_id='asdf')
-        factory.make_assignment("TestAss", "TestDescr", lti_id='bughh')
+        course = factory.make_course('TestCourse', 'aaaa', lti_id='asdf')
+        factory.make_assignment("TestAss", "TestDescr", lti_id='bughh', courses=[course])
         login = test.logging_in(self, self.username, self.password)
         self.request["user_id"] = "awefd"
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
@@ -257,8 +256,8 @@ class canEnterThroughLTI(TestCase):
 
     def test_get_lti_params_from_jwt_journal_student(self):
         """Hopefully returns the lti journal data."""
-        factory.make_course('TestCourse', 'aaaa', lti_id='asdf')
-        factory.make_assignment("TestAss", "TestDescr", lti_id='bughh')
+        course = factory.make_course('TestCourse', 'aaaa', lti_id='asdf')
+        factory.make_assignment("TestAss", "TestDescr", lti_id='bughh', courses=[course])
         login = test.logging_in(self, self.username, self.password)
         self.request["user_id"] = "awefd"
         self.request["roles"] = settings.ROLES["Student"]

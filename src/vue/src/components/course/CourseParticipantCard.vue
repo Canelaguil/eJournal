@@ -3,7 +3,7 @@
         <b-row>
             <b-col sm="8" class="d-flex mb-2">
                 <b-col cols="3" class="text-center">
-                    <profile-picture class="profile-picture" :user="user"/>
+                    <profile-picture class="profile-picture-sm" :user="user"/>
                 </b-col>
                 <b-col cols="9">
                     <b>{{ user.name }}</b> ({{ user.role }})<br/>

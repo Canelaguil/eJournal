@@ -7,6 +7,7 @@ import test.test_utils as test
 
 import django.utils.timezone as timezone
 from django.test import TestCase
+from rest_framework.settings import api_settings
 
 import VLE.factory as factory
 from VLE.models import Role
@@ -95,6 +96,34 @@ class GetApiTests(TestCase):
         test.set_up_participation(self.no_permission_user, self.course, 'Student')
         test.api_get_call(self, '/participations/unenrolled/', login, status=403, params={'course_id': self.course.pk})
 
+    def test_GDPR(self):
+        # Test normal user
+        login = test.logging_in(self, self.username, self.password)
+        _, _, other_user = test.set_up_user_and_auth('teacher', 'pass', 'teach@teach.com')
+
+        # Other user
+        test.api_get_call(self, '/users/{0}/GDPR/'.format(other_user.pk), login, status=403)
+
+        # Multiple times its own
+        for _ in range(int(api_settings.DEFAULT_THROTTLE_RATES['gdpr'].split('/')[0])):
+            test.api_get_call(self, '/users/0/GDPR/', login)
+        test.api_get_call(self, '/users/0/GDPR/', login, status=429)
+
+        # Test super user
+        self.user.is_superuser = True
+        self.user.save()
+
+        # Other user
+        test.api_get_call(self, '/users/{0}/GDPR/'.format(other_user.pk), login, status=403)
+
+        # Multiple times its own
+        for _ in range(int(api_settings.DEFAULT_THROTTLE_RATES['gdpr'].split('/')[0])):
+            test.api_get_call(self, '/users/0/GDPR/', login)
+        test.api_get_call(self, '/users/0/GDPR/', login)
+
+        self.user.is_superuser = False
+        self.user.save()
+
     def test_get_user_courses(self):
         """Test the get user courses function."""
         for course in test.set_up_courses('course', 4):
@@ -136,19 +165,18 @@ class GetApiTests(TestCase):
         factory.make_journal(assigns[1], self.user)
 
         login_user = test.logging_in(self, self.username, self.password)
-        response = test.api_get_call(self, '/assignments/?course_id={}'.format(course.pk), login_user)
+        response = test.api_get_call(self, '/assignments/', login_user, params={'course_id': course.pk})
         self.assertEquals(len(response.json()['assignments']), 2)
         self.assertIn('journal', response.json()['assignments'][0])
 
         login_rein = test.logging_in(self, self.rein_user, self.rein_pass)
-        response = test.api_get_call(self, '/assignments/?course_id={}'.format(course.pk), login_rein)
+        response = test.api_get_call(self, '/assignments/', login_rein, params={'course_id': course.pk})
         self.assertEquals(len(response.json()['assignments']), 2)
 
         # permissions and authorization check for the api call.
         login = test.logging_in(self, self.no_perm_user, self.no_perm_pass)
-        response = test.api_get_call(self, '/assignments/?course_id={}'.format(course.pk), login, status=403,)
-        response = test.api_get_call(self, '/assignments/?course_id={}'.format(self.not_found_pk), login,
-                                     status=404)
+        test.api_get_call(self, '/assignments/', login, status=403, params={'course_id': course.pk})
+        test.api_get_call(self, '/assignments/', login, status=404, params={'course_id': self.not_found_pk})
         test.test_unauthorized_api_get_call(self, '/assignments/' + str(course.pk) + '/')
 
     def test_get_assignment_data(self):
@@ -190,15 +218,34 @@ class GetApiTests(TestCase):
             test.set_up_journal(assignment, template, student, 4)
 
         login = test.logging_in(self, self.rein_user, self.rein_pass)
-        response = test.api_get_call(self, '/journals/', login, params={'assignment_id': assignment.pk})
+        response = test.api_get_call(self,
+                                     '/journals/',
+                                     login,
+                                     params={'course_id': course.pk, 'assignment_id': assignment.pk})
         result = response.json()
         self.assertEquals(len(result['journals']), 2)
 
         # permissions and authorization check for the api call.
         login = test.logging_in(self, self.no_perm_user, self.no_perm_pass)
-        test.api_get_call(self, '/journals/', login, status=403, params={'assignment_id': assignment.pk})
-        test.api_get_call(self, '/journals/', login, status=404, params={'assignment_id': self.not_found_pk})
-        test.test_unauthorized_api_get_call(self, '/journals/', params={'assignment_id': self.not_found_pk})
+        test.api_get_call(self,
+                          '/journals/',
+                          login,
+                          status=403,
+                          params={'course_id': course.pk, 'assignment_id': assignment.pk})
+        test.api_get_call(self,
+                          '/journals/',
+                          login,
+                          status=404,
+                          params={'course_id': course.pk, 'assignment_id': self.not_found_pk})
+
+        test.api_get_call(self,
+                          '/journals/',
+                          login,
+                          status=400,
+                          params={})
+        test.test_unauthorized_api_get_call(self,
+                                            '/journals/',
+                                            params={'course_id': course.pk, 'assignment_id': self.not_found_pk})
 
     def test_get_nodes(self):
         """Test the get nodes function."""
@@ -213,7 +260,7 @@ class GetApiTests(TestCase):
         login = test.logging_in(self, student_user, student_pass)
         response = test.api_get_call(self, '/nodes/', login, params={'journal_id': journal.pk})
         result = response.json()
-        self.assertEquals(len(result['nodes']), 4)
+        self.assertEquals(len(result['nodes']), 5)
 
         login = test.logging_in(self, self.rein_user, self.rein_pass)
         response = test.api_get_call(self, '/nodes/', login, params={'journal_id': journal.pk})

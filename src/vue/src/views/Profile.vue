@@ -2,9 +2,9 @@
     <content-single-column>
         <bread-crumb>&nbsp;</bread-crumb>
         <b-card class="no-hover blue-border">
-            <profile-data/>
+            <profile-data ref="profileData"/>
             <notification-card/>
-            <password-card/>
+            <password-card ref="passData"/>
         </b-card>
     </content-single-column>
 </template>
@@ -24,6 +24,15 @@ export default {
         'profile-data': profileData,
         'notification-card': notificationCard,
         'password-card': passwordCard
+    },
+    beforeRouteLeave (to, from, next) {
+        if ((this.$refs.profileData.isChanged() || this.$refs.passData.isChanged()) &&
+            !confirm('Unsaved changes will be lost if you leave. Do you wish to continue?')) {
+            next(false)
+            return
+        }
+
+        next()
     }
 }
 </script>

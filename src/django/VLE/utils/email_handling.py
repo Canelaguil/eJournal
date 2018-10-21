@@ -10,7 +10,7 @@ def send_email_verification_link(user):
     token_generator = PasswordResetTokenGenerator()
     token = token_generator.make_token(user)
 
-    recovery_link = '%s/EmailVerification/%s' % (settings.BASELINK, token)
+    recovery_link = '{}/EmailVerification/{}'.format(settings.BASELINK, token)
     email_body = '''\
 We have received a request for email verification, if you have not made this request please ignore this email.
 If you did make the request please visit the link below to verify your email address:
@@ -36,7 +36,7 @@ def send_password_recovery_link(user):
     token_generator = PasswordResetTokenGenerator()
     token = token_generator.make_token(user)
 
-    recovery_link = '%s/PasswordRecovery/%s/%s' % (settings.BASELINK, user.username, token)
+    recovery_link = '{}/PasswordRecovery/{}/{}'.format(settings.BASELINK, user.username, token)
     email_body = '''\
 We have received a request for password recovery, if you have not made this request please ignore this email.
 If you did make the request please visit the link below and set a new password:

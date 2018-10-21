@@ -3,272 +3,127 @@ permissions.py.
 
 All the permission functions.
 """
+from collections import defaultdict
+
 from django.forms.models import model_to_dict
 
-from VLE.models import Assignment, Participation
+import VLE.models
+from VLE.utils.error_handling import VLEProgrammingError
+
+GENERAL_PERMISSIONS = ['can_edit_institute_details', 'can_add_course']
+COURSE_PERMISSIONS = ['can_edit_course_details', 'can_delete_course', 'can_edit_course_roles',
+                      'can_view_course_users', 'can_add_course_users', 'can_delete_course_users',
+                      'can_add_course_user_group', 'can_delete_course_user_group', 'can_edit_course_user_group',
+                      'can_add_assignment', 'can_delete_assignment']
+ASSIGNMENT_PERMISSIONS = ['can_edit_assignment', 'can_view_all_journals', 'can_grade',
+                          'can_publish_grades', 'can_have_journal', 'can_comment']
 
 
-def get_role(user, course):
-    """Get the role (with permissions) of the given user in the given course.
-
-    Arguments:
-    user -- user that did the request.
-    cID -- course ID used to validate the request.
-    """
-    try:
-        # First attempt to get the participation of the user within the course.
-        return Participation.objects.get(user=user, course=course).role
-    except Participation.DoesNotExist:
-        return None
-
-
-def get_permissions(user, cID=-1):
-    """Get permissions given a user.
-
-    Get the permissions of the given user in the given course. The
-    permissions are returned in dictionary format. For site-wide permissions
-    when the user is not within a course, use cID == -1.
+def has_general_permission(user, permission):
+    """Check if the user has the needed "global" permission.
 
     Arguments:
     user -- user that did the request.
-    cID -- course ID used to retrieve the permissions. -1 for permissions
-    outside of a course.
+    permission -- the permission string to check.
+
+    Raises VLEProgrammingError when the passed permission is not a "General Permission".
     """
-    roleDict = {}
+    if permission not in GENERAL_PERMISSIONS:
+        raise VLEProgrammingError("Permission " + permission + " is not a general level permission.")
 
     if user.is_superuser:
-        # For system wide permissions, not course specific.
-        roleDict = {
-            "can_edit_institute_details": True,
-            "can_add_course": True,
+        return True
 
-            "can_edit_course_details": True,
-            "can_delete_course": True,
-            "can_edit_course_roles": True,
-            "can_view_course_users": True,
-            "can_add_course_users": True,
-            "can_delete_course_users": True,
-            "can_add_course_user_group": True,
-            "can_delete_course_user_group": True,
-            "can_edit_course_user_group": True,
-            "can_add_assignment": True,
-            "can_delete_assignment": True,
+    # If the user is a teacher, he is allowed to create courses on the platform.
+    if user.is_teacher and permission == 'can_add_course':
+        return True
 
-            "can_edit_assignment": True,
-            "can_view_assignment_journals": True,
-            "can_grade": True,
-            "can_publish_grades": True,
-            "can_have_journal": False,
-            "can_comment": True
-        }
-    elif cID == -1:
-        # No course ID was given. The user has no permissions.
-        roleDict = {
-            "can_edit_institute_details": False,
-            "can_add_course": False,
-
-            "can_edit_course_details": False,
-            "can_delete_course": False,
-            "can_edit_course_roles": False,
-            "can_view_course_users": False,
-            "can_add_course_users": False,
-            "can_delete_course_users": False,
-            "can_add_course_user_group": False,
-            "can_delete_course_user_group": False,
-            "can_edit_course_user_group": False,
-            "can_add_assignment": False,
-            "can_delete_assignment": False,
-
-            "can_edit_assignment": False,
-            "can_view_assignment_journals": False,
-            "can_grade": False,
-            "can_publish_grades": False,
-            "can_have_journal": False,
-            "can_comment": False
-        }
-
-        # If the user is not in a specific course, but he is a teacher, he is
-        # allowed to create courses on the platform.
-        if user.is_teacher:
-            roleDict["can_add_course"] = True
-    else:
-        # The course ID was given. Return the permissions of the user as dictionary.
-        role = get_role(user, cID)
-
-        # The role might not actually exist in the database, so return an
-        # empty permission list.
-        if not role:
-            return {}
-
-        roleDict = model_to_dict(role)
-        roleDict["can_edit_institute_details"] = False
-
-    return roleDict
+    return False
 
 
-def get_assignment_id_permissions(user, aID):
-    """Merge permissions from all courses that are linked to the assignment.
-
-    Arguments:
-    user -- user that did the request
-    aID -- the assignment ID
-    """
-    assignment = Assignment.objects.get(pk=aID)
-    roleDict = get_assignment_permissions(user, assignment)
-    return roleDict
-
-
-def get_assignment_permissions(user, assignment):
-    """Merge permissions from all courses that are linked to the assignment.
-
-    If the user has the permission in any of the courses, it will have the permission
-    for this assignment.
-    """
-    result = {}
-    for course in assignment.courses.all():
-        if Participation.objects.filter(user=user, course=course).count() > 0:
-            result = {key: value or (result[key] if key in result else False)
-                      for key, value in get_permissions(user, course.pk).items()}
-    return result
-
-
-def has_permissions(user, cID, permission_list):
-    """Check if the user has the needed permissions.
-
-    Do this by checking every permission, and returning False once a permission
-    is insufficient.
+def has_course_permission(user, permission, course):
+    """Check if the user has the needed permission in the given course.
 
     Arguments:
     user -- user that did the request.
-    cID -- course ID used to validate the request.
-    permission_list -- the list of permissions to check.
-    """
-    permissions = get_permissions(user, cID)
-
-    for permission in permission_list:
-        if permission not in permissions or not permissions[permission]:
-            return False
-
-    return True
-
-
-def has_permission(user, cID, permission):
-    """Check if the user has the needed permissions.
-
-    Do this by checking every permission, and returning False once a permission
-    is insufficient.
-
-    Arguments:
-    user -- user that did the request.
-    cID -- course ID used to validate the request.
+    course -- course used to check against.
     permission -- the permission string to check.
+
+    Raises VLEProgrammingError when the passed permission is not a "Course Permission".
+    Raises VLEParticipationError when the user is not participating in the course.
     """
-    permissions = get_permissions(user, cID)
+    if permission not in COURSE_PERMISSIONS:
+        raise VLEProgrammingError("Permission " + permission + " is not a course level permission.")
+
+    if user.is_superuser:
+        return True
+
+    user.check_participation(course)
+
+    role = VLE.models.Participation.objects.get(user=user, course=course).role
+    permissions = model_to_dict(role)
+
     return permission in permissions and permissions[permission]
 
 
-def has_assignment_permissions(user, assignment, permission_list):
-    """Check if the user has the needed permissions.
-
-    Do this by checking every permission, and returning False once a permission
-    is insufficient.
+def has_assignment_permission(user, permission, assignment):
+    """Check if the user has the needed permission in the given assignment.
 
     Arguments:
     user -- user that did the request.
-    assignment -- the assignment used to validate the request.
-    permissionList -- the list of permissions to check.
-    """
-    permissions = get_assignment_permissions(user, assignment)
+    assignment -- assignment used to check against.
+    permission -- the permission string to check.
 
-    for permission in permission_list:
-        if permission not in permissions or not permissions[permission]:
+    Raises VLEProgrammingError when the passed permission is not an "Assignment Permission".
+    Raises VLEParticipationError when the user is not participating in the assignment.
+    """
+
+    if permission not in ASSIGNMENT_PERMISSIONS:
+        raise VLEProgrammingError("Permission " + permission + " is not an assignment level permission.")
+
+    if user.is_superuser:
+        if permission == 'can_have_journal':
             return False
+        return True
 
-    return True
+    user.check_participation(assignment)
 
+    permissions = defaultdict(lambda: False)
+    for course in assignment.courses.all():
+        if user.is_participant(course):
+            role = VLE.models.Participation.objects.get(user=user, course=course).role
+            role_permissions = model_to_dict(role)
+            permissions = {key: (role_permissions[key] or permissions[key]) for key in ASSIGNMENT_PERMISSIONS}
 
-def has_assignment_permission(user, assignment, permission):
-    """Check whether the user has the correct permission for an assignment.
+    # Apply negations
+    if permissions['can_have_journal'] and permissions['can_view_all_journals']:
+        permissions['can_have_journal'] = False
 
-    Arguments:
-    user -- user that did the request.
-    assignment -- the assignment used to validate the request.
-    permission -- the permissions to check.
-    """
-    permissions = get_assignment_permissions(user, assignment)
-    return permission in permissions and permissions[permission]
-
-
-def is_user_in_course(user, course):
-    """Check whether the user is in a given course or not.
-
-    Arguments:
-    user -- the user to be checked if in a course or not
-    course -- the course to check with
-
-    Returns True if the user is in the course, else False.
-    """
-    return Participation.objects.filter(user=user, course=course).exists()
+    return permissions[permission]
 
 
-def is_user_supervisor(user, supervisor):
+def is_user_supervisor_of(supervisor, user):
     """Checks whether the user is a participant in any of the assignments where the supervisor has the permission of
     can_view_course_users or where the supervisor is linked to the user through an assignment where the supervisor
-    has the permission can_view_assignment_journals."""
+    has the permission can_view_all_journals."""
     for course in supervisor.participations.all():
-        if get_permissions(supervisor, course.pk).can_view_course_users:
-            if course.participations.filter(user=user).exists():
+        if supervisor.has_permission('can_view_course_users', course):
+            if course.participation_set.filter(user=user).exists():
                 return True
-            if course.assignment_set.filter(journal__user=user).exists() and \
-               has_permission(supervisor, course.pk, 'can_view_assignment_journals'):
-                return True
+            for assignment in course.assignment_set.filter(journal__user=user):
+                if supervisor.has_permission('can_view_all_journals', assignment):
+                    return True
 
     return False
 
 
-def can_add_users_to_a_course(user):
-    """Checks if the user can add users to one or more of his courses."""
-    for course in user.participations.all():
-        if get_permissions(user, course.pk).can_add_course_users:
-            return True
-
-    return False
+def serialize_general_permissions(user):
+    return {key: has_general_permission(user, key) for key in GENERAL_PERMISSIONS}
 
 
-def get_all_user_permissions(user):
-    """Returns a dictionary with all user permissions.
+def serialize_course_permissions(user, course):
+    return {key: has_course_permission(user, key, course) for key in COURSE_PERMISSIONS}
 
-    Arguments:
-    user -- The user whose permissions are requested.
 
-    Returns {all_permission:
-        course{id}: permisions
-        assignment{id}: permissions
-        general: permissions
-    }"""
-
-    permissions = {}
-    courses = user.participations.all()
-
-    permissions['general'] = get_permissions(user, -1)
-
-    for course in courses:
-        permissions['course' + str(course.id)] = get_permissions(user, course.id)
-
-    assignments = Assignment.objects.none()
-    for course in courses:
-        # Returns all assignments linked to a course if a grader.
-        if permissions['course' + str(course.id)]['can_grade']:
-            assignments |= course.assignment_set.all()
-        else:
-            assignments |= Assignment.objects.filter(courses=course, journal__user=user)
-
-    assignments = assignments.distinct()
-
-    for assignment in assignments:
-        permissions['assignment' + str(assignment.id)] = get_assignment_id_permissions(user, assignment.id)
-        # Ensure top level permission include can_grade for any course
-        if permissions['assignment' + str(assignment.id)]['can_grade']:
-            permissions['general']['can_grade'] = True
-
-    return permissions
+def serialize_assignment_permissions(user, assignment):
+    return {key: has_assignment_permission(user, key, assignment) for key in ASSIGNMENT_PERMISSIONS}

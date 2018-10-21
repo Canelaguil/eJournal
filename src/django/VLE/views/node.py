@@ -3,14 +3,11 @@ node.py.
 
 In this file are all the node api requests.
 """
-from datetime import datetime
-
 from rest_framework import viewsets
 
-import VLE.permissions as permissions
 import VLE.timeline as timeline
 import VLE.utils.generic_utils as utils
-import VLE.views.responses as response
+import VLE.utils.responses as response
 from VLE.models import Journal
 
 
@@ -43,21 +40,9 @@ class NodeView(viewsets.ModelViewSet):
             success -- with the node data
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
         journal_id, = utils.required_typed_params(request.query_params, (int, 'journal_id'))
-
         journal = Journal.objects.get(pk=journal_id)
 
-        if not (journal.user == request.user or permissions.has_assignment_permission(request.user, journal.assignment,
-                'can_view_assignment_journals')):
-            return response.forbidden('You are not allowed to view journals of other participants.')
-
-        if ((journal.assignment.unlock_date and journal.assignment.unlock_date > datetime.now()) or
-            (journal.assignment.lock_date and journal.assignment.lock_date < datetime.now())) and \
-           not permissions.has_assignment_permission(request.user, journal.assignment,
-                                                     'can_view_assignment_journals'):
-            return response.bad_request('The assignment is locked and unavailable for students.')
+        request.user.check_can_view(journal)
 
         return response.success({'nodes': timeline.get_nodes(journal, request.user)})

@@ -19,7 +19,8 @@
                     </div>
                     <div v-else-if="nodes[currentNode].type == 'd'">
                         <div v-if="nodes[currentNode].entry !== null">
-                            <entry-node :cID="cID" ref="entry-template-card" @edit-node="adaptData" :entryNode="nodes[currentNode]"/>
+                            <entry-node :cID="cID" ref="entry-template-card" @edit-node="adaptData"
+                            @delete-node="deleteNode" :entryNode="nodes[currentNode]"/>
                         </div>
                         <div v-else>
                             <entry-preview v-if="checkDeadline()" ref="entry-prev" @content-template="fillDeadline" :template="nodes[currentNode].template" :nodeID="nodes[currentNode].nID" :description="nodes[currentNode].description"/>
@@ -145,7 +146,12 @@ export default {
             entryAPI.delete(this.nodes[this.currentNode].entry.id)
                 .then(data => {
                     this.$toasted.success(data.description)
-                    this.nodes.splice(this.currentNode, 1)
+                    if (this.nodes[this.currentNode].type === 'd') {
+                        this.nodes[this.currentNode].entry = null
+                        this.currentNode = 0
+                    } else {
+                        this.nodes.splice(this.currentNode, 1)
+                    }
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },

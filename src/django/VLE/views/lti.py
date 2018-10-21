@@ -4,12 +4,12 @@ import jwt
 from django.conf import settings
 from django.http import QueryDict
 from django.shortcuts import redirect
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 import VLE.lti_launch as lti
-import VLE.permissions as permissions
-import VLE.views.responses as response
+import VLE.utils.responses as response
 from VLE.utils.error_handling import VLEMissingRequiredKey
 
 # VUE ENTRY STATE
@@ -27,23 +27,22 @@ FINISH_T = '4'
 FINISH_S = '5'
 
 
+def decode_lti_params(jwt_params):
+    return jwt.decode(jwt_params, settings.SECRET_KEY, algorithms=['HS256'])
+
+
+def encode_lti_params(jwt_params):
+    return jwt.encode(jwt_params, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
+
+
 @api_view(['GET'])
 def get_lti_params_from_jwt(request, jwt_params):
     """Handle the controlflow for course/assignment create, connect and select.
 
     Returns the data needed for the correct entry place.
     """
-    if not request.user.is_authenticated:
-        return response.unauthorized()
-
     user = request.user
-    try:
-        lti_params = jwt.decode(jwt_params, settings.SECRET_KEY, algorithms=['HS256'])
-    except jwt.exceptions.ExpiredSignatureError:
-        return response.forbidden(
-            description='The canvas link has expired, 15 minutes have passed. Please retry from canvas.')
-    except jwt.exceptions.InvalidSignatureError:
-        return response.unauthorized(description='Invalid LTI parameters given. Please retry from canvas.')
+    lti_params = decode_lti_params(jwt_params)
 
     try:
         role = [settings.LTI_ROLES[r] if r in settings.LTI_ROLES else r for r in lti.roles_to_list(lti_params)]
@@ -91,7 +90,7 @@ def get_lti_params_from_jwt(request, jwt_params):
 
         journal = lti.select_create_journal(lti_params, user, assignment)
         jID = journal.pk if journal is not None else None
-        state = FINISH_T if permissions.has_permission(user, course.pk, 'can_grade') else FINISH_S
+        state = FINISH_T if user.has_permission('can_grade', assignment) else FINISH_S
     except KeyError as err:
         raise VLEMissingRequiredKey(err)
 
@@ -103,6 +102,7 @@ def get_lti_params_from_jwt(request, jwt_params):
 
 
 @api_view(['POST'])
+@permission_classes((AllowAny, ))
 def lti_launch(request):
     """Django view for the lti post request.
 
@@ -125,7 +125,7 @@ def lti_launch(request):
         user = lti.check_user_lti(params)
 
         params['exp'] = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
-        lti_params = jwt.encode(params, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
+        lti_params = encode_lti_params(params)
 
         try:
             if user is None:

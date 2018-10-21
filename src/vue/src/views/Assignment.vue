@@ -1,5 +1,5 @@
 <!-- TODO Is this check really required if we redirect, or even better have correct flow anyway? -->
-<template v-if="$hasPermission('can_view_assignment_journals')">
+<template v-if="$hasPermission('can_view_all_journals')">
     <content-columns>
         <bread-crumb slot="main-content-column" @edit-click="handleEdit()"/>
         <b-card slot="main-content-column" class="no-hover settings-card">
@@ -112,7 +112,7 @@ export default {
     created () {
         // TODO Should be moved to the breadcrumb, ensuring there is no more natural flow left that can get you to this
         // page without manipulating the url manually. If someone does this, simply let the error be thrown (no checks required)
-        if (!this.$hasPermission('can_view_assignment_journals', 'assignment', String(this.aID))) {
+        if (!this.$hasPermission('can_view_all_journals', 'assignment', String(this.aID))) {
             if (this.$root.previousPage) {
                 this.$router.push({ name: this.$root.previousPage.name, params: this.$root.previousPage.params })
             } else {

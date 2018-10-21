@@ -94,7 +94,7 @@ const actions = {
                 commit(types.SET_JWT, response.data)
 
                 dispatch('populateStore').then(response => {
-                    resolve('JWT and store are set succesfully.')
+                    resolve('JWT and store are set successfully.')
                 }, error => {
                     Vue.toasted.error(error.response.data.description)
                     reject(error) // Login success but hydration failed
@@ -123,7 +123,7 @@ const actions = {
                             .then(_ => { resolve() })
                             .catch(error => { reject(error) })
                     } else {
-                        resolve('JWT refreshed succesfully, store was already populated.')
+                        resolve('JWT refreshed successfully, store was already populated.')
                     }
                 }, error => {
                     reject(error) // Refresh token invalid, reject
@@ -142,13 +142,13 @@ const actions = {
                 reject(error)
             }).then(() => {
                 if (this.getters['user/profilePicture']) {
-                    resolve('Store is populated succesfully')
+                    resolve('Store is populated successfully')
                 } else {
                     connection.connFile.get('/users/0/download_profile_picture/').then(response => {
                         var reader = new FileReader()
                         reader.onload = () => {
                             commit(types.SET_PROFILE_PICTURE, reader.result)
-                            resolve('Store is populated succesfully')
+                            resolve('Store is populated successfully')
                         }
                         reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
                     }, error => {

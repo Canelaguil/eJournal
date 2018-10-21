@@ -17,8 +17,8 @@ class Command(BaseCommand):
         """Create connection between the db_file and python."""
         try:
             return sqlite3.connect(db_file)
-        except Exception as e:
-            print(e)
+        except Exception as err:
+            print(err)
         return None
 
     def handle(self, *args, **options):

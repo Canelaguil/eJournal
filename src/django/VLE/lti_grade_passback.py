@@ -154,9 +154,9 @@ def needs_grading(journal, nID):
     secret = settings.LTI_SECRET
     key = settings.LTI_KEY
 
-    jID = str(journal.pk)
-    aID = str(journal.assignment.pk)
-    cID = str(journal.assignment.courses.first().pk)
+    jID = journal.pk
+    aID = journal.assignment.pk
+    cID = journal.assignment.courses_set.order_by('-startdate').first().pk
 
     result_data = {'url': '{0}/Home/Course/{1}/Assignment/{2}/Journal/{3}?nID={4}'.format(settings.BASELINK,
                                                                                           cID, aID, jID, nID)}

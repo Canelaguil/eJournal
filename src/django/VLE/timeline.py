@@ -3,12 +3,9 @@ timeline.py.
 
 Useful timeline functions.
 """
-from datetime import datetime
-
 from django.db.models import Case, When
 from django.utils import timezone
 
-import VLE.permissions as permissions
 from VLE.models import Node
 from VLE.serializers import EntrySerializer, TemplateSerializer
 
@@ -33,8 +30,7 @@ def get_nodes(journal, user):
     add-node if the user can add to the journal, the subsequent
     progress node is in the future and maximally one.
     """
-    can_add = journal.user == user and \
-        permissions.has_assignment_permission(user, journal.assignment, 'can_have_journal')
+    can_add = journal.user == user and user.has_permission('can_have_journal', journal.assignment)
 
     node_list = []
     for node in get_sorted_nodes(journal):
@@ -55,7 +51,7 @@ def get_nodes(journal, user):
         elif node.type == Node.PROGRESS:
             node_list.append(get_progress(node))
 
-    if can_add and journal.assignment.due_date and journal.assignment.due_date > datetime.now():
+    if can_add and not journal.assignment.is_due():
         add_node = get_add_node(journal)
         if add_node:
             node_list.append(add_node)

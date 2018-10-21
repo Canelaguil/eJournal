@@ -12,5 +12,12 @@ export default {
 
         split[0] = String(yearOff)
         return split.join('-')
+    },
+
+    /* Converts an arraybuffer response to a humanreadable description and displays it as an error. */
+    displayArrayBufferRequestError (context, error) {
+        let enc = new TextDecoder('utf-8')
+
+        context.$toasted.error(JSON.parse(enc.decode(error.response.data)).description)
     }
 }

@@ -8,7 +8,7 @@ import json
 from django.http import JsonResponse
 from django.test import TestCase
 
-import VLE.views.responses as responses
+import VLE.utils.responses as responses
 
 
 class ResponsesTests(TestCase):

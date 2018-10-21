@@ -13,6 +13,7 @@
 <script>
 import userAPI from '@/api/user.js'
 import icon from 'vue-awesome/components/Icon'
+import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     props: {
@@ -68,7 +69,7 @@ export default {
                     let blob = new Blob([response.data], { type: response.headers['content-type'] })
                     this.fileURL = window.URL.createObjectURL(blob)
                 }, error => {
-                    this.$toasted.error(error.response.data.description)
+                    genericUtils.displayArrayBufferRequestError(this, error)
                 })
                 .catch(_ => {
                     this.$toasted.error('Error creating file.')

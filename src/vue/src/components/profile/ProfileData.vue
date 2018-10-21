@@ -1,30 +1,38 @@
 <template>
     <b-row>
         <b-col md="5" sm="12" class="text-center">
-            <div class="profile-portrait small-shadow">
-                <img :src="$store.getters['user/profilePicture']">
-                <!-- TODO Add cropping tool to help with the square aspect ratio Croppa seems most active and a solid choice -->
-                <b-button @click="$refs.file.click()">
-                    <icon name="upload"/>
-                    Upload
+            <b-modal
+                ref="cropperModal"
+                title="Edit profile picture"
+                hide-footer>
+                    <cropper v-if="this.profileImageDataURL" ref="cropperRef" :pictureUrl="this.profileImageDataURL" @newPicture="fileHandler"/>
+            </b-modal>
+            <div class="profile-picture-lg">
+                <img :src="storeProfilePic">
+                <b-button @click="showCropperModal()">
+                    <icon name="edit"/>
+                    Edit
                 </b-button>
-                <input
-                    class="fileinput"
-                    @change="fileHandler"
-                    ref="file"
-                    accept="image/*"
-                    style="display: none"
-                    type="file"/>
             </div>
         </b-col>
         <b-col md="7" sm="12">
             <h2 class="mb-2">User details</h2>
-            <b-form-input :readonly="true" class="theme-input multi-form input-disabled" :value="$store.getters['user/username']" type="text"/>
-            <b-form-input :readonly="($store.getters['user/ltiID']) ? true : false" :class="{'input-disabled': ($store.getters['user/ltiID']) ? true : false}" class="theme-input multi-form" v-model="firstName" type="text"/>
-            <b-form-input :readonly="($store.getters['user/ltiID']) ? true : false" :class="{'input-disabled': ($store.getters['user/ltiID']) ? true : false}" class="theme-input multi-form" v-model="lastName" type="text"/>
+            <b-form-input :readonly="true" class="theme-input multi-form input-disabled" :value="storeUsername" type="text"/>
+            <b-form-input :readonly="(storeLtiID) ? true : false"
+                :class="{'input-disabled': (storeLtiID) ? true : false}"
+                class="theme-input multi-form"
+                v-model="firstName"
+                type="text"
+                placeholder="First name"/>
+            <b-form-input :readonly="(storeLtiID) ? true : false"
+                :class="{'input-disabled': (storeLtiID) ? true : false}"
+                class="theme-input multi-form"
+                v-model="lastName"
+                type="text"
+                placeholder="Last name"/>
             <email/>
 
-            <b-button v-if="!$store.getters['user/ltiID']" class="add-button multi-form float-right" @click="saveUserdata">
+            <b-button v-if="!storeLtiID" class="add-button multi-form float-right" @click="saveUserdata">
                 <icon name="save"/>
                 Save
             </b-button>
@@ -42,12 +50,16 @@ import profilePicture from '@/components/assets/ProfilePicture.vue'
 
 import userAPI from '@/api/user'
 import icon from 'vue-awesome/components/Icon'
+import cropper from '@/components/assets/ImageCropper'
+import { mapGetters } from 'vuex'
+import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     components: {
         icon,
         email,
-        profilePicture
+        profilePicture,
+        cropper
     },
     data () {
         return {
@@ -57,10 +69,24 @@ export default {
             emailVerificationToken: null,
             emailVerificationTokenMessage: null,
             firstName: null,
-            lastName: null
+            lastName: null,
+            updateCropper: false
         }
     },
+    computed: {
+        ...mapGetters({
+            storeUsername: 'user/username',
+            storeLtiID: 'user/ltiID',
+            storeProfilePic: 'user/profilePicture',
+            storeFirstName: 'user/firstName',
+            storeLastName: 'user/lastName'
+        })
+    },
     methods: {
+        showCropperModal () {
+            this.$refs.cropperRef.refreshPicture()
+            this.$refs['cropperModal'].show()
+        },
         saveUserdata () {
             userAPI.update(0, {first_name: this.firstName, last_name: this.lastName})
                 .then(_ => {
@@ -69,17 +95,9 @@ export default {
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },
-        fileHandler (e) {
-            let files = e.target.files
-
-            if (!files.length) { return }
-            if (files[0].size > this.$root.maxFileSizeBytes) {
-                this.$toasted.error('The profile picture exceeds the maximum file size of ' + this.$root.maxFileSizeBytes + ' bytes.')
-                return
-            }
-
+        fileHandler (blob) {
             let formData = new FormData()
-            formData.append('file', files[0])
+            formData.append('file', blob)
 
             userAPI.uploadProfilePicture(formData)
                 .then(_ => {
@@ -88,8 +106,10 @@ export default {
                     reader.onload = () => {
                         vm.$store.commit('user/SET_PROFILE_PICTURE', reader.result)
                         vm.profileImageDataURL = reader.result
+                        this.$toasted.success('Profile picture updated.')
+                        this.$refs['cropperModal'].hide()
                     }
-                    reader.readAsDataURL(files[0])
+                    reader.readAsDataURL(blob)
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },
@@ -99,56 +119,25 @@ export default {
                     let blob = new Blob([response.data], { type: response.headers['content-type'] })
                     let link = document.createElement('a')
                     link.href = window.URL.createObjectURL(blob)
-                    link.download = this.$store.getters['user/username'] + '_all_user_data.zip'
+                    link.download = this.storeUsername + '_all_user_data.zip'
                     document.body.appendChild(link)
                     link.click()
                     link.remove()
                 }, error => {
-                    this.$toasted.error(error.response.data.description)
+                    genericUtils.displayArrayBufferRequestError(this, error)
                 })
-                .catch(e => {
-                    this.$toasted.error('Error creating file.')
+                .catch(_ => {
+                    this.$toasted.error('Error creating file locally.')
                 })
+        },
+        isChanged () {
+            return (this.firstName !== this.storeFirstName || this.lastName !== this.storeLastName)
         }
     },
     mounted () {
-        this.profileImageDataURL = this.$store.getters['user/profilePicture']
-        this.firstName = this.$store.getters['user/firstName']
-        this.lastName = this.$store.getters['user/lastName']
+        this.profileImageDataURL = this.storeProfilePic
+        this.firstName = this.storeFirstName
+        this.lastName = this.storeLastName
     }
 }
 </script>
-
-<style lang="sass">
-@import '~sass/modules/breakpoints.sass'
-
-.profile-portrait
-    display: inline-block
-    position: relative
-    width: 100%
-    max-width: 250px
-    margin-bottom: 20px
-    border-radius: 50% !important
-    overflow: hidden
-    @include lg
-        left: 10px
-        top: 20px
-    img
-        position: absolute
-        height: 100%
-        width: 100%
-    .btn
-        position: absolute
-        width: 100%
-        height: 25%
-        bottom: -25%
-        opacity: 0
-    &:hover
-        .btn
-            bottom: 0px
-            opacity: 1
-.profile-portrait:after
-    content: ""
-    display: block
-    padding-bottom: 100%
-</style>

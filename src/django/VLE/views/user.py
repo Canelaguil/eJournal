@@ -5,22 +5,23 @@ In this file are all the user api requests.
 """
 from smtplib import SMTPAuthenticationError
 
-import jwt
 from django.conf import settings
 from django.core.validators import validate_email
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 
 import VLE.factory as factory
-import VLE.lti_launch as lti
+import VLE.lti_launch as lti_launch
 import VLE.permissions as permissions
 import VLE.utils.generic_utils as utils
+import VLE.utils.responses as response
 import VLE.validators as validators
 from VLE.models import (Assignment, Content, Entry, Journal, Node, User,
                         UserFile)
 from VLE.serializers import EntrySerializer, OwnUserSerializer, UserSerializer
 from VLE.utils import email_handling, file_handling
-from VLE.views import responses as response
+from VLE.views import lti
 
 
 class UserView(viewsets.ViewSet):
@@ -37,12 +38,8 @@ class UserView(viewsets.ViewSet):
             success -- with the course data
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
-        if not (permissions.can_add_users_to_a_course(request.user) or request.user.is_superuser):
-            return response.forbidden(description="Only teachers and administrators are allowed to request all user \
-                                       data.")
+        if not request.user.is_superuser:
+            return response.forbidden('Only administrators are allowed to request all user data.')
 
         serializer = UserSerializer(User.objects.all(), many=True)
         return response.success({'users': serializer.data})
@@ -61,8 +58,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- with the user data
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
         if int(pk) == 0:
             pk = request.user.id
 
@@ -70,10 +65,10 @@ class UserView(viewsets.ViewSet):
 
         if request.user == user or request.user.is_superuser:
             serializer = OwnUserSerializer(user, many=False)
-        elif permissions.is_user_supervisor(user, request.user):
+        elif permissions.is_user_supervisor_of(request.user, user):
             serializer = UserSerializer(user, many=False)
         else:
-            return response.forbidden("You are not allowed to view this users information.")
+            return response.forbidden('You are not allowed to view this users information.')
 
         return response.success({'user': serializer.data})
 
@@ -100,17 +95,11 @@ class UserView(viewsets.ViewSet):
         On succes:
             success -- with the newly created user data
         """
-        if 'jwt_params' in request.data and request.data['jwt_params'] != '':
-            try:
-                lti_params = jwt.decode(request.data['jwt_params'], settings.SECRET_KEY, algorithms=['HS256'])
-            except jwt.exceptions.ExpiredSignatureError:
-                return response.forbidden(
-                    description='Your session has expired. Please go back to your learning environment and try again.')
-            except jwt.exceptions.InvalidSignatureError:
-                return response.unauthorized(description='Invalid LTI parameters given. Please go back to your \
-                                             learning environment and try again.')
+        jwt_params, = utils.optional_params(request.data, 'jwt_params')
+        if jwt_params:
+            lti_params = lti.decode_lti_params(jwt_params)
             lti_id, user_image = utils.optional_params(lti_params, 'user_id', 'custom_user_image')
-            is_teacher = settings.ROLES['Teacher'] in lti.roles_to_list(lti_params)
+            is_teacher = settings.ROLES['Teacher'] in lti_launch.roles_to_list(lti_params)
         else:
             lti_id, user_image, is_teacher = None, None, False
 
@@ -118,7 +107,7 @@ class UserView(viewsets.ViewSet):
         first_name, last_name, email = utils.optional_params(request.data, 'first_name', 'last_name', 'email')
 
         if email and User.objects.filter(email=email).exists():
-            return response.bad_request('That email address belongs to another user.')
+            return response.bad_request('User with this email already exists.')
 
         validate_email(email)
 
@@ -137,9 +126,9 @@ class UserView(viewsets.ViewSet):
         if lti_id is None:
             try:
                 email_handling.send_email_verification_link(user)
-            except SMTPAuthenticationError:
+            except SMTPAuthenticationError as err:
                 user.delete()
-                raise SMTPAuthenticationError
+                raise err
 
         return response.created({'user': UserSerializer(user).data})
 
@@ -163,31 +152,23 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- with the updated user
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
         pk, = utils.required_typed_params(kwargs, (int, 'pk'))
-        if int(pk) == 0:
-            pk = request.user.id
+        if pk == 0:
+            pk = request.user.pk
         if not (request.user.pk == pk or request.user.is_superuser):
             return response.forbidden()
 
         user = User.objects.get(pk=pk)
 
-        if 'jwt_params' in request.data and request.data['jwt_params'] != '':
-            try:
-                lti_params = jwt.decode(request.data['jwt_params'], settings.SECRET_KEY, algorithms=['HS256'])
-            except jwt.exceptions.ExpiredSignatureError:
-                return response.forbidden(
-                    description='The canvas link has expired, 15 minutes have passed. Please retry from canvas.')
-            except jwt.exceptions.InvalidSignatureError:
-                return response.unauthorized(description='Invalid LTI parameters given. Please retry from canvas.')
-            lti_id, user_email, user_full_name, user_image = utils.optional_params(lti_params, 'user_id',
-                                                                                   'custom_user_email',
-                                                                                   'custom_user_full_name',
-                                                                                   'custom_user_image')
-            is_teacher = settings.ROLES['Teacher'] in lti.roles_to_list(lti_params)
+        jwt_params = utils.optional_params(request.data, 'jwt_params')
+        if jwt_params:
+            lti_params = lti.decode_lti_params(jwt_params)
+            lti_id, user_email, user_full_name, user_image = utils.optional_params(
+                lti_params, 'user_id', 'custom_user_email', 'custom_user_full_name', 'custom_user_image')
+            is_teacher = settings.ROLES['Teacher'] in lti_launch.roles_to_list(lti_params)
         else:
             lti_id, user_email, user_full_name, user_image, is_teacher = None, None, None, None, False
+
         if user_image is not None:
             user.lti_image = user_image
         if user_email is not None:
@@ -201,12 +182,22 @@ class UserView(viewsets.ViewSet):
             user.is_teacher = is_teacher
 
         if lti_id:
-            if User.objects.filter(lti_id=lti_id).exists() and User.objects.filter(lti_id=lti_id) != user:
+            if User.objects.filter(lti_id=lti_id) != user:
                 return response.bad_request('User with this lti id already exists.')
             user.lti_id = lti_id
 
         user.save()
-        serializer = OwnUserSerializer(user, data=request.data, partial=True)
+        if user.lti_id:
+            gn, cn, pp = utils.optional_params(
+                request.data, 'grade_notifications', 'comment_notifications', 'profile_picture')
+            data = {
+                'grade_notifications': gn,
+                'comment_notifications': cn,
+                'profile_picture': pp
+            }
+        else:
+            data = request.data
+        serializer = OwnUserSerializer(user, data=data, partial=True)
         if not serializer.is_valid():
             return response.bad_request()
         serializer.save()
@@ -226,9 +217,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- deleted message
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
         if not request.user.is_superuser:
             return response.forbidden('You are not allowed to delete a user.')
 
@@ -236,6 +224,9 @@ class UserView(viewsets.ViewSet):
             pk = request.user.id
 
         user = User.objects.get(pk=pk)
+
+        if len(User.objects.filter(is_superuser=True)) == 1:
+            return response.bad_request('There is only 1 superuser left and therefore cannot be deleted')
 
         user.delete()
         return response.deleted(description='Sucesfully deleted user.')
@@ -256,8 +247,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- with a success description
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
         new_password, old_password = utils.required_params(request.data, 'new_password', 'old_password')
 
         if not request.user.check_password(old_password):
@@ -268,9 +257,8 @@ class UserView(viewsets.ViewSet):
 
         request.user.set_password(new_password)
         request.user.save()
-        return response.success(description='Succesfully changed the password.')
+        return response.success(description='Successfully changed the password.')
 
-    # TODO: limit this request for end users, otherwise its really easy to DDOS the server.
     @action(methods=['get'], detail=True)
     def GDPR(self, request, pk):
         """Get a zip file of all the userdata.
@@ -286,8 +274,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- a zip file of all the userdata with all their files
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
         if int(pk) == 0:
             pk = request.user.id
 
@@ -306,7 +292,8 @@ class UserView(viewsets.ViewSet):
             entries = Entry.objects.filter(id__in=entry_ids)
             # Serialize all entries and put them into the entries dictionary with the assignment name key.
             journal_dict.update({
-                journal.assignment.name: EntrySerializer(entries, context={'user': request.user}, many=True).data
+                journal.assignment.name: EntrySerializer(
+                    entries, context={'user': request.user, 'comments': True}, many=True).data
             })
 
         archive_path = file_handling.compress_all_user_data(user, {'profile': profile, 'journals': journal_dict})
@@ -330,8 +317,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- a zip file of all the userdata with all their files
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
         if int(pk) == 0:
             pk = request.user.id
 
@@ -339,21 +324,20 @@ class UserView(viewsets.ViewSet):
             request.query_params, (str, 'file_name'), (int, 'entry_id'), (int, 'node_id'), (int, 'content_id'))
 
         try:
-            user_file = UserFile.objects.get(author=pk, file_name=file_name, entry=int(entry_id), node=int(node_id),
-                                             content=int(content_id))
+            user_file = UserFile.objects.get(author=pk, file_name=file_name, entry=entry_id, node=node_id,
+                                             content=content_id)
+
+            if user_file.author != request.user:
+                request.user.check_permission('can_view_all_journals', user_file.assignment)
+
         except (UserFile.DoesNotExist, ValueError):
             return response.bad_request(file_name + ' was not found.')
-
-        if user_file.author.id is not request.user.id and \
-           not permissions.has_assignment_permission(
-                request.user, user_file.assignment, 'can_view_assignment_journals'):
-            return response.forbidden('Forbidden to view: %s by author ID: %s.' % (file_name, pk))
 
         return response.file(user_file)
 
     @action(methods=['post'], detail=False)
     def upload(self, request):
-        """Upload user file.
+        """Upload a user file.
 
         No validation is performed beyond a size check of the file and the available space for the user.
         At the time of creation, the UserFile is uploaded but not attached to an entry yet. This UserFile is treated
@@ -372,20 +356,14 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- name of the file.
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
+        assignment_id, content_id = utils.required_params(request.POST, 'assignment_id', 'content_id')
+        assignment = Assignment.objects.get(pk=assignment_id)
+
+        request.user.check_participation()
 
         if not (request.FILES and 'file' in request.FILES):
             return response.bad_request('No accompanying file found in the request.')
-
-        assignment_id, content_id = utils.required_params(request.POST, 'assignment_id', 'content_id')
-
         validators.validate_user_file(request.FILES['file'], request.user)
-
-        assignment = Assignment.objects.get(pk=assignment_id)
-
-        if not Assignment.objects.filter(courses__users=request.user, pk=assignment.pk).exists():
-            return response.forbidden('You cannot upload a file to: {:s}.'.format(assignment.name))
 
         if content_id == 'null':
             factory.make_user_file(request.FILES['file'], request.user, assignment)
@@ -397,7 +375,7 @@ class UserView(viewsets.ViewSet):
 
             factory.make_user_file(request.FILES['file'], request.user, assignment, content=content)
 
-        return response.success(description='Succesfully uploaded {:s}.'.format(request.FILES['file'].name))
+        return response.success(description='Successfully uploaded {:s}.'.format(request.FILES['file'].name))
 
     @action(methods=['post'], detail=False)
     def upload_profile_picture(self, request):
@@ -414,9 +392,6 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- nothing
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
         utils.required_params(request.data, 'file')
 
         validators.validate_profile_picture(request.data['file'])
@@ -450,3 +425,9 @@ class UserView(viewsets.ViewSet):
         user = User.objects.get(pk=pk)
 
         return response.file(user.profile_picture.path)
+
+    def get_permissions(self):
+        if self.request.path == '/users/' and self.request.method == 'POST':
+            return [AllowAny()]
+        else:
+            return [permission() for permission in self.permission_classes]

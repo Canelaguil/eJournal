@@ -4,8 +4,8 @@ from rest_framework import viewsets
 import VLE.factory as factory
 import VLE.permissions as permissions
 import VLE.utils.generic_utils as utils
-import VLE.views.responses as response
-from VLE.models import Course, Role, User
+import VLE.utils.responses as response
+from VLE.models import Assignment, Course, Role, User
 from VLE.serializers import RoleSerializer
 from VLE.utils.error_handling import VLEMissingRequiredKey, VLEParamWrongType
 
@@ -28,19 +28,13 @@ class RoleView(viewsets.ViewSet):
             success -- list of all the roles in the course
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
-        course_id = request.query_params['course_id']
+        course_id, = utils.required_typed_params(request.query_params, (int, 'course_id'))
         course = Course.objects.get(pk=course_id)
 
-        role = permissions.get_role(request.user, course)
-        if role is None:
-            return response.forbidden('You are not allowed to view this course.')
-        elif not role.can_edit_course_roles:
-            return response.forbidden('You are not allowed to edit course roles.')
+        # TODO: P Is this the right permission
+        request.user.check_permission('can_edit_course_roles', course)
 
-        roles = Role.objects.filter(course=course_id)
+        roles = Role.objects.filter(course=course)
         serializer = RoleSerializer(roles, many=True)
         return response.success({'roles': serializer.data})
 
@@ -62,30 +56,30 @@ class RoleView(viewsets.ViewSet):
             success -- with a list of the permissions
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
         if int(pk) == 0:
             pk = request.user.id
-
         user = User.objects.get(pk=pk)
 
         # Return course permissions if course_id is set
         try:
             course_id, = utils.required_typed_params(request.query_params, (int, 'course_id'))
-            if course_id > 0:
-                Course.objects.get(pk=course_id)
+            course = Course.objects.get(pk=course_id)
 
-            perms = permissions.get_permissions(user, course_id)
-            if perms is None:
-                return response.forbidden('You are not a participant of this course.')
+            if user != request.user:
+                # TODO: P Is this the right permission
+                request.user.check_permission('can_edit_course_roles', course)
 
-            return response.success({'role': perms})
+            return response.success({'role': permissions.serialize_course_permissions(request.user, course)})
         # Return assignment permissions if assignment_id is set
         except (VLEMissingRequiredKey, VLEParamWrongType):
             assignment_id, = utils.required_typed_params(request.query_params, (int, 'assignment_id'))
-            perms = permissions.get_assignment_id_permissions(request.user, assignment_id)
-            return response.success({'role': perms})
+            assignment = Assignment.objects.get(pk=assignment_id)
+
+            if user != request.user:
+                # TODO: P Add a permission for this
+                request.user.check_permission('can_view_all_journals', course)
+
+            return response.success({'role': permissions.serialize_assignment_permissions(request.user, assignment)})
         # Returns keyerror if course_id nor assignment_id is set
 
     def create(self, request):
@@ -107,19 +101,14 @@ class RoleView(viewsets.ViewSet):
             success -- newly created course
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
+        course_id, name, permissions = utils.required_params(request.data, 'course_id', 'name', 'permissions')
+        course = Course.objects.get(pk=course_id)
 
-        course = Course.objects.get(pk=request.data['course_id'])
-
-        role = permissions.get_role(request.user, course)
-        if role is None:
-            return response.forbidden('You are not a participant of this course.')
-        elif not role.can_edit_course_roles:
-            return response.forbidden('You do not have the permission to create roles for this course.')
+        # TODO: P Is this the right permission
+        request.user.check_permission('can_edit_course_roles', course)
 
         try:
-            role = factory.make_role_default_no_perms(request.data['name'], course, **request.data['permissions'])
+            role = factory.make_role_default_no_perms(name, course, **permissions)
         except Exception:
             return response.bad_request()
 
@@ -145,32 +134,25 @@ class RoleView(viewsets.ViewSet):
             success -- list of all the roles in the course
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
         course = Course.objects.get(pk=pk)
 
-        role = permissions.get_role(request.user, course)
-        if role is None:
-            return response.forbidden('You are not in this course.')
-        elif not role.can_edit_course_roles:
-            return response.forbidden('You cannot edit roles of this course.')
+        request.user.check_permission('can_edit_course_roles', course)
 
-        resp = []
-
-        for new_role in request.data['roles']:
+        roles_response = []
+        roles, = utils.required_params(request.data, 'roles')
+        for new_role in roles:
             try:
                 role = Role.objects.get(name=new_role['name'], course=course)
             except Role.DoesNotExist:
                 role = factory.make_role_default_no_perms(new_role['name'], course)
+
             serializer = RoleSerializer(role, data=new_role, partial=True)
             if not serializer.is_valid():
                 response.bad_request()
-
             serializer.save()
 
-            resp.append(serializer.data)
-        return response.success({'roles': resp})
+            roles_response.append(serializer.data)
+        return response.success({'roles': roles_response})
 
     def destroy(self, request, pk):
         """Delete course role.
@@ -189,20 +171,14 @@ class RoleView(viewsets.ViewSet):
             success -- newly created course
 
         """
-        if not request.user.is_authenticated:
-            return response.unauthorized()
-
-        name = request.query_params['name']
+        name, = utils.required_typed_params(request.query_params, (str, 'name'))
+        course = Course.objects.get(pk=pk)
 
         # Users can only delete course roles with can_edit_course_roles
-        role = permissions.get_role(request.user, pk)
-        if role is None:
-            return response.forbidden(description="You have no access to this course")
-        elif not role.can_edit_course_roles:
-            return response.forbidden(description="You have no permissions to delete this course role.")
+        request.user.check_permission('can_edit_course_roles', course)
 
         if name in ['Student', 'TA', 'Teacher']:
-            return response.bad_request("Default roles 'Student', 'TA' and 'Teacher' cannot be deleted.")
+            return response.bad_request('Default roles "Student", "TA" and "Teacher" cannot be deleted.')
 
         Role.objects.get(name=name, course=pk).delete()
-        return response.success(description='Succesfully deleted role from course.')
+        return response.success(description='Successfully deleted role from course.')

@@ -8,6 +8,7 @@
 <script>
 import icon from 'vue-awesome/components/Icon'
 import userAPI from '@/api/user.js'
+import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     props: {
@@ -46,9 +47,8 @@ export default {
                     document.body.appendChild(link)
                     link.click()
                     link.remove()
-                }, _ => {
-                    // TODO Translate error from server for all responseType: 'arraybuffer' responses.
-                    this.$toasted.error('Error downloading ' + this.fileName)
+                }, error => {
+                    genericUtils.displayArrayBufferRequestError(this, error)
                 })
                 .catch(_ => {
                     this.$toasted.error('Error creating file.')

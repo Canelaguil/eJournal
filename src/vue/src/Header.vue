@@ -27,7 +27,7 @@
         <b-navbar-nav class="ml-auto">
             <b-nav-dropdown no-caret right id="nav-dropdown-options">
                 <div class="profile-picture-container" slot="button-content">
-                    <img class="profile-picture" :src="profileImg">
+                    <img class="profile-picture-sm" :src="profileImg">
                 </div>
                 <b-button :to="{ name: 'Profile' }">
                     <icon name="user"/>

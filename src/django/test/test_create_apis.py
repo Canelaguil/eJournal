@@ -17,6 +17,19 @@ class CreateApiTests(TestCase):
         """Setup."""
         self.username, self.password, self.user = test.set_up_user_and_auth('test', 'test123', 'test@test.com')
 
+    def test_create_user(self):
+        user = {
+            'username': 'Student',
+            'password': 'Pa$$word!',
+            'first_name': 'Student',
+            'last_name': 'Testing',
+        }
+        # No email
+        test.api_post_call(self, '/users/', params=user, status=400)
+
+        user['email'] = 'student@ejourn.al'
+        test.api_post_call(self, '/users/', params=user, status=201)
+
     def test_create_new_course(self):
         """Test create new course."""
         username, password, user = test.set_up_user_and_auth('test2', 'test1233', 'test@ttaest.com', is_teacher=True)

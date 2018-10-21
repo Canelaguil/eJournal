@@ -36,6 +36,13 @@ export default {
                     .then(response => { this.$toasted.success(response.data.description) })
                     .catch(error => { this.$toasted.error(error.response.data.description) })
             }
+        },
+        isChanged () {
+            if (this.oldPass !== '' || this.newPass !== '' || this.newPassRepeat !== '') {
+                return true
+            }
+
+            return false
         }
     },
     components: {

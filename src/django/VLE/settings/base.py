@@ -44,6 +44,15 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'VLE.utils.throttle.GDPRThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'gdpr': '3/day',
+    },
 }
 
 AUTH_USER_MODEL = "VLE.User"
@@ -56,7 +65,6 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
-    'VLE.utils.error_handling.ErrorMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -64,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'VLE.utils.error_handling.ErrorMiddleware',
 ]
 
 ROOT_URLCONF = 'VLE.urls'

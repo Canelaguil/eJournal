@@ -23,7 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'first_name', 'last_name', 'name', 'lti_image', 'is_teacher', 'lti_id', 'id',
                   'role', 'group')
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'lti_id', 'is_teacher', 'username')
 
     def get_name(self, user):
         return user.first_name + ' ' + user.last_name
@@ -32,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
         if 'course' not in self.context or not self.context['course']:
             return None
 
-        role = permissions.get_role(user, self.context['course'])
+        role = Participation.objects.get(user=user, course=self.context['course']).role
 
         if role:
             return role.name
@@ -59,17 +59,43 @@ class OwnUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'last_login', 'username', 'first_name', 'last_name', 'is_active', 'email', 'permissions',
+        fields = ('id', 'username', 'first_name', 'last_name', 'email', 'permissions',
                   'name', 'lti_id', 'lti_image', 'is_teacher', 'grade_notifications', 'comment_notifications',
                   'verified_email')
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'permissions', 'lti_id', 'is_teacher', 'verified_email', 'username')
 
     def get_name(self, user):
         return user.first_name + ' ' + user.last_name
 
     def get_permissions(self, user):
-        # TODO: Use a serializer for this
-        return permissions.get_all_user_permissions(user)
+        """Returns a dictionary with all user permissions.
+
+        Arguments:
+        user -- The user whose permissions are requested.
+
+        Returns {all_permission:
+            course{id}: permisions
+            assignment{id}: permissions
+            general: permissions
+        }"""
+        perms = {}
+        courses = user.participations.all()
+
+        perms['general'] = permissions.serialize_general_permissions(user)
+
+        for course in courses:
+            perms['course' + str(course.id)] = permissions.serialize_course_permissions(user, course)
+
+        assignments = set()
+        for course in courses:
+            for assignment in course.assignment_set.all():
+                if user.has_permission('can_grade', assignment) or user.has_permission('can_have_journal', assignment):
+                    assignments.add(assignment)
+
+        for assignment in assignments:
+            perms['assignment' + str(assignment.id)] = permissions.serialize_assignment_permissions(user, assignment)
+
+        return perms
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -84,7 +110,7 @@ class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = '__all__'
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'course', 'lti_id')
 
 
 class ParticipationSerializer(serializers.ModelSerializer):
@@ -119,7 +145,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
         # TODO: When all assignments are graded, set deadline to next deadline?
         # If the user doesnt have a journal, take the deadline that is the first upcoming deadline
         if 'user' not in self.context or \
-           permissions.has_assignment_permission(self.context['user'], assignment, 'can_grade'):
+           self.context['user'].has_permission('can_grade', assignment):
             nodes = assignment.format.presetnode_set.all().order_by('deadline')
             if not nodes:
                 return None
@@ -166,7 +192,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
         if not journals:
             return None
         stats = {}
-        if permissions.has_assignment_permission(self.context['user'], assignment, 'can_grade'):
+        if self.context['user'].has_permission('can_grade', assignment):
             stats['needs_marking'] = sum([x['stats']['submitted'] - x['stats']['graded'] for x in journals])
             stats['unpublished'] = sum([x['stats']['submitted'] - x['stats']['published']
                                         for x in journals]) - stats['needs_marking']
@@ -193,7 +219,7 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'entry', 'author', 'timestamp')
 
     def get_author(self, comment):
         return UserSerializer(comment.author).data
@@ -203,7 +229,7 @@ class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = '__all__'
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'course')
 
 
 class JournalSerializer(serializers.ModelSerializer):
@@ -213,7 +239,7 @@ class JournalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Journal
         fields = '__all__'
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'assignment', 'user', 'grade_url', 'sourcedid')
 
     def get_student(self, journal):
         return UserSerializer(journal.user, context=self.context).data
@@ -284,7 +310,7 @@ class EntrySerializer(serializers.ModelSerializer):
         model = Entry
         fields = ('id', 'createdate', 'published', 'template', 'content',
                   'editable', 'grade', 'last_edited', 'comments')
-        read_only_fields = ('id', )
+        read_only_fields = ('id', 'template', 'createdate', 'content', 'published')
 
     def get_template(self, entry):
         return TemplateSerializer(entry.template).data
@@ -299,8 +325,7 @@ class EntrySerializer(serializers.ModelSerializer):
         # TODO: Add permission can_view_grade
         if 'user' not in self.context:
             return None
-        if entry.published or permissions.has_assignment_permission(
-                self.context['user'], entry.node.journal.assignment, 'can_grade'):
+        if entry.published or self.context['user'].has_permission('can_grade', entry.node.journal.assignment):
             return entry.grade
         return None
 

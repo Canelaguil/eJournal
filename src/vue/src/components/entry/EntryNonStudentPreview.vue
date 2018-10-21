@@ -8,7 +8,7 @@
         <b-card class="entry-card no-hover entry-card-teacher" :class="$root.getBorderClass($route.params.cID)">
             <div v-if="$hasPermission('can_grade')" class="grade-section shadow sticky">
                 <b-form-input type="number" class="theme-input" step="0.01" size="2" v-model="grade" autofocus placeholder="0" min="0.0"/>
-                <b-form-checkbox v-model="published" value=true unchecked-value=false data-toggle="tooltip" title="Show grade to student">
+                <b-form-checkbox v-model="published" fieldValue=true unchecked-fieldValue=false data-toggle="tooltip" title="Show grade to student">
                     Published
                 </b-form-checkbox>
                 <b-button class="add-button" @click="commitGrade">
@@ -127,9 +127,9 @@ export default {
         commitGrade () {
             if (this.grade !== null) {
                 this.tempNode.entry.grade = this.grade
-                this.tempNode.entry.published = (this.published === 'true' || this.published === true)
+                this.tempNode.entry.published = this.published
 
-                if (this.published === 'true' || this.published === true) {
+                if (this.published) {
                     entryAPI.update(this.entryNode.entry.id, {grade: this.grade, published: 1})
                         .then(_ => {
                             this.$toasted.success('Grade updated and published.')

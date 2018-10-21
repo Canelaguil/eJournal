@@ -314,9 +314,11 @@ export default {
                 .then(data => {
                     this.saveFromDB(data)
                     this.convertFromDB()
-                    this.isChanged = false
                     this.saveRequestInFlight = false
                     this.$toasted.success('New format saved')
+                    this.$nextTick(function () {
+                        this.isChanged = false
+                    })
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },
