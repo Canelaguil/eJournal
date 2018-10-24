@@ -7,6 +7,7 @@
 
 <script>
 import userAPI from '@/api/user'
+import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     props: ['user'],
@@ -23,14 +24,12 @@ export default {
                     reader.onload = () => {
                         this.profilePicture = reader.result
                     }
-                    try {
-                        reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
-                    } catch (e) {
-                        this.$toasted.error('Failed to read profile picture data.')
-                    }
+                    reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
+                }, error => {
+                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
                 })
-                .catch(error => {
-                    this.$toasted.error(error.response.data.description)
+                .catch(_ => {
+                    this.$toasted.error('Failed to read profile picture data.')
                 })
         }
     }

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import * as types from '../constants/mutation-types.js'
 import connection from '@/api/connection.js'
+import genericUtils from '@/utils/generic_utils.js'
 
 const getters = {
     jwtAccess: state => state.jwtAccess,
@@ -152,7 +153,7 @@ const actions = {
                         }
                         reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
                     }, error => {
-                        Vue.toasted.error(error.response.data.description)
+                        genericUtils.displayArrayBufferRequestError(Vue.toasted, error)
                         reject(error)
                     })
                 }

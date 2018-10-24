@@ -15,9 +15,9 @@ export default {
     },
 
     /* Converts an arraybuffer response to a humanreadable description and displays it as an error. */
-    displayArrayBufferRequestError (context, error) {
+    displayArrayBufferRequestError (toasted, error) {
         let enc = new TextDecoder('utf-8')
 
-        context.$toasted.error(JSON.parse(enc.decode(error.response.data)).description)
+        toasted.error(JSON.parse(enc.decode(error.response.data)).description)
     }
 }

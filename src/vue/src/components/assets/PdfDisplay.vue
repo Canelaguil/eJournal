@@ -131,7 +131,7 @@ export default {
                     this.downloadLink.download = this.fileName
                     document.body.appendChild(this.downloadLink)
                 }, error => {
-                    genericUtils.displayArrayBufferRequestError(this, error)
+                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
                 })
                 .catch(_ => {
                     this.$toasted.error('Error creating file.')

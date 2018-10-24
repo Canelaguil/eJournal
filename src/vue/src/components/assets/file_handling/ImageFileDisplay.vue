@@ -69,7 +69,7 @@ export default {
                     let blob = new Blob([response.data], { type: response.headers['content-type'] })
                     this.fileURL = window.URL.createObjectURL(blob)
                 }, error => {
-                    genericUtils.displayArrayBufferRequestError(this, error)
+                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
                 })
                 .catch(_ => {
                     this.$toasted.error('Error creating file.')

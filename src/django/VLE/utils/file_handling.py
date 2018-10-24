@@ -9,16 +9,16 @@ from django.conf import settings
 from django.db.models import Q
 
 
-def get_path(instance, filename):
+def get_path(userfile, filename):
     """Upload user files into their respective directories. Following MEDIA_ROOT/uID/aID/<file>
 
     Uploaded files not part of an entry yet, and are treated as temporary until linked to an entry."""
-    return '{}/{}/{}'.format(str(instance.author.id), str(instance.assignment.id), filename)
+    return '{}/{}/{}'.format(str(userfile.author.id), str(userfile.assignment.id), filename)
 
 
-def get_profile_picture_path(instance, filename):
+def get_profile_picture_path(user, filename):
     """Upload user profile pictures into their respective directories. Following MEDIA_ROOT/uID/profile_picture"""
-    return '{}/profile_picture'.format(str(instance.id))
+    return '{}/profile_picture'.format(str(user.id))
 
 
 def compress_all_user_data(user, extra_data_dict=None, archive_extension='zip'):

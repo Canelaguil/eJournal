@@ -48,7 +48,7 @@ export default {
                     link.click()
                     link.remove()
                 }, error => {
-                    genericUtils.displayArrayBufferRequestError(this, error)
+                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
                 })
                 .catch(_ => {
                     this.$toasted.error('Error creating file.')
