@@ -15,9 +15,16 @@
                      v-model="assignmentDetails.name"
                      placeholder="Assignment name"/>
             <h2 class="field-heading">Description</h2>
-            <text-editor class="multi-form"
+            <text-editor v-if="assignmentDetails.description !== null"
+                class="multi-form"
                 :id="'text-editor-assignment-edit-description'"
                 :givenContent="assignmentDetails.description"
+                @content-update="assignmentDetails.description = $event"
+                :footer="false"/>
+            <text-editor
+                v-else
+                class="multi-form"
+                :id="'text-editor-assignment-edit-description'"
                 @content-update="assignmentDetails.description = $event"
                 :footer="false"/>
             <h2 class="field-heading">Points possible</h2>

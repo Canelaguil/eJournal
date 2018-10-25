@@ -19,6 +19,10 @@
                                 <b>{{ progressNodes[nodes[currentNode].id] }}</b> out of <b>{{ nodes[currentNode].target }}</b> points.<br/>
                                 <b>{{ progressPointsLeft }}</b> more required before <b>{{ $root.beautifyDate(nodes[currentNode].deadline) }}</b>.
                             </span>
+                            <div v-if="nodes[currentNode].description !== null">
+                                <h2 class="mb-2">Description</h2>
+                                <div v-html="nodes[currentNode].description"/>
+                            </div>
                         </b-card>
                     </div>
                 </div>

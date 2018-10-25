@@ -50,7 +50,22 @@
         <flat-pickr class="theme-input multi-form full-width" v-model="currentPreset.deadline" :config="$root.flatPickrTimeConfig"/>
 
         <h2 class="field-heading">Description</h2>
-        <b-textarea class="multi-form theme-input" v-model="currentPreset.description" placeholder="Description"/>
+        <!-- <b-textarea class="multi-form theme-input" v-model="currentPreset.description" placeholder="Description"/> -->
+        <text-editor
+            v-if="currentPreset.description !== null"
+            class="multi-form"
+            :id="'preset-text-editor-' + currentPreset.id"
+            :givenContent="currentPreset.description"
+            @content-update="currentPreset.description = $event"
+            :footer="false"
+        />
+        <text-editor
+            v-else
+            class="multi-form"
+            :id="'field-text-editor-' + currentPreset.id"
+            @content-update="currentPreset.description = $event"
+            :footer="false"
+        />
 
         <div v-if="currentPreset.type === 'd'">
             <h2 class="field-heading">Preset Template</h2>
@@ -75,6 +90,7 @@
 <script>
 import templatePreview from '@/components/template/TemplatePreview.vue'
 import icon from 'vue-awesome/components/Icon'
+import textEditor from '@/components/assets/TextEditor.vue'
 
 export default {
     props: ['currentPreset', 'templates'],
@@ -120,7 +136,8 @@ export default {
     },
     components: {
         'template-preview': templatePreview,
-        icon
+        icon,
+        'text-editor': textEditor
     }
 }
 </script>

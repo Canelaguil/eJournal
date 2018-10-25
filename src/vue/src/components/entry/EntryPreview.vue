@@ -6,8 +6,7 @@
     <div>
         <b-card class="no-hover" :class="$root.getBorderClass($route.params.cID)">
             <h2 class="mb-2">{{ template.name }}</h2>
-            <p v-if="description">{{ description }}</p>
-
+            <div v-if="description" v-html="description"/>
             <entry-fields :template="template" :completeContent="completeContent" :displayMode="false" :nodeID="nodeID"/>
 
             <b-alert :show="dismissCountDown" dismissible variant="secondary"

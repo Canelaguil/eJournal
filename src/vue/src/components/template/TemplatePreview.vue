@@ -4,7 +4,7 @@
         <h2>{{ template.name }}</h2>
         <div v-for="(field, i) in template.field_set" :key="field.eID" class="multi-form">
             <h2 v-if="field.title" class="field-heading" :class="{ 'required': field.required }">{{ field.title }}</h2>
-            <p v-if="field.description">{{ field.description }}</p>
+            <div v-if="field.description" v-html="field.description"/>
 
             <b-textarea
                 v-if="field.type == 't'"

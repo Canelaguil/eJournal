@@ -24,6 +24,21 @@
                     <b-row align-h="between" no-gutters>
                         <b-col cols="12" sm="10" lg="11">
                             <b-input class="multi-form theme-input" v-model="field.title" placeholder="Field title" required/>
+                            <text-editor
+                                v-if="field.description !== null"
+                                class="multi-form"
+                                :id="'field-text-editor-' + field.id"
+                                :givenContent="field.description"
+                                @content-update="field.description = $event"
+                                :footer="false"
+                            />
+                            <text-editor
+                                v-else
+                                class="multi-form"
+                                :id="'field-text-editor-' + field.id"
+                                @content-update="field.description = $event"
+                                :footer="false"
+                            />
                             <b-textarea class="multi-form theme-input" v-model="field.description" placeholder="Description" required/>
                             <div class="d-flex">
                                 <b-select class="multi-form mr-2" :options="fieldTypes" v-model="field.type" @change="field.options = ''"></b-select>
@@ -86,6 +101,7 @@ import ContentSingleColumn from '@/components/columns/ContentSingleColumn.vue'
 import TemplatePreview from '@/components/template/TemplatePreview.vue'
 import icon from 'vue-awesome/components/Icon'
 import draggable from 'vuedraggable'
+import textEditor from '@/components/assets/TextEditor.vue'
 
 export default {
     props: {
@@ -114,7 +130,8 @@ export default {
         'content-single-column': ContentSingleColumn,
         icon,
         'draggable': draggable,
-        'template-preview': TemplatePreview
+        'template-preview': TemplatePreview,
+        'text-editor': textEditor
     },
     methods: {
         updateLocations () {
