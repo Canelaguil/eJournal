@@ -50,7 +50,6 @@
         <flat-pickr class="theme-input multi-form full-width" v-model="currentPreset.deadline" :config="$root.flatPickrTimeConfig"/>
 
         <h2 class="field-heading">Description</h2>
-        <!-- <b-textarea class="multi-form theme-input" v-model="currentPreset.description" placeholder="Description"/> -->
         <text-editor
             v-if="currentPreset.description !== null"
             class="multi-form"
@@ -58,14 +57,14 @@
             :givenContent="currentPreset.description"
             @content-update="currentPreset.description = $event"
             :footer="false"
-        />
+            :placeholderText="'Description'"/>
         <text-editor
             v-else
             class="multi-form"
             :id="'field-text-editor-' + currentPreset.id"
             @content-update="currentPreset.description = $event"
             :footer="false"
-        />
+            :placeholderText="'Description'"/>
 
         <div v-if="currentPreset.type === 'd'">
             <h2 class="field-heading">Preset Template</h2>

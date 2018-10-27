@@ -1,7 +1,6 @@
 <!-- Custom wrapper for tinymce editor -->
 <!-- If more events are desired, here is an overview: https://www.tiny.cloud/docs/advanced/events/ -->
 
-<!-- TODO Text placeholder functionality (not working with a content inject when not required.) -->
 <!-- TODO displayInline functionality not compatible with launching the editor from a modal -->
 
 <template>
@@ -69,11 +68,18 @@ export default {
         },
         footer: {
             default: true
+        },
+        placeholderText: {
+            type: String,
+            default: ''
         }
     },
     data () {
         return {
             content: '',
+            placeholderStatus: false,
+            initPlaceholder: false,
+            placeholder: '',
             editor: null,
             config: {
                 selector: '#' + this.id,
@@ -135,10 +141,68 @@ export default {
         }
     },
     watch: {
-        content: function (newVal) { this.$emit('content-update', this.content) },
-        id: function () {
-            this.content = this.givenContent
-            this.editor.setContent(this.givenContent)
+        content: function (newVal, oldVal) {
+            if (this.placeholderStatus === true) {
+                var result = newVal
+
+                if (result.includes(this.placeholderText)) {
+                    result = result.replace('<span style="color: #808080;">', '')
+                    result = result.replace('</span>', '')
+                    result = result.replace(this.placeholderText, '')
+
+                    /*  If there is additional input replace the placeholder
+                    with with the new input. Else replace the
+                    the partly deleted placeholder with the complete
+                    placeholder again.  */
+                    if (this.stripHtml(result).length !== 0) {
+                        /*  If the resulting text contains new characters this will
+                        overwrite the placeholder.  */
+                        this.content = result
+                        this.editor.setContent(result)
+                        this.placeholderStatus = false
+
+                        /* Sets the cursor in the end of the resulting text. */
+                        this.editor.selection.select(this.editor.getBody(), true)
+                        this.editor.selection.collapse(false)
+                        /* Emits a change in the adapted placeholder. */
+                        this.$emit('content-update', result)
+                    }
+                } else if (newVal.length < oldVal.length) {
+                    this.content = this.placeholder
+                    this.editor.setContent(this.placeholder)
+                }
+            } else if (this.placeholderText !== '' && newVal === '' && this.placeholderStatus === false) {
+                this.content = this.placeholder
+                this.editor.setContent(this.placeholder)
+
+                this.placeholderStatus = true
+                this.$emit('content-update', null)
+            } else if (!this.initPlaceholder) {
+                this.$emit('content-update', this.content)
+            }
+        },
+        id: function (newID, oldID) {
+            this.setPlaceholderColor(this.placeholderText)
+
+            tinymce.EditorManager.execCommand('mceRemoveControl', true, '#' + oldID)
+            this.config.selector = '#' + newID
+            tinymce.init(this.config)
+            tinymce.EditorManager.execCommand('mceAddControl', true, '#' + newID)
+
+            if (this.stripHtml(this.givenContent) === '' && this.stripHtml(this.placeholder) !== '') {
+                this.initPlaceholder = true
+                this.content = this.placeholder
+                this.editor.setContent(this.placeholder)
+
+                this.$nextTick(function () {
+                    this.placeholderStatus = true
+                    this.initPlaceholder = false
+                })
+            } else {
+                this.placeholderStatus = false
+                this.content = this.givenContent
+                this.editor.setContent(this.givenContent)
+            }
         }
     },
     methods: {
@@ -146,9 +210,23 @@ export default {
             var vm = this
             this.editor = editor
 
-            this.content = this.givenContent
-            /* set content resets the default font for some reason */
-            editor.setContent(this.givenContent)
+            this.setPlaceholderColor(this.placeholderText)
+
+            if (this.stripHtml(this.givenContent) === '' && this.placeholderText !== '') {
+                this.content = this.placeholder
+
+                editor.setContent(this.placeholder)
+                this.initPlaceholder = true
+
+                this.$nextTick(function () {
+                    this.placeholderStatus = true
+                    this.initPlaceholder = false
+                })
+            } else {
+                this.content = this.givenContent
+                /* set content resets the default font for some reason */
+                editor.setContent(this.givenContent)
+            }
 
             if (this.displayInline) {
                 this.setupInlineDisplay(editor)
@@ -162,24 +240,37 @@ export default {
                 vm.handleShortCuts(e)
                 vm.content = this.editor.getContent()
             })
+
+            /*  Forces the user to the first cursor place if a placeholder
+                is being shown, ignores the 'cursor changes' if an action is
+                done, which results in the same cursor location.    */
+            if (this.placeholderText !== '') {
+                editor.on('NodeChange', (e) => {
+                    if (this.placeholderStatus && !this.checkFormatChange(editor)) {
+                        editor.selection.setCursorLocation(editor.getBody().children[0], 0)
+                    }
+                })
+            }
         },
         setupInlineDisplay (editor) {
+            var footer = this.footer
             var vm = this
 
             editor.theme.panel.find('toolbar')[0].$el.hide()
             if (!this.basic) { editor.theme.panel.find('menubar')[0].$el.hide() }
-            editor.theme.panel.find('#statusbar')[0].$el.hide()
+
+            if (footer) { editor.theme.panel.find('#statusbar')[0].$el.hide() }
 
             editor.on('focus', function () {
                 if (!vm.basic) { editor.theme.panel.find('menubar')[0].$el.show() }
                 editor.theme.panel.find('toolbar')[0].$el.show()
-                editor.theme.panel.find('#statusbar')[0].$el.show()
+                if (footer) { editor.theme.panel.find('#statusbar')[0].$el.show() }
             })
 
             editor.on('blur', function () {
                 if (!vm.basic) { editor.theme.panel.find('menubar')[0].$el.hide() }
                 editor.theme.panel.find('toolbar')[0].$el.hide()
-                editor.theme.panel.find('#statusbar')[0].$el.hide()
+                if (footer) { editor.theme.panel.find('#statusbar')[0].$el.hide() }
             })
         },
         handleShortCuts (e) {
@@ -290,6 +381,29 @@ export default {
             this.editor.setContent('')
             this.editor.execCommand('fontName', false, 'roboto condensed', {skip_focus: true})
             this.content = ''
+        },
+        stripHtml (html) {
+            // Create a new div element
+            var temporalDivElement = document.createElement('div')
+            // Set the HTML content with the providen
+            temporalDivElement.innerHTML = html
+            // Retrieve the text property of the element (cross-browser support)
+            return temporalDivElement.textContent || temporalDivElement.innerText || ''
+        },
+        setPlaceholderColor () {
+            this.placeholder = '<p><span style="color: #808080;">' + this.placeholderText + '</span></p>'
+        },
+        checkFormatChange (editor) {
+            var formatList = this.config.menu.format.items
+            var formats = formatList.split(' ')
+
+            for (var i = 0; i < formats.length; i++) {
+                if (editor.queryCommandState(formats[i])) {
+                    return true
+                }
+            }
+
+            return false
         }
     },
     mounted () {

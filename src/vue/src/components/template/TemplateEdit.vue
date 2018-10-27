@@ -30,16 +30,17 @@
                                 :id="'field-text-editor-' + field.id"
                                 :givenContent="field.description"
                                 @content-update="field.description = $event"
-                                :footer="false"
-                            />
+                                :placeholderText="'Description'"
+                                :displayInline="true"
+                                :footer="false"/>
                             <text-editor
                                 v-else
                                 class="multi-form"
                                 :id="'field-text-editor-' + field.id"
                                 @content-update="field.description = $event"
-                                :footer="false"
-                            />
-                            <b-textarea class="multi-form theme-input" v-model="field.description" placeholder="Description" required/>
+                                :placeholderText="'Description'"
+                                :displayInline="true"
+                                :footer="false"/>
                             <div class="d-flex">
                                 <b-select class="multi-form mr-2" :options="fieldTypes" v-model="field.type" @change="field.options = ''"></b-select>
                                 <b-button v-on:click.stop v-if="!field.required" @click="field.required = !field.required" class="optional-field-template float-right multi-form">

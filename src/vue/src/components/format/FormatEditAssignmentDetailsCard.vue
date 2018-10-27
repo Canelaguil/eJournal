@@ -20,13 +20,15 @@
                 :id="'text-editor-assignment-edit-description'"
                 :givenContent="assignmentDetails.description"
                 @content-update="assignmentDetails.description = $event"
-                :footer="false"/>
+                :footer="false"
+                :placeholderText="'Description'"/>
             <text-editor
                 v-else
                 class="multi-form"
                 :id="'text-editor-assignment-edit-description'"
                 @content-update="assignmentDetails.description = $event"
-                :footer="false"/>
+                :footer="false"
+                :placeholderText="'Description'"/>
             <h2 class="field-heading">Points possible</h2>
             <b-input class="multi-form theme-input"
                 v-model="assignmentDetails.points_possible"
