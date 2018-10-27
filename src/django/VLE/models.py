@@ -178,6 +178,9 @@ class User(AbstractUser):
             raise VLEPermissionError(message='You are not allowed to view {}'.format(str(obj)))
 
     def can_view(self, obj):
+        if self.is_superuser:
+            return True
+
         if isinstance(obj, Journal):
             if obj.user != self:
                 return self.has_permission('can_view_all_journals', obj.assignment)
