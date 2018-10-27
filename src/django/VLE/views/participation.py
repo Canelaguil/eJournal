@@ -150,7 +150,7 @@ class ParticipationView(viewsets.ViewSet):
         request.user.check_permission('can_delete_course_users', course)
 
         participation.delete()
-        return response.success(description='Sucesfully removed user from course.')
+        return response.success(description='Successfully removed user from course.')
 
     @action(methods=['get'], detail=False)
     def unenrolled(self, request):
