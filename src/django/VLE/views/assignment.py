@@ -103,7 +103,11 @@ class AssignmentView(viewsets.ViewSet):
         for user in course.users.all():
             factory.make_journal(assignment, user)
 
-        serializer = AssignmentSerializer(assignment, context={'user': request.user, 'course': course})
+        serializer = AssignmentSerializer(
+            assignment,
+            context={'user': request.user, 'course': course,
+                     'journals': request.user.has_permission('can_grade', assignment)}
+        )
         return response.created({'assignment': serializer.data})
 
     def retrieve(self, request, pk=None):
@@ -143,7 +147,6 @@ class AssignmentView(viewsets.ViewSet):
             context={'user': request.user, 'course': course,
                      'journals': request.user.has_permission('can_grade', assignment)}
         )
-
         return response.success({'assignment': serializer.data})
 
     def partial_update(self, request, *args, **kwargs):
@@ -165,11 +168,10 @@ class AssignmentView(viewsets.ViewSet):
             success -- with the new assignment data
 
         """
-        # Get data
+        # Get data\
         pk, = utils.required_typed_params(kwargs, (int, 'pk'))
         assignment = Assignment.objects.get(pk=pk)
         published, = utils.optional_params(request.data, 'published')
-
         # Remove data that must not be changed by the serializer
         req_data = request.data
         req_data.pop('published', None)

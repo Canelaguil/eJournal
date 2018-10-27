@@ -46,8 +46,8 @@ def login(obj, username, password, status=200):
                 params={'username': username, 'password': password}, status=status)
 
 
-def test_rest(obj, url, create_params=None, delete_params=None, update_params=None, get_is_create=True,
-              username=None, password='Pa$$word!',
+def test_rest(obj, url, create_params=None, delete_params=None, update_params=None, get_params=None,
+              get_is_create=True, username=None, password='Pa$$word!',
               create_status=201, get_status=200, delete_status=200, get_status_when_unauthorized=401):
     # Create the object that is given
     create_object = create(obj, url, params=create_params, username=username, password=password, status=create_status)
@@ -57,8 +57,10 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
     pk, = utils.required_typed_params(list(create_object.values())[0], (int, 'id'))
 
     # Get that same object
-    get(obj, url, params={'pk': pk}, status=get_status_when_unauthorized)
-    get_object = get(obj, url, params={'pk': pk}, username=username, password=password, status=get_status)
+    if get_params is None:
+        get_params = dict()
+    get(obj, url, params={'pk': pk, **get_params}, status=get_status_when_unauthorized)
+    get_object = get(obj, url, params={'pk': pk, **get_params}, username=username, password=password, status=get_status)
     if get_status != 200:
         return
     get_object.pop('description', None)
@@ -74,8 +76,11 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
 
         for to_update in update_params:
             changes, status = utils.optional_params(to_update, 'changes', 'status')
+            if changes is None and status is None:
+                changes = to_update
             if status is None:
                 status = 200
+            changes['pk'] = pk
             update_object = update(obj, url, params=changes, username=username, password=password, status=status)
             update_object.pop('description', None)
 
