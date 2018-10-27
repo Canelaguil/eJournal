@@ -14,4 +14,4 @@ class UserAPITest(TestCase):
         api.test_rest(self, 'users',
                       create_params={'username': 'test', 'password': 'Pa$$word!', 'email': 'test@123.nl'},
                       update_params={'username': 'test2'},
-                      username=self.superuser['username'])
+                      user=self.superuser)

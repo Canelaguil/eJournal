@@ -4,7 +4,7 @@ import VLE.factory as factory
 
 def setup_user(name, is_superuser=False, is_teacher=False, password='Pa$$word!'):
     user = setup_users(name, 1, is_superuser=is_superuser, is_teacher=is_teacher)[0]
-    return {'user': user, 'username': user.username, 'password': user.password}
+    return {'user': user, 'username': user.username, 'password': password}
 
 
 def setup_users(name, count, is_superuser=False, is_teacher=False, password='Pa$$word!'):
