@@ -5,9 +5,11 @@ Helpter function for the test enviroment.
 """
 
 import json
-from django.urls import reverse
-import VLE.utils.generic_utils as utils
 import test.utils.generic_utils as test_utils
+
+from django.urls import reverse
+
+import VLE.utils.generic_utils as utils
 
 
 def format_url(obj, url, params, function):
