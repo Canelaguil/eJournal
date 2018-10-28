@@ -19,8 +19,9 @@ def format_url(obj, url, params, function):
 
     # set primary key if its not a create, when no pk is supplied, default to 0
     if function != obj.client.post:
-        pk = params.pop('pk', 0)
-        url += '{}/'.format(pk)
+        pk = params.pop('pk', None)
+        if pk is not None:
+            url += '{}/'.format(pk)
 
     # add params to the url if it cant have a body
     if function in [obj.client.get, obj.client.delete]:
@@ -61,12 +62,10 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
         get_params = dict()
     get(obj, url, params={'pk': pk, **get_params}, status=get_status_when_unauthorized)
     get_object = get(obj, url, params={'pk': pk, **get_params}, user=user, status=get_status)
-    if get_status != 200:
-        return
     get_object.pop('description', None)
 
     # Check if the created object is the same as the one it got
-    if get_is_create:
+    if get_is_create and get_status == 200:
         obj.assertEquals(create_object, get_object)
 
     # Update the object
@@ -91,6 +90,11 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
 
 
 def get(obj, url, params=None, user=None, status=200, result=None):
+    return call(obj, obj.client.get, url,
+                params=params, user=user, status=status, result=result)
+
+
+def get_list(obj, url, params=None, user=None, status=200, result=None):
     return call(obj, obj.client.get, url,
                 params=params, user=user, status=status, result=result)
 

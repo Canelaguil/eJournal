@@ -23,7 +23,7 @@
             v-for="g in groups"
             :key="g.id"
             :cID="cID"
-            :group="g.name"/>
+            :group="g"/>
     </div>
 </template>
 
@@ -58,7 +58,7 @@ export default {
                 lti_id: this.lti_id
             })
                 .then(group => {
-                    this.$emit('create-group', group.name)
+                    this.$emit('create-group', group)
                     this.$toasted.success('Successfully created group.')
                     this.resetFormInput()
                 })
@@ -68,11 +68,11 @@ export default {
             /* Reset our form values */
             this.form.groupName = ''
         },
-        deleteGroup (groupName) {
-            this.$emit('delete-group', groupName)
+        deleteGroup (group) {
+            this.$emit('delete-group', group)
         },
-        updateGroup (oldGroupName, newGroupName) {
-            this.$emit('update-group', oldGroupName, newGroupName)
+        updateGroup (group) {
+            this.$emit('update-group', group)
         }
     },
     components: {
