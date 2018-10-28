@@ -354,7 +354,7 @@ class Participation(models.Model):
     group = models.ForeignKey(
         Group,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         default=None,
     )
 
