@@ -246,7 +246,7 @@ def make_journal(assignment, user):
     return journal
 
 
-def make_entry(template, posttime=timezone.now()):
+def make_entry(template):
     """Create a new entry in a journal.
 
     Posts it at the specified moment, or when unset, now.
@@ -256,7 +256,7 @@ def make_entry(template, posttime=timezone.now()):
     """
     # TODO: Too late logic.
 
-    entry = Entry(template=template, createdate=posttime)
+    entry = Entry(template=template)
     entry.save()
     return entry
 

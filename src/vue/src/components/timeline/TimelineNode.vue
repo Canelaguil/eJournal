@@ -46,7 +46,7 @@ export default {
             if (this.node.deadline) {
                 return this.node.deadline
             } else if (this.node.entry) {
-                return this.node.entry.createdate
+                return this.node.entry.creation_date
             } else {
                 return null
             }
