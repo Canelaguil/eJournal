@@ -40,7 +40,7 @@
                     Last edited: {{ $root.beautifyDate(entryNode.entry.last_edited) }}<br/>
                 </span>
                 <span class="timestamp" v-else>
-                    Submitted on: {{ $root.beautifyDate(entryNode.entry.createdate) }}<br/>
+                    Submitted on: {{ $root.beautifyDate(entryNode.entry.creation_date) }}<br/>
                 </span>
             </div>
         </b-card>

@@ -1,6 +1,6 @@
 <template>
     <b-card class="no-hover">
-        <h2 class="mb-2">Group: {{ groupName }}</h2>
+        <h2 class="mb-2">Group: {{ group.name }}</h2>
             <b-form v-if="$hasPermission('can_edit_course_user_group')" @submit.prevent="updateGroupName">
                 <b-input class="multi-form theme-input" v-model="form.newGroupName" placeholder="Update group name" required/>
                 <b-button class="float-right add-button" type="submit">
@@ -30,7 +30,6 @@ export default {
     },
     data () {
         return {
-            groupName: '',
             form: {
                 newGroupName: ''
             }
@@ -38,23 +37,23 @@ export default {
     },
     methods: {
         updateGroupName () {
-            groupAPI.update(this.cID, {
-                old_group_name: this.group,
-                new_group_name: this.form.newGroupName
+            console.log(this.group)
+            groupAPI.update(this.group.id, {
+                name: this.form.newGroupName
             })
                 .then(group => {
-                    this.groupName = this.form.newGroupName
-                    this.$emit('update-group', this.groupName, group.name)
+                    this.group = group
+                    this.$emit('update-group', this.group)
                     this.$toasted.success('Successfully updated the group.')
                     this.form.newGroupName = ''
                 })
                 .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         removeGroup () {
-            if (confirm('Are you sure you want to remove "' + this.groupName + '" from this course?')) {
-                groupAPI.delete(this.cID, this.groupName).then(data => {
+            if (confirm('Are you sure you want to remove "' + this.group.name + '" from this course?')) {
+                groupAPI.delete(this.group.id).then(data => {
                     this.$toasted.success(data.description)
-                    this.$emit('delete-group', this.groupName)
+                    this.$emit('delete-group', this.group)
                 }, error => {
                     this.$toasted.error(error.response.data.description)
                 })

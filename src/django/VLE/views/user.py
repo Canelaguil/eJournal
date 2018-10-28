@@ -140,7 +140,7 @@ class UserView(viewsets.ViewSet):
                 user.delete()
                 raise err
 
-        return response.created({'user': UserSerializer(user).data})
+        return response.created({'user': OwnUserSerializer(user).data})
 
     def partial_update(self, request, *args, **kwargs):
         """Update an existing user.
@@ -235,11 +235,12 @@ class UserView(viewsets.ViewSet):
 
         user = User.objects.get(pk=pk)
 
-        if len(User.objects.filter(is_superuser=True)) == 1:
+        # Deleting the last superuser should not be possible
+        if user.is_superuser and User.objects.filter(is_superuser=True).count() == 1:
             return response.bad_request('There is only 1 superuser left and therefore cannot be deleted')
 
         user.delete()
-        return response.deleted(description='Sucesfully deleted user.')
+        return response.success(description='Successfully deleted user.')
 
     @action(['patch'], detail=False)
     def password(self, request):

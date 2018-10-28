@@ -105,7 +105,10 @@ class RoleView(viewsets.ViewSet):
             success -- newly created course
 
         """
-        course_id, name, permissions = utils.required_params(request.data, 'course_id', 'name', 'permissions')
+        course_id, name = utils.required_params(request.data, 'course_id', 'name')
+        permissions, = utils.optional_params(request.data, 'permissions')
+        if permissions is None:
+            permissions = dict()
         course = Course.objects.get(pk=course_id)
 
         # TODO: P Is this the right permission

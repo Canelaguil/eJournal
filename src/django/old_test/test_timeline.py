@@ -24,8 +24,10 @@ class TimelineTests(TestCase):
         self.template.save()
 
         f_colloq = factory.make_format()
-        self.deadlineentry = factory.make_entrydeadline_node(f_colloq, datetime.date(2020, 1, 1), self.template)
-        self.progressnode = factory.make_progress_node(f_colloq, datetime.date(2024, 1, 1), 10)
+        self.deadlineentry = factory.make_entrydeadline_node(
+            f_colloq, datetime.datetime.now() - datetime.timedelta(days=10), self.template)
+        self.progressnode = factory.make_progress_node(
+            f_colloq, datetime.datetime.now() + datetime.timedelta(days=10), 10)
         f_log = factory.make_format()
 
         f_colloq.available_templates.add(self.template)
@@ -60,7 +62,7 @@ class TimelineTests(TestCase):
 
     def test_sorted(self):
         """Test is the sort function works."""
-        entry = factory.make_entry(self.template, datetime.date(2022, 1, 1))
+        entry = factory.make_entry(self.template)
         node = factory.make_node(self.j_rick_colloq, entry)
         nodes = timeline.get_sorted_nodes(self.j_rick_colloq)
 
@@ -70,7 +72,7 @@ class TimelineTests(TestCase):
 
     def test_json(self):
         """Test is the to dict function works correctly."""
-        entry = factory.make_entry(self.template, datetime.date(2022, 1, 1))
+        entry = factory.make_entry(self.template)
         factory.make_node(self.j_rick_colloq, entry)
 
         nodes = timeline.get_nodes(self.j_rick_colloq, self.u_rick)

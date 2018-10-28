@@ -18,7 +18,7 @@ def get_sorted_nodes(journal):
     """
     return journal.node_set.annotate(
         sort_deadline=Case(
-            When(type=Node.ENTRY, then='entry__createdate'),
+            When(type=Node.ENTRY, then='entry__creation_date'),
             default='preset__deadline')
     ).order_by('sort_deadline')
 

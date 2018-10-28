@@ -259,24 +259,13 @@ export default {
             user.group = null
             this.participants.push(user)
         },
-        createGroup (groupName) {
-            this.groups.push({
-                'name': groupName
-            })
+        createGroup (group) {
+            this.groups.push(group)
         },
-        deleteGroup (groupName) {
-            groupAPI.getAllFromCourse(this.cID)
-                .then(groups => { this.groups = groups })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
-
-            // TODO replace api function with frontend function
-            if (this.$hasPermission('can_view_course_users')) {
-                participationAPI.getEnrolled(this.cID)
-                    .then(users => { this.participants = users })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
-            }
+        deleteGroup (group) {
+            this.updateGroup(group)
         },
-        updateGroup (oldGroupName, newGroupName) {
+        updateGroup (group) {
             // TODO replace api function with frontend function
             groupAPI.getAllFromCourse(this.cID)
                 .then(groups => { this.groups = groups })

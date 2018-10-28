@@ -9,6 +9,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.timezone import now
 
 import VLE.permissions as permissions
@@ -57,9 +58,6 @@ class UserFile(models.Model):
         on_delete=models.CASCADE,
         null=False
     )
-    creation_date = models.DateTimeField(
-        auto_now_add=True
-    )
     content_type = models.TextField(
         null=False
     )
@@ -83,6 +81,15 @@ class UserFile(models.Model):
         on_delete=models.CASCADE,
         null=True
     )
+    creation_date = models.DateTimeField(editable=False)
+    last_edited = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.creation_date = timezone.now()
+        self.last_edited = timezone.now()
+
+        return super(UserFile, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         self.file.delete()
@@ -178,6 +185,9 @@ class User(AbstractUser):
             raise VLEPermissionError(message='You are not allowed to view {}'.format(str(obj)))
 
     def can_view(self, obj):
+        if self.is_superuser:
+            return True
+
         if isinstance(obj, Journal):
             if obj.user != self:
                 return self.has_permission('can_view_all_journals', obj.assignment)
@@ -351,7 +361,7 @@ class Participation(models.Model):
     group = models.ForeignKey(
         Group,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         default=None,
     )
 
@@ -621,7 +631,7 @@ class Entry(models.Model):
 
     An Entry has the following features:
     - journal: a foreign key linked to an Journal.
-    - createdate: the date and time when the entry was posted.
+    - creation_date: the date and time when the entry was posted.
     - grade: grade the entry has
     - published: if its a published grade or not
     - last_edited: when the etry was last edited
@@ -633,9 +643,6 @@ class Entry(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    createdate = models.DateTimeField(
-        default=now,
-    )
     grade = models.FloatField(
         default=None,
         null=True,
@@ -643,13 +650,18 @@ class Entry(models.Model):
     published = models.BooleanField(
         default=False
     )
-    last_edited = models.DateTimeField(
-        default=None,
-        null=True
-    )
+    creation_date = models.DateTimeField(editable=False)
+    last_edited = models.DateTimeField()
 
     def is_due(self):
         return (self.node.preset and self.node.preset.is_due()) or self.node.journal.assignment.is_due()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.creation_date = timezone.now()
+        self.last_edited = timezone.now()
+
+        return super(Entry, self).save(*args, **kwargs)
 
     def __str__(self):
         """toString."""
@@ -778,14 +790,18 @@ class Comment(models.Model):
         null=True
     )
     text = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
     published = models.BooleanField(
         default=True
     )
-    last_edited = models.DateTimeField(
-        default=None,
-        null=True
-    )
+    creation_date = models.DateTimeField(editable=False)
+    last_edited = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.creation_date = timezone.now()
+        self.last_edited = timezone.now()
+
+        return super(Comment, self).save(*args, **kwargs)
 
 
 class Lti_ids(models.Model):
