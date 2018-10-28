@@ -33,7 +33,7 @@ def names(request, course_id, assignment_id, journal_id):
 
     if assignment_id:
         assignment = Assignment.objects.get(pk=assignment_id)
-        request.user.check_participation(assignment)
+        request.user.check_can_view(assignment)
         result['assignment'] = assignment.name
 
     if journal_id:

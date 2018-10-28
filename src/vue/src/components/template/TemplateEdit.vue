@@ -23,10 +23,10 @@
                 <b-card v-for="field in template.field_set" :key="field.location" class="field-card">
                     <b-row align-h="between" no-gutters>
                         <b-col cols="12" sm="10" lg="11">
-                            <b-input class="mb-2 mr-sm-2 mb-sm-0 multi-form theme-input" v-model="field.title" placeholder="Field title" required/>
-                            <b-textarea class="mb-2 mr-sm-2 mb-sm-0 multi-form theme-input" v-model="field.description" placeholder="Description" required/>
+                            <b-input class="multi-form theme-input" v-model="field.title" placeholder="Field title" required/>
+                            <b-textarea class="multi-form theme-input" v-model="field.description" placeholder="Description" required/>
                             <div class="d-flex">
-                                <b-select class="multi-form mr-2" :options="fieldTypes" v-model="field.type"></b-select>
+                                <b-select class="multi-form mr-2" :options="fieldTypes" v-model="field.type" @change="field.options = ''"></b-select>
                                 <b-button v-on:click.stop v-if="!field.required" @click="field.required = !field.required" class="optional-field-template float-right multi-form">
                                     <icon name="asterisk"/>
                                     Optional
@@ -36,6 +36,31 @@
                                     Required
                                 </b-button>
                             </div>
+
+                            <!-- Field Options -->
+                            <div v-if="field.type == 's'">
+                                <!-- Event targeting allows us to access the input value -->
+                                <div class="d-flex">
+                                    <b-input class="multi-form mr-2 theme-input" placeholder="Enter an option"
+                                    @keyup.enter.native="addSelectionOption($event.target, field)"/>
+                                    <b-button class="float-right multi-form"
+                                    @click.stop="addSelectionOption($event.target.previousElementSibling, field)">
+                                        <icon name="plus"/>
+                                        Add option
+                                    </b-button>
+                                </div>
+                                <div v-if="field.options">
+                                    <b-button
+                                        v-for="(option, index) in JSON.parse(field.options)"
+                                        :key="index"
+                                        class="delete-button mr-2 mb-2"
+                                        @click.stop="removeSelectionOption(option, field)">
+                                        <icon name="trash"/>
+                                        {{ option }}
+                                    </b-button>
+                                </div>
+                            </div>
+
                         </b-col>
                         <b-col cols="12" sm="2" lg="1" class="icon-box">
                             <div class="handle d-inline d-sm-block">
@@ -78,9 +103,11 @@ export default {
                 'f': 'File',
                 'v': 'YouTube Video',
                 'u': 'URL',
-                'd': 'Date'
+                'd': 'Date',
+                's': 'Selection'
             },
-            mode: 'edit'
+            mode: 'edit',
+            selectedLocation: null
         }
     },
     components: {
@@ -100,6 +127,7 @@ export default {
                 'type': 't',
                 'title': '',
                 'description': '',
+                'options': null,
                 'location': this.template.field_set.length,
                 'required': true
             }
@@ -117,6 +145,23 @@ export default {
         },
         onUpdate () {
             this.updateLocations()
+        },
+        addSelectionOption (target, field) {
+            if (target.value.trim()) {
+                if (!field.options) {
+                    field.options = JSON.stringify([])
+                }
+                var options = JSON.parse(field.options)
+                options.push(target.value.trim())
+                field.options = JSON.stringify(options)
+                target.value = ''
+                target.focus()
+            }
+        },
+        removeSelectionOption (option, field) {
+            var options = JSON.parse(field.options)
+            options.splice(options.indexOf(option.trim()), 1)
+            field.options = JSON.stringify(options)
         }
     }
 }

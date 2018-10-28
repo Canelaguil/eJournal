@@ -47,6 +47,12 @@ def get_lti_params_from_jwt(request, jwt_params):
     try:
         role = [settings.LTI_ROLES[r] if r in settings.LTI_ROLES else r for r in lti.roles_to_list(lti_params)]
         payload = dict()
+
+        # convert LTI param for True to python True
+        if 'custom_assignment_publish' in lti_params:
+            lti_params['custom_assignment_publish'] = lti_params['custom_assignment_publish'] == 'true'
+        else:
+            lti_params['custom_assignment_publish'] = False
         course = lti.check_course_lti(lti_params, user, role)
         if course is None:
             if 'Teacher' in role:
@@ -64,6 +70,7 @@ def get_lti_params_from_jwt(request, jwt_params):
                 payload['lti_aDue'] = lti_params['custom_assignment_due']
                 payload['lti_aLock'] = lti_params['custom_assignment_lock']
                 payload['lti_points_possible'] = lti_params['custom_assignment_points']
+                payload['lti_aPublished'] = lti_params['custom_assignment_publish']
 
                 return response.success({'params': payload})
             else:
@@ -81,6 +88,7 @@ def get_lti_params_from_jwt(request, jwt_params):
                 payload['lti_aDue'] = lti_params['custom_assignment_due']
                 payload['lti_aLock'] = lti_params['custom_assignment_lock']
                 payload['lti_points_possible'] = lti_params['custom_assignment_points']
+                payload['lti_aPublished'] = lti_params['custom_assignment_publish']
 
                 return response.success({'params': payload})
             else:

@@ -65,6 +65,8 @@ class RoleView(viewsets.ViewSet):
             course_id, = utils.required_typed_params(request.query_params, (int, 'course_id'))
             course = Course.objects.get(pk=course_id)
 
+            request.user.check_participation(course)
+
             if user != request.user:
                 # TODO: P Is this the right permission
                 request.user.check_permission('can_edit_course_roles', course)
@@ -74,6 +76,8 @@ class RoleView(viewsets.ViewSet):
         except (VLEMissingRequiredKey, VLEParamWrongType):
             assignment_id, = utils.required_typed_params(request.query_params, (int, 'assignment_id'))
             assignment = Assignment.objects.get(pk=assignment_id)
+
+            request.user.check_can_view(assignment)
 
             if user != request.user:
                 # TODO: P Add a permission for this

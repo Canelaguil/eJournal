@@ -55,6 +55,11 @@
                 :placeholder="completeContent[i].data"
                 @correctUrlInput="completeContent[i].data = $event"
             />
+            <b-form-select
+                v-else-if="field.type == 's'"
+                v-model="completeContent[i].data"
+                :options="parseSelectionOptions(field.options)"
+            />
         </div>
     </div>
     <!-- Display section -->
@@ -99,6 +104,7 @@
             />
             <div v-else-if="field.type == 'rt'" v-html="completeContent[i].data"/>
             <a v-else-if="field.type == 'u'" :href="completeContent[i].data">{{ completeContent[i].data }}</a>
+            <span v-else-if="field.type == 's'">{{ completeContent[i].data }}</span>
         </div>
     </div>
 </template>
@@ -151,6 +157,14 @@ export default {
             } else {
                 return null
             }
+        },
+        parseSelectionOptions (fieldOptions) {
+            if (!fieldOptions) {
+                return [{ value: null, text: 'Please select an option' }]
+            }
+            var options = JSON.parse(fieldOptions).filter(e => e).map(x => { return { value: x, text: x } })
+            options.unshift({ value: null, text: 'Please select an option' })
+            return options
         },
         checkChanges () {
             for (var i = 0; i < this.completeContent.length; i++) {

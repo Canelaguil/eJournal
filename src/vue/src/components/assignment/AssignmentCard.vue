@@ -9,6 +9,14 @@
                     title="Linked via LTI">
                     LTI
                 </b-badge>
+                <b-badge
+                    v-if="!published"
+                    class="ml-2 mt-2"
+                    v-b-tooltip.hover
+                    title="Not visible to students:
+                    click to edit">
+                    Unpublished
+                </b-badge>
                 <h2 class="float-left">{{ line1 }}</h2>
                 {{ line2 }}
             </b-col>
@@ -21,6 +29,6 @@
 
 <script>
 export default {
-    props: ['line1', 'line2', 'lti']
+    props: ['line1', 'line2', 'lti', 'published']
 }
 </script>

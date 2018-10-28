@@ -185,8 +185,10 @@ class GetApiTests(TestCase):
         template = factory.make_entry_template('template')
         format1 = factory.make_format([template])
         format2 = factory.make_format([template])
-        assignment1 = factory.make_assignment('Colloq', 'description1', format=format1, courses=[course])
-        assignment2 = factory.make_assignment('Portfolio', 'description2', format=format2, courses=[course])
+        assignment1 = factory.make_assignment('Colloq', 'description1', format=format1, courses=[course],
+                                              is_published=True)
+        assignment2 = factory.make_assignment('Portfolio', 'description2', format=format2, courses=[course],
+                                              is_published=True)
 
         test.set_up_participation(self.user, course, 'Student')
 
@@ -332,7 +334,8 @@ class GetApiTests(TestCase):
         course = factory.make_course('Portfolio', 'PAV', author=self.rein)
         template = factory.make_entry_template('template')
         format = factory.make_format([template])
-        assignment = factory.make_assignment('Colloq', 'description1', format=format, courses=[course])
+        assignment = factory.make_assignment('Colloq', 'description1', format=format, courses=[course],
+                                             is_published=True)
         student_user, student_pass, student = test.set_up_user_and_auth('student', 'pass', 's@s.com', 'first', 'last')
         test.set_up_participation(student, course, 'Student')
         journal = test.set_up_journal(assignment, template, student, 4)

@@ -16,7 +16,7 @@ COURSE_PERMISSIONS = ['can_edit_course_details', 'can_delete_course', 'can_edit_
                       'can_add_course_user_group', 'can_delete_course_user_group', 'can_edit_course_user_group',
                       'can_add_assignment', 'can_delete_assignment']
 ASSIGNMENT_PERMISSIONS = ['can_edit_assignment', 'can_view_all_journals', 'can_grade',
-                          'can_publish_grades', 'can_have_journal', 'can_comment']
+                          'can_publish_grades', 'can_have_journal', 'can_comment', 'can_view_unpublished_assignment']
 
 
 def has_general_permission(user, permission):

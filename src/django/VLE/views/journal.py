@@ -46,6 +46,7 @@ class JournalView(viewsets.ViewSet):
         course = Course.objects.get(pk=course_id)
 
         request.user.check_permission('can_view_all_journals', assignment)
+        request.user.check_can_view(assignment)
 
         users = course.participation_set.filter(role__can_have_journal=True).values('user')
         queryset = assignment.journal_set.filter(user__in=users)

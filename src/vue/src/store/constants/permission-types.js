@@ -22,6 +22,7 @@ export const ASSIGNMENT_LEVEL_PERMISSIONS = new Set([
     'can_view_all_journals',
     'can_grade',
     'can_publish_grades',
+    'can_view_unpublished_assignment',
     // Journal level
     'can_have_journal',
     'can_comment'

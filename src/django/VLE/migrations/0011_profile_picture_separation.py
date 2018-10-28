@@ -9,7 +9,7 @@ import VLE.utils.storage
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('VLE', '0006_can_view_assignment_journals_rename'),
+        ('VLE', '0010_auto_20181027_1403'),
     ]
 
     operations = [

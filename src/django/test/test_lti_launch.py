@@ -38,6 +38,7 @@ class canEnterThroughLTI(TestCase):
                         "custom_assignment_title": "TestAss",
                         "custom_assignment_unlock": "2018-08-16 00:00:00 +0200",
                         "custom_assignment_points": "10",
+                        "custom_assignment_publish": "true",
                         "custom_course_id": "asdf",
                         "custom_course_name": "TestCourse",
                         "custom_course_start": "2018-06-15 14:41:00 +0200",

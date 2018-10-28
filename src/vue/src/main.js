@@ -57,6 +57,8 @@ import 'vue-awesome/icons/cog'
 import 'vue-awesome/icons/clock-o'
 import 'vue-awesome/icons/print'
 import 'vue-awesome/icons/github'
+import 'vue-awesome/icons/linkedin'
+import 'vue-awesome/icons/file'
 
 import Toasted from 'vue-toasted'
 import flatPickr from 'vue-flatpickr-component'

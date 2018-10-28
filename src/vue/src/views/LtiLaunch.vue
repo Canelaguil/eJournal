@@ -67,6 +67,7 @@ export default {
                 ltiCourseStart: '',
                 ltiAssignName: '',
                 ltiAssignID: '',
+                ltiAssignPublished: '',
                 ltiPointsPossible: '',
                 ltiAssignUnlock: '',
                 ltiAssignDue: '',
@@ -97,6 +98,7 @@ export default {
                     this.lti.ltiAssignUnlock = response.lti_aUnlock
                     this.lti.ltiAssignDue = response.lti_aDue
                     this.lti.ltiAssignLock = response.lti_aLock
+                    this.lti.ltiAssignPublished = response.lti_aPublished
                     this.page.cID = response.cID
                     this.page.aID = response.aID
                     this.page.jID = response.jID

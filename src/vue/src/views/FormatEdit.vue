@@ -186,6 +186,7 @@ export default {
                         'type': 'rt',
                         'title': 'Entry',
                         'description': '',
+                        'options': null,
                         'location': 0,
                         'required': true
                     }],
@@ -320,7 +321,10 @@ export default {
                         this.isChanged = false
                     })
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
+                .catch(error => {
+                    this.$toasted.error(error.response.data.description)
+                    this.saveRequestInFlight = false
+                })
         },
         customisePage () {
             this.$toasted.info('Wishlist: Customise page')

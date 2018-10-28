@@ -1,4 +1,4 @@
-.grade-section,
+.grade-section
     width: 3em
     height: 3em
     background-color: white
@@ -13,13 +13,13 @@
         width: 3em
         display: inline-block
         box-shadow: none
-        border: 0px
+        border: none !important
         margin: 0px
         padding: 0px !important
         font-family: 'Roboto', sans-serif
         font-weight: bold
         font-size: 1.5em
-        text-align: center
+        text-align: right
     .grade
         font-weight: normal
     .btn
@@ -33,10 +33,12 @@
 
 .entry-card-teacher
     .grade-section
-        width: 30%
+        width: 35%
         height: auto
         @include xs-max
             width: 50%
+        .custom-checkbox
+            margin: auto
 
 
 hr.full-width

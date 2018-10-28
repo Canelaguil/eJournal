@@ -3,7 +3,7 @@
         <bread-crumb>&nbsp;</bread-crumb>
         <b-card class="no-hover blue-border">
             <profile-data ref="profileData"/>
-            <notification-card/>
+            <!--<notification-card/>-->
             <password-card ref="passData"/>
         </b-card>
     </content-single-column>

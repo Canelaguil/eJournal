@@ -10,7 +10,7 @@ import VLE.factory as factory
 import VLE.lti_grade_passback as lti_grade
 import VLE.utils.generic_utils as utils
 import VLE.utils.responses as response
-from VLE.models import Assignment, Course, Lti_ids
+from VLE.models import Assignment, Course, Entry, Lti_ids
 from VLE.serializers import AssignmentSerializer
 from VLE.utils.error_handling import VLEMissingRequiredKey, VLEParamWrongType
 
@@ -51,8 +51,7 @@ class AssignmentView(viewsets.ViewSet):
         # Consider all assignments that the user is in, or can grade.
         assignments = []
         for assignment in course.assignment_set.all():
-            if request.user.has_permission('can_grade', assignment) or \
-               request.user.has_permission('can_have_journal', assignment):
+            if request.user.can_view(assignment):
                 assignments.append(assignment)
 
         serializer = AssignmentSerializer(assignments, many=True, context={'user': request.user, 'course': course})
@@ -88,9 +87,9 @@ class AssignmentView(viewsets.ViewSet):
 
         """
         name, description, course_id = utils.required_params(request.data, "name", "description", "course_id")
-        points_possible, unlock_date, due_date, lock_date, lti_id = \
-            utils.optional_params(request.data, "points_possible", "unlock_date", "due_date", "lock_date", "lti_id")
-
+        points_possible, unlock_date, due_date, lock_date, lti_id, is_published = \
+            utils.optional_params(request.data, "points_possible", "unlock_date", "due_date", "lock_date", "lti_id",
+                                  "is_published")
         course = Course.objects.get(pk=course_id)
 
         request.user.check_permission('can_add_assignment', course)
@@ -99,7 +98,7 @@ class AssignmentView(viewsets.ViewSet):
                                              author=request.user, lti_id=lti_id,
                                              points_possible=points_possible,
                                              unlock_date=unlock_date, due_date=due_date,
-                                             lock_date=lock_date)
+                                             lock_date=lock_date, is_published=is_published)
 
         for user in course.users.all():
             factory.make_journal(assignment, user)
@@ -126,13 +125,10 @@ class AssignmentView(viewsets.ViewSet):
             succes -- with the assignment data
 
         """
-        try:
-            if 'lti' in request.query_params:
-                assignment = Lti_ids.objects.filter(lti_id=pk, for_model=Lti_ids.ASSIGNMENT)[0].assignment
-            else:
-                assignment = Assignment.objects.get(pk=pk)
-        except IndexError:
-            raise Assignment.DoesNotExist
+        if 'lti' in request.query_params:
+            assignment = Assignment.objects.get(lti_ids__lti_id=pk, lti_ids__for_model=Lti_ids.ASSIGNMENT)
+        else:
+            assignment = Assignment.objects.get(pk=pk)
 
         try:
             course_id, = utils.required_typed_params(request.query_params, (int, 'course_id'))
@@ -140,7 +136,7 @@ class AssignmentView(viewsets.ViewSet):
         except (VLEMissingRequiredKey, VLEParamWrongType):
             course = None
 
-        request.user.check_participation(assignment)
+        request.user.check_can_view(assignment)
 
         serializer = AssignmentSerializer(
             assignment,
@@ -192,6 +188,12 @@ class AssignmentView(viewsets.ViewSet):
         if req_data:
             if 'lti_id' in req_data:
                 factory.make_lti_ids(lti_id=req_data['lti_id'], for_model=Lti_ids.ASSIGNMENT, assignment=assignment)
+
+            # If a entry has been submitted to one of the journals of the journal it cannot be unpublished
+            if assignment.is_published and 'is_published' in req_data and not req_data['is_published'] and \
+               Entry.objects.filter(node__journal__assignment=assignment).exists():
+                return response.bad_request(
+                    'You are not allowed to unpublish an assignment that already has submissions.')
 
             serializer = AssignmentSerializer(assignment, data=req_data, context={'user': request.user}, partial=True)
             if not serializer.is_valid():
@@ -263,7 +265,7 @@ class AssignmentView(viewsets.ViewSet):
         # TODO: change query to a query that selects all upcoming assignments connected to the user.
         for course in courses:
             if request.user.is_participant(course):
-                for assignment in Assignment.objects.filter(courses=course.id).all():
+                for assignment in Assignment.objects.filter(courses=course.id, is_published=True).all():
                     deadline_list.append(
                         AssignmentSerializer(assignment, context={'user': request.user, 'course': course}).data)
 
@@ -293,6 +295,6 @@ class AssignmentView(viewsets.ViewSet):
     def publish(self, request, assignment, published=True):
         utils.publish_all_assignment_grades(assignment, published)
         if published:
-            for journal in assignment.journal_set:
+            for journal in assignment.journal_set.all():
                 if journal.sourcedid is not None and journal.grade_url is not None:
                     lti_grade.replace_result(journal)

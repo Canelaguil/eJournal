@@ -1,5 +1,16 @@
 <template>
     <b-card class="no-hover settings-card" :class="$root.getBorderClass($route.params.cID)">
+        <div class="d-flex float-right multi-form">
+            <b-button v-if="assignmentDetails.is_published" @click="assignmentDetails.is_published = false" class="add-button flex-grow-1">
+                <icon name="check"/>
+                Published
+            </b-button>
+            <b-button v-if="!assignmentDetails.is_published" @click="assignmentDetails.is_published = true" class="delete-button flex-grow-1">
+                <icon name="times"/>
+                Unpublished
+            </b-button>
+        </div>
+
         <h2>Assignment details</h2>
         <b-form @submit.prevent="onSubmit">
             <h2 class="field-heading">Assignment name</h2>

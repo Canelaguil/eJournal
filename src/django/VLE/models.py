@@ -9,6 +9,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.timezone import now
 
 import VLE.permissions as permissions
@@ -17,6 +18,16 @@ from VLE.utils.error_handling import (VLEParticipationError,
                                       VLEUnverifiedEmailError)
 from VLE.utils.file_handling import get_path, get_profile_picture_path
 from VLE.utils.storage import OverwriteStorage
+
+
+class Instance(models.Model):
+    """Global settings for the running instance."""
+    allow_standalone_registration = models.BooleanField(
+        default=True
+    )
+    name = models.TextField(
+        default='eJournal'
+    )
 
 
 class UserFile(models.Model):
@@ -48,9 +59,6 @@ class UserFile(models.Model):
         on_delete=models.CASCADE,
         null=False
     )
-    creation_date = models.DateTimeField(
-        auto_now_add=True
-    )
     content_type = models.TextField(
         null=False
     )
@@ -74,6 +82,15 @@ class UserFile(models.Model):
         on_delete=models.CASCADE,
         null=True
     )
+    creation_date = models.DateTimeField(editable=False)
+    last_edited = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.creation_date = timezone.now()
+        self.last_edited = timezone.now()
+
+        return super(UserFile, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         self.file.delete()
@@ -181,6 +198,9 @@ class User(AbstractUser):
                 return self.has_permission('can_view_all_journals', obj.assignment)
             else:
                 return self.has_permission('can_have_journal', obj.assignment)
+        elif isinstance(obj, Assignment):
+            self.check_participation(obj)
+            return obj.is_published or self.has_permission('can_view_unpublished_assignment', obj)
 
     def delete(self, *args, **kwargs):
         self.profile_picture.delete()
@@ -303,6 +323,7 @@ class Role(models.Model):
     can_publish_grades = models.BooleanField(default=False)
     can_have_journal = models.BooleanField(default=False)
     can_comment = models.BooleanField(default=False)
+    can_view_unpublished_assignment = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if self.can_add_course_users and not self.can_view_course_users:
@@ -393,6 +414,7 @@ class Assignment(models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    is_published = models.BooleanField(default=False)
     points_possible = models.IntegerField(
         'points_possible',
         default=10
@@ -626,7 +648,7 @@ class Entry(models.Model):
 
     An Entry has the following features:
     - journal: a foreign key linked to an Journal.
-    - createdate: the date and time when the entry was posted.
+    - creation_date: the date and time when the entry was posted.
     - grade: grade the entry has
     - published: if its a published grade or not
     - last_edited: when the etry was last edited
@@ -638,9 +660,6 @@ class Entry(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    createdate = models.DateTimeField(
-        default=now,
-    )
     grade = models.FloatField(
         default=None,
         null=True,
@@ -648,13 +667,18 @@ class Entry(models.Model):
     published = models.BooleanField(
         default=False
     )
-    last_edited = models.DateTimeField(
-        default=None,
-        null=True
-    )
+    creation_date = models.DateTimeField(editable=False)
+    last_edited = models.DateTimeField()
 
     def is_due(self):
         return (self.node.preset and self.node.preset.is_due()) or self.node.journal.assignment.is_due()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.creation_date = timezone.now()
+        self.last_edited = timezone.now()
+
+        return super(Entry, self).save(*args, **kwargs)
 
     def __str__(self):
         """toString."""
@@ -710,6 +734,7 @@ class Field(models.Model):
     PDF = 'p'
     URL = 'u'
     DATE = 'd'
+    SELECTION = 's'
     TYPES = (
         (TEXT, 'text'),
         (RICH_TEXT, 'rich text'),
@@ -718,7 +743,8 @@ class Field(models.Model):
         (FILE, 'file'),
         (VIDEO, 'vid'),
         (URL, 'url'),
-        (DATE, 'date')
+        (DATE, 'date'),
+        (SELECTION, 'selection')
     )
     type = models.TextField(
         max_length=4,
@@ -727,6 +753,9 @@ class Field(models.Model):
     )
     title = models.TextField()
     description = models.TextField(
+        null=True
+    )
+    options = models.TextField(
         null=True
     )
     location = models.IntegerField()
@@ -778,14 +807,18 @@ class Comment(models.Model):
         null=True
     )
     text = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
     published = models.BooleanField(
         default=True
     )
-    last_edited = models.DateTimeField(
-        default=None,
-        null=True
-    )
+    creation_date = models.DateTimeField(editable=False)
+    last_edited = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.creation_date = timezone.now()
+        self.last_edited = timezone.now()
+
+        return super(Comment, self).save(*args, **kwargs)
 
 
 class Lti_ids(models.Model):

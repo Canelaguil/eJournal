@@ -30,6 +30,16 @@ class CreateApiTests(TestCase):
         user['email'] = 'student@ejourn.al'
         test.api_post_call(self, '/users/', params=user, status=201)
 
+        # Not allowed by instance
+        self.user.is_superuser = True
+        self.user.save()
+        login = test.logging_in(self, self.username, self.password)
+        test.api_patch_call(
+            self, '/instance/1/', params={'allow_standalone_registration': False}, login=login, status=200)
+        user['username'] = 'Student2'
+        user['email'] = 'student2@ejourn.al'
+        test.api_post_call(self, '/users/', params=user, status=400)
+
     def test_create_new_course(self):
         """Test create new course."""
         username, password, user = test.set_up_user_and_auth('test2', 'test1233', 'test@ttaest.com', is_teacher=True)

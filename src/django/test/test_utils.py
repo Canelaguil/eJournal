@@ -112,7 +112,7 @@ def set_up_courses(name, n, author=None, lti_id=False):
     return courses
 
 
-def set_up_assignments(name, desc, n, course, lti_id=False):
+def set_up_assignments(name, desc, n, course, lti_id=False, is_published=True):
     """Set up some assignments.
 
     Arguments:
@@ -127,10 +127,11 @@ def set_up_assignments(name, desc, n, course, lti_id=False):
     if lti_id:
         for i in range(n):
             assignments.append(factory.make_assignment(name + str(i), desc + str(i),
-                                                       lti_id=str(i), courses=[course]))
+                                                       lti_id=str(i), courses=[course], is_published=is_published))
     else:
         for i in range(n):
-            assignments.append(factory.make_assignment(name + str(i), desc + str(i), courses=[course]))
+            assignments.append(factory.make_assignment(name + str(i), desc + str(i), courses=[course],
+                                                       is_published=is_published))
     return assignments
 
 

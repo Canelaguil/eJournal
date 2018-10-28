@@ -3,8 +3,8 @@
         <bread-crumb slot="main-content-column" @edit-click="handleEdit()"/>
 
         <div slot="main-content-column" v-for="a in assignments" :key="a.id">
-            <b-link tag="b-button" :to="assignmentRoute(cID, a.id, a.journal)">
-                <assignment-card :line1="a.name" :lti="a.lti_couples > 0">
+            <b-link tag="b-button" :to="assignmentRoute(cID, a.id, a.journal, a.is_published)">
+                <assignment-card :line1="a.name" :lti="a.lti_couples > 0" :published="a.is_published">
                     <b-button v-if="$hasPermission('can_delete_assignment')" @click.prevent.stop="deleteAssignment(a)" class="delete-button float-right">
                         <icon name="trash"/>
                         Delete
@@ -111,7 +111,7 @@ export default {
         showModal (ref) {
             this.$refs[ref].show()
         },
-        assignmentRoute (cID, aID, jID) {
+        assignmentRoute (cID, aID, jID, isPublished) {
             var route = {
                 params: {
                     cID: cID,
@@ -119,7 +119,9 @@ export default {
                 }
             }
 
-            if (this.$hasPermission('can_view_all_journals', 'assignment', aID)) {
+            if (!isPublished) {
+                route.name = 'FormatEdit'
+            } else if (this.$hasPermission('can_view_all_journals', 'assignment', aID)) {
                 route.name = 'Assignment'
             } else {
                 route.name = 'Journal'

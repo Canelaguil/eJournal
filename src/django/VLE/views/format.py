@@ -7,7 +7,7 @@ from rest_framework import viewsets
 
 import VLE.utils.generic_utils as utils
 import VLE.utils.responses as response
-from VLE.models import Assignment
+from VLE.models import Assignment, Entry
 from VLE.serializers import (AssignmentDetailsSerializer, AssignmentSerializer,
                              FormatSerializer)
 
@@ -32,6 +32,7 @@ class FormatView(viewsets.ViewSet):
         """
         assignment = Assignment.objects.get(pk=pk)
 
+        request.user.check_can_view(assignment)
         request.user.check_permission('can_edit_assignment', assignment)
 
         serializer = FormatSerializer(assignment.format)
@@ -70,6 +71,11 @@ class FormatView(viewsets.ViewSet):
 
         assignment = Assignment.objects.get(pk=assignment_id)
         format = assignment.format
+
+        # If a entry has been submitted to one of the journals of the journal it cannot be unpublished
+        if assignment.is_published and 'is_published' in assignment_details and not assignment_details['is_published'] \
+           and Entry.objects.filter(node__journal__assignment=assignment).exists():
+            return response.bad_request('You are not allowed to unpublish an assignment that already has submissions.')
 
         request.user.check_permission('can_edit_assignment', assignment)
 

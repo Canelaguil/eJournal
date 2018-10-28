@@ -93,7 +93,8 @@ class UpdateApiTests(TestCase):
         test.api_patch_call(self,
                             '/assignments/' + str(assign.pk) + '/',
                             {'name': 'Assign2',
-                             'description': 'summary'},
+                             'description': 'summary',
+                             'is_published': True},
                             login)
 
         assign = Assignment.objects.get(pk=assign.pk)
@@ -112,7 +113,8 @@ class UpdateApiTests(TestCase):
         update_dict = {
             'assignment_details': {
                 'name': 'Colloq',
-                'description': 'description1'
+                'description': 'description1',
+                'is_published': True
             },
             'templates': [serialize.TemplateSerializer(template).data
                           for template in format.available_templates.all()],

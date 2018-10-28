@@ -1,4 +1,6 @@
+import json
 import re
+from datetime import datetime
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -11,6 +13,8 @@ FILE = 'f'
 VIDEO = 'v'
 PDF = 'p'
 URL = 'u'
+DATE = 'd'
+SELECTION = 's'
 
 
 def validate_profile_picture(urlData):
@@ -65,3 +69,13 @@ def validate_entry_content(data, field):
     if field.type == URL:
         url_validate = URLValidator(schemes=('http', 'https', 'ftp', 'ftps'))
         url_validate(data)
+
+    if field.type == SELECTION:
+        if data not in json.loads(field.options):
+            raise ValidationError("Selected option is not in the given options")
+
+    if field.type == DATE:
+        try:
+            datetime.strptime(data, '%Y-%m-%d')
+        except ValueError as e:
+            raise ValidationError(str(e))

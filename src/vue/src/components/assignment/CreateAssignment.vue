@@ -1,7 +1,17 @@
 <template>
     <b-card class="no-hover">
-        <!-- TODO: Create default formats. -->
         <b-form @submit.prevent="onSubmit" @reset.prevent="onReset">
+            <div class="d-flex float-right multi-form">
+                <b-button v-if="form.isPublished" @click="form.isPublished = false" class="add-button flex-grow-1">
+                    <icon name="check"/>
+                    Published
+                </b-button>
+                <b-button v-if="!form.isPublished" @click="form.isPublished = true" class="delete-button flex-grow-1">
+                    <icon name="times"/>
+                    Unpublished
+                </b-button>
+            </div>
+
             <h2 class="field-heading">Assignment Name</h2>
             <b-input class="multi-form theme-input"
                 v-model="form.assignmentName"
@@ -71,7 +81,8 @@ export default {
                 pointsPossible: null,
                 unlockDate: null,
                 dueDate: null,
-                lockDate: null
+                lockDate: null,
+                isPublished: false
             }
         }
     },
@@ -89,7 +100,8 @@ export default {
                 points_possible: this.form.pointsPossible,
                 unlock_date: this.form.unlockDate,
                 due_date: this.form.dueDate,
-                lock_date: this.form.lockDate
+                lock_date: this.form.lockDate,
+                is_published: this.form.isPublished
             })
                 .then(assignment => {
                     this.$emit('handleAction', assignment.id)
@@ -110,6 +122,7 @@ export default {
             this.form.unlockDate = undefined
             this.form.dueDate = undefined
             this.form.lockDate = undefined
+            this.form.isPublished = false
 
             /* Trick to reset/clear native browser form validation state */
             this.show = false
@@ -125,6 +138,7 @@ export default {
             this.form.dueDate = this.lti.ltiAssignDue.slice(0, -9)
             this.form.lockDate = this.lti.ltiAssignLock.slice(0, -9)
             this.form.courseID = this.page.cID
+            this.form.isPublished = this.lti.ltiAssignPublished
         } else {
             this.form.courseID = this.$route.params.cID
         }

@@ -3,8 +3,6 @@ comment.py.
 
 In this file are all the comment api requests.
 """
-from datetime import datetime
-
 from rest_framework import viewsets
 
 import VLE.factory as factory
@@ -148,7 +146,7 @@ class CommentView(viewsets.ViewSet):
 
         text, = utils.required_params(request.data, 'text')
         serializer = CommentSerializer(
-            comment, data={'text': text, 'last_edited': datetime.now()}, partial=True)
+            comment, data={'text': text}, partial=True)
         if not serializer.is_valid():
             response.bad_request()
         serializer.save()

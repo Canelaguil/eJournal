@@ -114,8 +114,17 @@ const actions = {
     /* An attempt is made at refreshing the JW access token, store is populated if needed.
      * Fails if the refresh fails or if the store needed to be populated if that fails as well. */
     validateToken ({ commit, dispatch, getters }, error = null) {
+        if (error) {
+            var code
+            if (error.response.data instanceof ArrayBuffer) {
+                code = genericUtils.parseArrayBufferResponseErrorData(error).code
+            } else {
+                code = error.response.data.code
+            }
+        }
+
         return new Promise((resolve, reject) => {
-            if (!error || (error && error.response.data.code === 'token_not_valid')) {
+            if (!error || code === 'token_not_valid') {
                 connection.conn.post('token/refresh/', {refresh: getters.jwtRefresh}).then(response => {
                     commit(types.SET_ACCES_TOKEN, response.data.access) // Refresh token valid, update access token.
 
