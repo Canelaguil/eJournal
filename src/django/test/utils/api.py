@@ -6,6 +6,7 @@ Helpter function for the test enviroment.
 
 import json
 import test.utils.generic_utils as test_utils
+import test.factory.user as userfactory
 
 from django.urls import reverse
 
@@ -36,7 +37,7 @@ def format_url(obj, url, params, function):
     return url
 
 
-def login(obj, user, status=200):
+def login(obj, user, password=userfactory.DEFAULT_PASSWORD, status=200):
     """Login using username and password.
 
     Arguments:
@@ -46,14 +47,14 @@ def login(obj, user, status=200):
     Returns the loggin in user.
     """
     return post(obj, reverse('token_obtain_pair'),
-                params={'username': user['username'], 'password': user['password']}, status=status)
+                params={'username': user.username, 'password': password}, status=status)
 
 
 def test_rest(obj, url, create_params=None, delete_params=None, update_params=None, get_params=None,
-              get_is_create=True, user=None,
+              get_is_create=True, user=None, password=userfactory.DEFAULT_PASSWORD,
               create_status=201, get_status=200, delete_status=200, get_status_when_unauthorized=401):
     # Create the object that is given
-    create_object = create(obj, url, params=create_params, user=user, status=create_status)
+    create_object = create(obj, url, params=create_params, user=user, password=password, status=create_status)
     if create_status != 201:
         return
     create_object.pop('description', None)
@@ -63,7 +64,7 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
     if get_params is None:
         get_params = dict()
     get(obj, url, params={'pk': pk, **get_params}, status=get_status_when_unauthorized)
-    get_object = get(obj, url, params={'pk': pk, **get_params}, user=user, status=get_status)
+    get_object = get(obj, url, params={'pk': pk, **get_params}, user=user, password=password, status=get_status)
     get_object.pop('description', None)
 
     # Check if the created object is the same as the one it got
@@ -82,52 +83,52 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
             if status is None:
                 status = 200
             changes['pk'] = pk
-            update_object = update(obj, url, params=changes, user=user, status=status)
+            update_object = update(obj, url, params=changes, user=user, password=password, status=status)
             update_object.pop('description', None)
 
     # Delete the object
     if delete_params is None:
         delete_params = dict()
-    delete(obj, url, params={'pk': pk, **delete_params}, user=user, status=delete_status)
+    delete(obj, url, params={'pk': pk, **delete_params}, user=user, password=password, status=delete_status)
 
 
-def get(obj, url, params=None, user=None, status=200, result=None):
+def get(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
     return call(obj, obj.client.get, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
-def get_list(obj, url, params=None, user=None, status=200, result=None):
+def get_list(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
     return call(obj, obj.client.get, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
-def create(obj, url, params=None, user=None, status=201, result=None):
+def create(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=201, result=None):
     return call(obj, obj.client.post, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
-def post(obj, url, params=None, user=None, status=200, result=None):
+def post(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
     return call(obj, obj.client.post, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
-def update(obj, url, params=None, user=None, status=200, result=None):
+def update(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
     return call(obj, obj.client.patch, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
-def patch(obj, url, params=None, user=None, status=200, result=None):
+def patch(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
     return call(obj, obj.client.patch, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
-def delete(obj, url, params=None, user=None, status=200, result=None):
+def delete(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
     return call(obj, obj.client.delete, url,
-                params=params, user=user, status=status, result=result)
+                params=params, user=user, password=password, status=status, result=result)
 
 
 def call(obj, function, url, params=None,
-         user=None,
+         user=None, password=userfactory.DEFAULT_PASSWORD,
          status=200, status_when_unauthorized=401, result=None,
          content_type='application/json'):
     # Set params to an empty dictionary when its None this cant be done in the parameters themself as that can give
@@ -143,7 +144,7 @@ def call(obj, function, url, params=None,
         else:
             result = function(url, json.dumps(params), content_type=content_type)
     else:
-        logged_user = login(obj, user)
+        logged_user = login(obj, user, password)
         access, = utils.required_params(logged_user, 'access')
         if function in [obj.client.get, obj.client.delete]:
             result = function(url, content_type=content_type, HTTP_AUTHORIZATION='Bearer ' + access)
