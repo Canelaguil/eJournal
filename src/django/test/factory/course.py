@@ -1,5 +1,8 @@
-import VLE.models
+import test.factory.role
+
 import factory
+
+import VLE.models
 
 
 class CourseFactory(factory.django.DjangoModelFactory):
@@ -14,12 +17,24 @@ class CourseFactory(factory.django.DjangoModelFactory):
     student_role = factory.RelatedFactory('test.factory.role.StudentRoleFactory', 'course')
     ta_role = factory.RelatedFactory('test.factory.role.TaRoleFactory', 'course')
 
-    author_participation = factory.Maybe('author', None,
-                                         factory.RelatedFactory('test.factory.participation.ParticipationFactory',
-                                                                'course',
-                                                                user=factory.SelfAttribute('..author'),
-                                                                role=factory.RelatedFactory(
-                                                                    'test.factory.role.TeacherRoleFactory', 'course')))
+    @factory.post_generation
+    def author_participation(self, create, extracted):
+        if not create:
+            return
+
+        # Ensure TeacherRole is always created.
+        role = test.factory.role.TeacherRoleFactory(course=self)
+
+        if extracted:
+            return extracted
+
+        if not self.author:
+            return
+
+        participation = VLE.models.Participation(course=self, user=self.author, role=role)
+        participation.save()
+
+        return participation
 
 
 class LtiCourseFactory(CourseFactory):

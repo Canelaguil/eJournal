@@ -1,9 +1,8 @@
+import test.factory.course as coursefactory
+import test.factory.user as userfactory
 from test.utils import api
 
 from django.test import TestCase
-
-import test.factory.user as userfactory
-import test.factory.course as coursefactory
 
 
 class AssignmentAPITest(TestCase):

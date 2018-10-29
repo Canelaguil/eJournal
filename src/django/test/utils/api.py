@@ -5,8 +5,8 @@ Helpter function for the test enviroment.
 """
 
 import json
-import test.utils.generic_utils as test_utils
 import test.factory.user as userfactory
+import test.utils.generic_utils as test_utils
 
 from django.urls import reverse
 
