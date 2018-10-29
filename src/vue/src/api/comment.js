@@ -1,29 +1,28 @@
 import auth from '@/api/auth'
 
 export default {
-
-    get (id) {
-        return auth.get('comments/' + id)
+    get (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('comments/' + id, null, connArgs)
             .then(response => response.data.comment)
     },
 
-    create (data) {
-        return auth.create('comments', data)
+    create (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.create('comments', data, connArgs)
             .then(response => response.data.comment)
     },
 
-    update (id, data) {
-        return auth.update('comments/' + id, data)
+    update (id, data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('comments/' + id, data, connArgs)
             .then(response => response.data.comment)
     },
 
-    delete (id) {
-        return auth.delete('comments/' + id)
+    delete (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.delete('comments/' + id, connArgs)
             .then(response => response.data)
     },
 
-    getFromEntry (id) {
-        return auth.get('comments', {entry_id: id})
+    getFromEntry (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('comments', {entry_id: id}, connArgs)
             .then(response => response.data.comments)
     }
 }

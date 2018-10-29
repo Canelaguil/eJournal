@@ -53,7 +53,6 @@ export default {
     created () {
         assignmentAPI.getUpcoming()
             .then(deadlines => { this.deadlines = deadlines })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
     },
     components: {
         'content-single-column': contentSingleColumn,

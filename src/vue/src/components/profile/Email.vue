@@ -44,7 +44,7 @@
 </template>
 
 <script>
-import userAPI from '@/api/user.js'
+import userAPI from '@/api/user'
 import icon from 'vue-awesome/components/Icon'
 
 export default {
@@ -61,24 +61,17 @@ export default {
     methods: {
         requestEmailVerification () {
             if (!this.showEmailValidationInput) {
-                userAPI.requestEmailVerification()
-                    .then(response => {
-                        this.showEmailValidationInput = true
-                        this.$toasted.success(response.data.description)
-                    })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
+                userAPI.requestEmailVerification({responseSuccessToast: true})
+                    .then(_ => { this.showEmailValidationInput = true })
             }
         },
         verifyEmail () {
-            userAPI.verifyEmail(this.emailVerificationToken)
-                .then(response => {
-                    this.$toasted.success(response.data.description)
+            userAPI.verifyEmail(this.emailVerificationToken, {responseSuccessToast: true})
+                .then(_ => {
                     this.$store.commit('user/EMAIL_VERIFIED')
                     this.showEmailValidationInput = false
                 })
-                .catch(_ => {
-                    this.emailVerificationTokenMessage = 'Invalid token'
-                })
+                .catch(_ => { this.emailVerificationTokenMessage = 'Invalid token' })
         }
     }
 }

@@ -52,7 +52,6 @@ import userAPI from '@/api/user'
 import icon from 'vue-awesome/components/Icon'
 import cropper from '@/components/assets/ImageCropper'
 import { mapGetters } from 'vuex'
-import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     components: {
@@ -88,45 +87,40 @@ export default {
             this.$refs['cropperModal'].show()
         },
         saveUserdata () {
-            userAPI.update(0, {first_name: this.firstName, last_name: this.lastName})
+            userAPI.update(0, {first_name: this.firstName, last_name: this.lastName}, {customSuccessToast: 'Saved profile data.'})
                 .then(_ => {
-                    this.$store.commit('user/SET_FULL_USER_NAME', { firstName: this.firstName, lastName: this.lastName })
-                    this.$toasted.success('Saved profile data.')
+                    this.$store.commit('user/SET_FULL_USER_NAME', {firstName: this.firstName, lastName: this.lastName})
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         fileHandler (blob) {
             let formData = new FormData()
             formData.append('file', blob)
 
-            userAPI.uploadProfilePicture(formData)
+            userAPI.uploadProfilePicture(formData, {customSuccessToast: 'Profile picture updated.'})
                 .then(_ => {
                     var reader = new FileReader()
                     reader.onload = () => {
                         this.$store.commit('user/SET_PROFILE_PICTURE', reader.result)
                         this.profileImageDataURL = reader.result
-                        this.$toasted.success('Profile picture updated.')
                         this.$refs['cropperModal'].hide()
                     }
                     reader.readAsDataURL(blob)
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         downloadUserData () {
-            userAPI.GDPR()
+            userAPI.GDPR(0)
                 .then(response => {
-                    let blob = new Blob([response.data], { type: response.headers['content-type'] })
-                    let link = document.createElement('a')
-                    link.href = window.URL.createObjectURL(blob)
-                    link.download = this.storeUsername + '_all_user_data.zip'
-                    document.body.appendChild(link)
-                    link.click()
-                    link.remove()
-                }, error => {
-                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
-                })
-                .catch(_ => {
-                    this.$toasted.error('Error creating file locally.')
+                    try {
+                        let blob = new Blob([response.data], { type: response.headers['content-type'] })
+                        let link = document.createElement('a')
+                        link.href = window.URL.createObjectURL(blob)
+                        link.download = this.storeUsername + '_all_user_data.zip'
+                        document.body.appendChild(link)
+                        link.click()
+                        link.remove()
+                    } catch (_) {
+                        this.$toasted.error('Error creating file locally.')
+                    }
                 })
         },
         isChanged () {

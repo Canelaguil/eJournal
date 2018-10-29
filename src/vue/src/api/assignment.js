@@ -1,46 +1,37 @@
 import auth from '@/api/auth'
 
 export default {
-
-    get (aID, cID = null) {
-        return auth.get('assignments/' + aID, {course_id: cID})
+    get (aID, cID = null, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('assignments/' + aID, {course_id: cID}, connArgs)
             .then(response => response.data.assignment)
     },
 
-    create (data) {
-        return auth.create('assignments', data)
+    create (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.create('assignments', data, connArgs)
             .then(response => response.data.assignment)
     },
 
-    update (id, data) {
-        return auth.update('assignments/' + id, data)
+    update (id, data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('assignments/' + id, data, connArgs)
             .then(response => response.data.assignment)
     },
 
-    delete (aID, cID) {
-        return auth.delete('assignments/' + aID, {course_id: cID})
+    delete (aID, cID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.delete('assignments/' + aID, {course_id: cID}, connArgs)
             .then(response => response.data)
     },
 
-    getAllFromCourse (cID) {
-        if (cID) {
-            return auth.get('assignments', {course_id: cID})
-                .then(response => response.data.assignments)
-        }
-        return auth.get('assignments')
+    getAllFromCourse (cID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('assignments', {course_id: cID}, connArgs)
             .then(response => response.data.assignments)
     },
 
-    getUpcoming (cID = null) {
-        if (cID) {
-            return auth.get('assignments/upcoming', {course_id: cID})
-                .then(response => response.data.upcoming)
-        }
-        return auth.get('assignments/upcoming')
+    getUpcoming (cID = null, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('assignments/upcoming', {course_id: cID}, connArgs)
             .then(response => response.data.upcoming)
     },
 
-    getWithLti (id) {
-        return auth.get('assignments/' + id, {lti: true}, true)
+    getWithLti (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('assignments/' + id, {lti: true}, connArgs)
     }
 }

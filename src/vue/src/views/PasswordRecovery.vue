@@ -35,13 +35,9 @@ export default {
     methods: {
         recoverPassword () {
             if (validation.validatePassword(this.password, this.passwordRepeated)) {
-                authAPI.recoverPassword(this.username, this.recoveryToken, this.password)
-                    .then(response => {
-                        this.$toasted.success(response.description)
-                        this.$router.push({ name: 'Login' })
-                    })
+                authAPI.recoverPassword(this.username, this.recoveryToken, this.password, {responseSuccessToast: true})
+                    .then(response => { this.$router.push({ name: 'Login' }) })
                     .catch(error => {
-                        this.$toasted.error(error.response.data.description)
                         this.$router.push({
                             name: 'ErrorPage',
                             params: {

@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 
 import VLE.permissions as permissions
+from VLE.utils import sanitization
 from VLE.utils.error_handling import (VLEParticipationError,
                                       VLEPermissionError, VLEProgrammingError,
                                       VLEUnverifiedEmailError)
@@ -447,6 +448,11 @@ class Assignment(models.Model):
     def is_due(self):
         return self.due_date and self.due_date < now()
 
+    def save(self, *args, **kwargs):
+        self.description = sanitization.strip_script_tags(self.description)
+
+        return super(Assignment, self).save(*args, **kwargs)
+
     def __str__(self):
         """toString."""
         return self.name + " (" + str(self.id) + ")"
@@ -789,6 +795,11 @@ class Content(models.Model):
         null=True
     )
 
+    def save(self, *args, **kwargs):
+        self.data = sanitization.strip_script_tags(self.data)
+
+        return super(Content, self).save(*args, **kwargs)
+
 
 class Comment(models.Model):
     """Comment.
@@ -817,7 +828,7 @@ class Comment(models.Model):
         if not self.pk:
             self.creation_date = timezone.now()
         self.last_edited = timezone.now()
-
+        self.text = sanitization.strip_script_tags(self.text)
         return super(Comment, self).save(*args, **kwargs)
 
 

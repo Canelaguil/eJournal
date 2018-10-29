@@ -1,14 +1,13 @@
 import auth from '@/api/auth'
 
 export default {
-
-    get () {
-        return auth.get('instance/0')
+    get (connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('instance/0', null, connArgs)
             .then(response => response.data.instance)
     },
 
-    update (data) {
-        return auth.update('instance/0', data)
+    update (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('instance/0', data, connArgs)
             .then(response => response.data.instance)
     }
 

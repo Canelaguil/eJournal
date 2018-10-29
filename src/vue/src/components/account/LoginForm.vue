@@ -74,23 +74,13 @@ export default {
                 username = this.usernameEmail
             }
 
-            authAPI.forgotPassword(username, emailAdress)
-                .then(response => {
-                    this.$refs.forgotPasswordModalRef.hide()
-                    this.$toasted.success(response.data.description)
-                })
-                .catch(error => {
-                    this.$toasted.error(error.response.data.description)
-                })
+            authAPI.forgotPassword(username, emailAdress, {responseSuccessToast: true})
+                .then(response => { this.$refs.forgotPasswordModalRef.hide() })
         },
         handleLogin () {
             this.$store.dispatch('user/login', { username: this.username, password: this.password })
-                .then(_ => {
-                    this.$emit('handleAction')
-                })
-                .catch(_ => {
-                    this.$toasted.error('Could not login')
-                })
+                .then(_ => { this.$emit('handleAction') })
+                .catch(_ => { this.$toasted.error('Could not login') })
         }
     },
     mounted () {

@@ -110,7 +110,6 @@ export default {
                         this.$toasted.error('The website might be out of sync, please login again.')
                     })
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         onReset (evt) {
             if (evt !== undefined) {

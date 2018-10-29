@@ -11,9 +11,8 @@
 </template>
 
 <script>
-import userAPI from '@/api/user.js'
+import userAPI from '@/api/user'
 import icon from 'vue-awesome/components/Icon'
-import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     props: {
@@ -66,13 +65,12 @@ export default {
         fileDownload () {
             userAPI.download(this.authorUID, this.fileName, this.entryID, this.nodeID, this.contentID)
                 .then(response => {
-                    let blob = new Blob([response.data], { type: response.headers['content-type'] })
-                    this.fileURL = window.URL.createObjectURL(blob)
-                }, error => {
-                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
-                })
-                .catch(_ => {
-                    this.$toasted.error('Error creating file.')
+                    try {
+                        let blob = new Blob([response.data], { type: response.headers['content-type'] })
+                        this.fileURL = window.URL.createObjectURL(blob)
+                    } catch (_) {
+                        this.$toasted.error('Error creating file.')
+                    }
                 })
         }
     },

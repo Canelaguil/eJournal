@@ -195,24 +195,19 @@ export default {
                 this.course = course
                 this.originalCourse = this.deepCopyCourse(course)
             })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
 
         groupAPI.getAllFromCourse(this.cID)
             .then(groups => { this.groups = groups })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
 
         roleAPI.getFromCourse(this.cID)
             .then(roles => { this.roles = roles })
-            .catch(error => { this.$toated.error(error.response.data.description) })
 
         if (this.$hasPermission('can_view_course_users')) {
             roleAPI.getFromCourse(this.cID)
                 .then(roles => { this.roles = roles })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
 
             participationAPI.getEnrolled(this.cID)
                 .then(users => { this.participants = users })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         }
     },
     methods: {
@@ -221,14 +216,12 @@ export default {
         },
         onSubmit () {
             if (this.formFilled()) {
-                courseAPI.update(this.cID, this.course)
+                courseAPI.update(this.cID, this.course, {customSuccessToast: 'Successfully updated the course.'})
                     .then(course => {
                         this.course = course
                         this.originalCourse = this.deepCopyCourse(course)
-                        this.$toasted.success('Successfully updated the course.')
                         store.clearCache()
                     })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
             } else {
                 this.$toasted.error('One or more required fields are empty.')
             }
@@ -236,11 +229,7 @@ export default {
         deleteCourse () {
             if (confirm('Are you sure you want to delete ' + this.course.name + '?')) {
                 courseAPI.delete(this.cID)
-                    .then(response => {
-                        this.$router.push({name: 'Home'})
-                        this.$toasted.success(response.description)
-                    })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
+                    .then(response => { this.$router.push({name: 'Home'}) })
             }
         },
         deleteParticipantLocally (user) {
@@ -267,31 +256,26 @@ export default {
         deleteGroup (groupName) {
             groupAPI.getAllFromCourse(this.cID)
                 .then(groups => { this.groups = groups })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
 
             // TODO replace api function with frontend function
             if (this.$hasPermission('can_view_course_users')) {
                 participationAPI.getEnrolled(this.cID)
                     .then(users => { this.participants = users })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
             }
         },
         updateGroup (oldGroupName, newGroupName) {
             // TODO replace api function with frontend function
             groupAPI.getAllFromCourse(this.cID)
                 .then(groups => { this.groups = groups })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
 
             if (this.$hasPermission('can_view_course_users')) {
                 participationAPI.getEnrolled(this.cID)
                     .then(users => { this.participants = users })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
             }
         },
         loadUnenrolledStudents () {
             participationAPI.getUnenrolled(this.cID)
                 .then(users => { this.unenrolledStudents = users })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
             this.unenrolledLoaded = !this.unenrolledLoaded
         },
         routeToEditCourseRoles () {

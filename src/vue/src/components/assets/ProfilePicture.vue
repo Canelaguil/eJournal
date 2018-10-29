@@ -7,7 +7,6 @@
 
 <script>
 import userAPI from '@/api/user'
-import genericUtils from '@/utils/generic_utils.js'
 
 export default {
     props: ['user'],
@@ -18,18 +17,17 @@ export default {
     },
     mounted () {
         if (!this.user.lti_image) {
-            userAPI.downloadProfilePicture(this.user.id)
+            userAPI.downloadProfilePicture(this.user.id, { redirect: false })
                 .then(response => {
-                    var reader = new FileReader()
-                    reader.onload = () => {
-                        this.profilePicture = reader.result
+                    try {
+                        var reader = new FileReader()
+                        reader.onload = () => {
+                            this.profilePicture = reader.result
+                        }
+                        reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
+                    } catch (_) {
+                        this.$toasted.error('Failed to read profile picture data.')
                     }
-                    reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
-                }, error => {
-                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
-                })
-                .catch(_ => {
-                    this.$toasted.error('Failed to read profile picture data.')
                 })
         }
     }

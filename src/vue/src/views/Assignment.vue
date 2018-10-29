@@ -126,25 +126,19 @@ export default {
                 this.assignmentJournals = assignment.journals
                 this.stats = assignment.stats
             })
-            .catch(error => {
-                this.$toasted.error(error.response.data.description)
-            })
 
         if (this.$hasPermission('can_view_course_users')) {
             groupAPI.getAllFromCourse(this.cID)
-                .then(groups => {
-                    this.groups = groups
-                })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
+                .then(groups => { this.groups = groups })
         }
 
         participationAPI.get(this.cID)
             .then(participant => {
+                /* Group can be null */
                 if (participant.group && participant.group.name) {
                     this.selectedFilterGroupOption = participant.group.name
                 }
             })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
 
         if (this.$route.query.sort === 'sortFullName' ||
             this.$route.query.sort === 'sortUsername' ||
@@ -157,9 +151,6 @@ export default {
         }
     },
     methods: {
-        customisePage () {
-            this.$toasted.info('Wishlist: Customise page')
-        },
         handleEdit () {
             this.$router.push({
                 name: 'FormatEdit',
@@ -171,17 +162,16 @@ export default {
         },
         publishGradesAssignment () {
             if (confirm('Are you sure you want to publish all grades for each journal?')) {
-                assignmentAPI.update(this.aID, {published: true})
+                assignmentAPI.update(this.aID, {published: true}, {
+                    customErrorToast: 'Error while publishing all grades for this assignment.',
+                    customSuccessToast: 'Published all grades for this assignment.'
+                })
                     .then(_ => {
-                        this.$toasted.success('Published all grades for this assignment.')
                         assignmentAPI.get(this.aID, this.cID)
                             .then(assignment => {
                                 this.assignmentJournals = assignment.journals
                                 this.stats = assignment.stats
                             })
-                    })
-                    .catch(_ => {
-                        this.$toasted.error('Error while publishing all grades for this assignment.')
                     })
             }
         },

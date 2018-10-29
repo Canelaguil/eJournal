@@ -108,7 +108,6 @@ export default {
     created () {
         assignmentAPI.get(this.aID)
             .then(assignment => { this.assignment = assignment })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
         journalAPI.getNodes(this.jID)
             .then(nodes => {
                 this.nodes = nodes
@@ -124,17 +123,14 @@ export default {
 
                 this.selectFirstUngradedNode()
             })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
 
         journalAPI.get(this.jID)
             .then(journal => { this.journal = journal })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
 
         if (store.state.filteredJournals.length === 0) {
             if (this.$hasPermission('can_view_all_journals')) {
                 journalAPI.getFromAssignment(this.cID, this.aID)
                     .then(journals => { this.assignmentJournals = journals })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
             }
 
             if (this.$route.query.sort === 'sortFullName' ||
@@ -234,14 +230,14 @@ export default {
 
             journalAPI.get(this.jID)
                 .then(journal => { this.journal = journal })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         publishGradesJournal () {
             if (confirm('Are you sure you want to publish all grades for this journal?')) {
-                journalAPI.update(this.jID, {published: true})
+                journalAPI.update(this.jID, {published: true}, {
+                    customSuccessToast: 'Published all grades for this journal.',
+                    customErrorToast: 'Error while publishing all grades for this journal.'
+                })
                     .then(_ => {
-                        this.$toasted.success('Published all grades for this journal.')
-
                         for (var node of this.nodes) {
                             if ((node.type === 'e' || node.type === 'd') && node.entry) {
                                 node.entry.published = true
@@ -252,9 +248,6 @@ export default {
                             .then(nodes => { this.nodes = nodes })
                         journalAPI.get(this.jID)
                             .then(journal => { this.journal = journal })
-                    })
-                    .catch(_ => {
-                        this.$toasted.error('Error while publishing all grades for this journal.')
                     })
             }
         },

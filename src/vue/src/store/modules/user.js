@@ -2,6 +2,7 @@ import Vue from 'vue'
 import * as types from '../constants/mutation-types.js'
 import connection from '@/api/connection.js'
 import genericUtils from '@/utils/generic_utils.js'
+import sanitization from '@/utils/sanitization.js'
 
 const getters = {
     jwtAccess: state => state.jwtAccess,
@@ -97,7 +98,7 @@ const actions = {
                 dispatch('populateStore').then(response => {
                     resolve('JWT and store are set successfully.')
                 }, error => {
-                    Vue.toasted.error(error.response.data.description)
+                    Vue.toasted.error(sanitization.escapeHtml(error.response.data.description))
                     reject(error) // Login success but hydration failed
                 })
             }, error => {
@@ -117,7 +118,7 @@ const actions = {
         if (error) {
             var code
             if (error.response.data instanceof ArrayBuffer) {
-                code = genericUtils.parseArrayBufferResponseErrorData(error).code
+                code = genericUtils.parseArrayBuffer(error.response.data).code
             } else {
                 code = error.response.data.code
             }
@@ -148,7 +149,7 @@ const actions = {
             connection.conn.get('/users/0/').then(response => {
                 commit(types.HYDRATE_USER, response.data)
             }, error => {
-                Vue.toasted.error(error.response.data.description)
+                Vue.toasted.error(sanitization.escapeHtml(error.response.data.description))
                 reject(error)
             }).then(() => {
                 if (this.getters['user/profilePicture']) {
@@ -162,7 +163,8 @@ const actions = {
                         }
                         reader.readAsDataURL(new Blob([response.data], { type: response.headers['content-type'] }))
                     }, error => {
-                        genericUtils.displayArrayBufferRequestError(Vue.toasted, error)
+                        let enc = new TextDecoder('utf-8')
+                        Vue.toasted.error(JSON.parse(enc.decode(error.response.data)).description)
                         reject(error)
                     })
                 }

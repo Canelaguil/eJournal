@@ -38,25 +38,18 @@ export default {
     },
     methods: {
         updateGroupName () {
-            groupAPI.update(this.cID, {
-                old_group_name: this.group,
-                new_group_name: this.form.newGroupName
-            })
+            groupAPI.update(this.cID, {old_group_name: this.group, new_group_name: this.form.newGroupName},
+                {customSuccessToast: 'Successfully updated the group.'})
                 .then(group => {
                     this.groupName = this.form.newGroupName
                     this.$emit('update-group', this.groupName, group.name)
-                    this.$toasted.success('Successfully updated the group.')
                     this.form.newGroupName = ''
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         removeGroup () {
             if (confirm('Are you sure you want to remove "' + this.groupName + '" from this course?')) {
-                groupAPI.delete(this.cID, this.groupName).then(data => {
-                    this.$toasted.success(data.description)
+                groupAPI.delete(this.cID, this.groupName, {responseSuccessToast: true}).then(data => {
                     this.$emit('delete-group', this.groupName)
-                }, error => {
-                    this.$toasted.error(error.response.data.description)
                 })
             }
         }

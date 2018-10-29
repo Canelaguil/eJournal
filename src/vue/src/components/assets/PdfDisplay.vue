@@ -41,9 +41,9 @@
 
 <script>
 import pdf from 'vue-pdf'
-import userAPI from '@/api/user.js'
+import userAPI from '@/api/user'
 import icon from 'vue-awesome/components/Icon'
-import genericUtils from '@/utils/generic_utils.js'
+import sanitization from '@/utils/sanitization.js'
 
 export default {
     props: {
@@ -115,7 +115,7 @@ export default {
             this.$toasted.error('Password handling is not implemented.')
         },
         error (err) {
-            this.$toasted.error(err)
+            this.$toasted.error(sanitization.escapeHtml(err))
         },
         print () {
             this.$refs.pdf.print()
@@ -123,18 +123,17 @@ export default {
         fileDownload () {
             userAPI.download(this.authorUID, this.fileName, this.entryID, this.nodeID, this.contentID)
                 .then(response => {
-                    let blob = new Blob([response.data], { type: response.headers['content-type'] })
-                    this.fileURL = window.URL.createObjectURL(blob)
+                    try {
+                        let blob = new Blob([response.data], { type: response.headers['content-type'] })
+                        this.fileURL = window.URL.createObjectURL(blob)
 
-                    this.downloadLink = document.createElement('a')
-                    this.downloadLink.href = this.fileURL
-                    this.downloadLink.download = this.fileName
-                    document.body.appendChild(this.downloadLink)
-                }, error => {
-                    genericUtils.displayArrayBufferRequestError(this.$toasted, error)
-                })
-                .catch(_ => {
-                    this.$toasted.error('Error creating file.')
+                        this.downloadLink = document.createElement('a')
+                        this.downloadLink.href = this.fileURL
+                        this.downloadLink.download = this.fileName
+                        document.body.appendChild(this.downloadLink)
+                    } catch (_) {
+                        this.$toasted.error('Error creating file.')
+                    }
                 })
         }
     },
