@@ -69,7 +69,7 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
 
     # Check if the created object is the same as the one it got
     if get_is_create and get_status == 200:
-        obj.assertEquals(create_object, get_object)
+        obj.assertEquals(create_object, get_object, 'Create object does not equal the ')
 
     # Update the object
     if update_params is not None:
