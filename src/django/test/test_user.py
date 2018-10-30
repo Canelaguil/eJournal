@@ -35,6 +35,9 @@ class UserAPITest(TestCase):
         assert 'id' in get_resp, 'Test is the student got userdata'
         assert 'grade_notifications' in get_resp, 'Test is the student got all their userdata'
 
+        # Check if a user cant see other users data
+        api.get(self, 'users', params={'pk': teacher.pk}, user=student, status=403)
+
         # TODO: test get user as supervisor
         # NOTE: grade_notifications should not be in get_resp
 
