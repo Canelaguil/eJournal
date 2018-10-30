@@ -1,4 +1,4 @@
-import test.factory.user as userfactory
+import test.factory as factory
 from test.utils import api
 
 from django.test import TestCase
@@ -13,16 +13,16 @@ class CourseAPITest(TestCase):
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       update_params={'abbreviation': 'TC2'},
-                      user=userfactory.AdminFactory())
+                      user=factory.Admin())
 
         # Test the basic rest functionallity as a teacher
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       update_params={'abbreviation': 'TC2'},
-                      user=userfactory.TeacherFactory())
+                      user=factory.Teacher())
 
         # Test the basic rest functionallity as a student
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       create_status=403,
-                      user=userfactory.UserFactory())
+                      user=factory.User())
