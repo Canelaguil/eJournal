@@ -227,13 +227,12 @@ class UserView(viewsets.ViewSet):
         On success:
             success -- deleted message
         """
-        if not request.user.is_superuser:
-            return response.forbidden('You are not allowed to delete a user.')
-
         if int(pk) == 0:
             pk = request.user.id
-
         user = User.objects.get(pk=pk)
+
+        if not (request.user.is_superuser or request.user == user):
+            return response.forbidden('You are not allowed to delete a user.')
 
         # Deleting the last superuser should not be possible
         if user.is_superuser and User.objects.filter(is_superuser=True).count() == 1:
@@ -291,7 +290,7 @@ class UserView(viewsets.ViewSet):
         user = User.objects.get(pk=pk)
 
         # Check the right permissions to get this users data, either be the user of the data or be an admin.
-        if not (user.is_superuser or request.user.id == pk):
+        if not (request.user.is_superuser or request.user.id == pk):
             return response.forbidden('You are not allowed to view this user\'s data.')
 
         profile = UserSerializer(user).data
