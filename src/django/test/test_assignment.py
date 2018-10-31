@@ -1,5 +1,4 @@
-import test.factory.course as coursefactory
-import test.factory.user as userfactory
+import test.factory as factory
 from test.utils import api
 
 from django.test import TestCase
@@ -7,8 +6,8 @@ from django.test import TestCase
 
 class AssignmentAPITest(TestCase):
     def setUp(self):
-        self.teacher = userfactory.TeacherFactory()
-        self.course = coursefactory.CourseFactory(author=self.teacher)
+        self.teacher = factory.Teacher()
+        self.course = factory.Course(author=self.teacher)
         self.create_params = {'name': 'test', 'description': 'test_description', 'course_id': self.course.pk}
 
     def test_rest(self):
@@ -18,7 +17,7 @@ class AssignmentAPITest(TestCase):
                       get_params={'course_id': self.course.pk},
                       update_params={'description': 'test_description2'},
                       delete_params={'course_id': self.course.pk},
-                      user=userfactory.AdminFactory())
+                      user=factory.Admin())
 
         # Test the basic rest functionality as a teacher
         api.test_rest(self, 'assignments',
@@ -32,16 +31,15 @@ class AssignmentAPITest(TestCase):
         api.test_rest(self, 'assignments',
                       create_params=self.create_params,
                       create_status=403,
-                      user=userfactory.UserFactory())
+                      user=factory.User())
 
     def test_update(self):
-        assignment = api.create(self, 'assignments', params=self.create_params,
-                                user=self.teacher)['assignment']
+        assignment = api.create(self, 'assignments', params=self.create_params, user=self.teacher)['assignment']
 
         # Try to publish the assignment
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
-                   user=userfactory.UserFactory(), status=403)
+                   user=factory.User(), status=403)
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
                    user=self.teacher)
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
-                   user=userfactory.AdminFactory())
+                   user=factory.Admin())

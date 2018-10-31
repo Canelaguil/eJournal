@@ -14,17 +14,19 @@ import VLE.utils.generic_utils as utils
 
 
 def format_url(obj, url, params, function):
+    # set primary key if its not a create, when no pk is supplied, default to 0
+    if function != obj.client.post:
+        pk = params.pop('pk', None)
+        if pk is not None:
+            s = url.split('/')
+            s.insert(1, str(pk))
+            url = '/'.join(s)
+
     # add / to from and back
     if url[0] != '/':
         url = '/' + url
     if url[-1] != '/':
         url += '/'
-
-    # set primary key if its not a create, when no pk is supplied, default to 0
-    if function != obj.client.post:
-        pk = params.pop('pk', None)
-        if pk is not None:
-            url += '{}/'.format(pk)
 
     # add params to the url if it cant have a body
     if function in [obj.client.get, obj.client.delete]:
@@ -154,5 +156,5 @@ def call(obj, function, url, params=None,
     test_utils.assert_response(obj, result, status)
     try:
         return result.json()
-    except AttributeError:
+    except (AttributeError, ValueError):
         return result
