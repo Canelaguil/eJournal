@@ -26,7 +26,7 @@ class UserAPITest(TestCase):
         # Test get all users
         api.get(self, 'users', user=student, status=403)
         get_resp = api.get(self, 'users', user=admin)['users']
-        assert len(get_resp) == 3, 'Test is the admin got all the users'
+        assert len(get_resp) == 2, 'Test is the admin got all the users'
 
         # Test get own user
         get_resp = api.get(self, 'users', params={'pk': 0}, user=student)['user']

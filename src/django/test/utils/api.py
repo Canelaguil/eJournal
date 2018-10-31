@@ -6,7 +6,6 @@ Helpter function for the test enviroment.
 
 import json
 import test.factory.user as userfactory
-import test.utils.generic_utils as test_utils
 
 from django.urls import reverse
 
@@ -71,7 +70,7 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
 
     # Check if the created object is the same as the one it got
     if get_is_create and get_status == 200:
-        obj.assertEquals(create_object, get_object, 'Create object does not equal the ')
+        assert create_object == get_object, 'Created object does not equal the get result.'
 
     # Update the object
     if update_params is not None:
@@ -94,44 +93,44 @@ def test_rest(obj, url, create_params=None, delete_params=None, update_params=No
     delete(obj, url, params={'pk': pk, **delete_params}, user=user, password=password, status=delete_status)
 
 
-def get(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
+def get(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200):
     return call(obj, obj.client.get, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
-def get_list(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
+def get_list(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200):
     return call(obj, obj.client.get, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
-def create(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=201, result=None):
+def create(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=201):
     return call(obj, obj.client.post, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
-def post(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
+def post(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200):
     return call(obj, obj.client.post, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
-def update(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
+def update(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200):
     return call(obj, obj.client.patch, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
-def patch(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
+def patch(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200):
     return call(obj, obj.client.patch, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
-def delete(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200, result=None):
+def delete(obj, url, params=None, user=None, password=userfactory.DEFAULT_PASSWORD, status=200):
     return call(obj, obj.client.delete, url,
-                params=params, user=user, password=password, status=status, result=result)
+                params=params, user=user, password=password, status=status)
 
 
 def call(obj, function, url, params=None,
          user=None, password=userfactory.DEFAULT_PASSWORD,
-         status=200, status_when_unauthorized=401, result=None,
+         status=200, status_when_unauthorized=401,
          content_type='application/json'):
     # Set params to an empty dictionary when its None this cant be done in the parameters themself as that can give
     # unwanted results when calling the function multiple times
@@ -142,19 +141,22 @@ def call(obj, function, url, params=None,
 
     if user is None:
         if function in [obj.client.get, obj.client.delete]:
-            result = function(url, content_type=content_type)
+            response = function(url, content_type=content_type)
         else:
-            result = function(url, json.dumps(params), content_type=content_type)
+            response = function(url, json.dumps(params), content_type=content_type)
     else:
         logged_user = login(obj, user, password)
         access, = utils.required_params(logged_user, 'access')
         if function in [obj.client.get, obj.client.delete]:
-            result = function(url, content_type=content_type, HTTP_AUTHORIZATION='Bearer ' + access)
+            response = function(url, content_type=content_type, HTTP_AUTHORIZATION='Bearer ' + access)
         else:
-            result = function(url, json.dumps(params), content_type=content_type, HTTP_AUTHORIZATION='Bearer ' + access)
+            response = function(url, json.dumps(params), content_type=content_type,
+                                HTTP_AUTHORIZATION='Bearer ' + access)
 
-    test_utils.assert_response(obj, result, status)
     try:
-        return result.json()
+        result = response.json()
     except (AttributeError, ValueError):
-        return result
+        result = response
+
+    assert response.status_code == status, 'Request status did not equal the expected response. Result:' + result
+    return result
