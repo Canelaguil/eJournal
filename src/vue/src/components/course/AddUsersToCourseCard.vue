@@ -1,7 +1,7 @@
 <template>
     <b-card :class="$root.getBorderClass(user.id)" class="no-hover">
         <div class="float-left">
-            <b>{{ user.name }}</b><br>
+            <b>{{ user.fullname }}</b><br>
             {{ user.username }}
         </div>
         <b-button v-if="$hasPermission('can_add_course_users')"
@@ -28,7 +28,7 @@ export default {
     },
     methods: {
         addUserToCourse () {
-            if (confirm('Are you sure you want to add "' + this.user.name + '" to this course?')) {
+            if (confirm('Are you sure you want to add "' + this.user.fullname + '" to this course?')) {
                 participationAPI.create({course_id: this.cID, user_id: this.user.id})
                     .then(_ => { this.$emit('add-participant', this.user) })
             }

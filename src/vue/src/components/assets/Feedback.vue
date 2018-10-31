@@ -1,7 +1,7 @@
 <template>
     <b-card class="no-hover">
         <h2>Thank you for helping us improve eJournal</h2>
-        Hi {{ $store.getters['user/firstName'] }}! If you have any suggestions for improvements or encountered
+        Hi {{ $store.getters['user/fullName'] }}! If you have any suggestions for improvements or encountered
         any issues/bugs, please inform us by filling in the form below. We aim to get back to you as soon as possible.
         <hr/>
         <h2 class='field-heading'>Topic:*</h2>
@@ -38,7 +38,7 @@
         </b-form-file>
 
         <b-form-checkbox v-model="privacyAgreement">
-            I agree to share my username, email, first name and feedback with eJournal's email provider Zoho.*
+            I agree to share my username, email, full name and feedback with eJournal's email provider Zoho.*
         </b-form-checkbox>
 
         <b-button class="add-button float-right" @click="$emit(sendFeedback())">

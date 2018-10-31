@@ -138,6 +138,20 @@ class GetApiTests(TestCase):
         # permissions and authorization check for the api call.
         test.test_unauthorized_api_get_call(self, '/courses/')
 
+    def test_get_groups(self):
+        """Test get groups function."""
+        course = factory.make_course('Portfolio', 'PAV')
+        factory.make_course_group('C++', course)
+        test.set_up_participation(self.user, course, 'Teacher')
+
+        login = test.logging_in(self, self.username, self.password)
+        response = test.api_get_call(self, '/groups/', login, params={'course_id': course.pk})
+        self.assertEquals(response.json()['groups'][0]['name'], 'C++')
+
+        factory.make_course_group('A', course)
+        response = test.api_get_call(self, '/groups/', login, params={'course_id': course.pk})
+        self.assertEquals(len(response.json()['groups']), 2)
+
     def test_get_linkable_courses(self):
         """Test the get linkable courses function."""
         self.user.is_teacher = True

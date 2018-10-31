@@ -21,8 +21,7 @@ class CreateApiTests(TestCase):
         user = {
             'username': 'Student',
             'password': 'Pa$$word!',
-            'first_name': 'Student',
-            'last_name': 'Testing',
+            'full_name': 'Student Testing',
         }
         # No email
         test.api_post_call(self, '/users/', params=user, status=400)

@@ -25,51 +25,44 @@ class Command(BaseCommand):
         users_examples = [
             {
                 "username": "Student",
-                "first_name": "Lars",
-                "last_name": "van Hijfte",
+                "full_name": "Lars van Hijfte",
                 "verified_email": False,
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False
             }, {
                 "username": "Student2",
-                "first_name": "Rick",
-                "last_name": "Watertor",
+                "full_name": "Rick Watertor",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False
             }, {
                 "username": "Student3",
-                "first_name": "Dennis",
-                "last_name": "Wind",
+                "full_name": "Dennis Wind",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False
             }, {
                 "username": "Student4",
-                "first_name": "Maarten",
-                "last_name": "Keulen",
+                "full_name": "Maarten Keulen",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False
             }, {
                 "username": "Student5",
-                "first_name": "Zi Long",
-                "last_name": "Zhu",
+                "full_name": "Zi Long Zhu",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False
             }, {
                 "username": "Teacher",
-                "first_name": "Xavier",
-                "last_name": "van Dommelen",
+                "full_name": "Xavier van Dommelen",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": True
             }, {
                 "username": "Superuser",
-                "first_name": "Super",
-                "last_name": "User",
+                "full_name": "Super User",
                 "pass": "pass",
                 "is_superuser": True,
                 "is_teacher": True
@@ -81,10 +74,9 @@ class Command(BaseCommand):
             self.users.append(factory.make_user(
                 u['username'],
                 u['pass'],
-                u['email'] if 'email' in u else u['first_name'] + '@eJourn.al',
+                u['email'] if 'email' in u else u['full_name'] + '@eJourn.al',
                 is_superuser=u['is_superuser'], is_teacher=u['is_teacher'],
-                first_name=u['first_name'], last_name=u['last_name'],
-                verified_email=u['verified_email'] if 'verified_email' in u else False)
+                full_name=u['full_name'], verified_email=u['verified_email'] if 'verified_email' in u else False)
             )
 
     def gen_courses(self):

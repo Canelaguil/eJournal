@@ -79,8 +79,7 @@ class UserView(viewsets.ViewSet):
         request -- request data
             username -- username
             password -- password
-            first_name -- (optinal) first name
-            last_name -- (optinal) last name
+            full_name -- (optinal) full name
             email -- (optinal) email
             jwt_params -- (optinal) jwt params to get the lti information from
                 user_id -- id of the user
@@ -114,7 +113,7 @@ class UserView(viewsets.ViewSet):
                 pass
 
         username, password = utils.required_params(request.data, 'username', 'password')
-        first_name, last_name, email = utils.optional_params(request.data, 'first_name', 'last_name', 'email')
+        full_name, email = utils.optional_params(request.data, 'full_name', 'email')
 
         if email and User.objects.filter(email=email).exists():
             return response.bad_request('User with this email already exists.')
@@ -130,7 +129,7 @@ class UserView(viewsets.ViewSet):
         validators.validate_password(password)
 
         user = factory.make_user(username, password, email=email, lti_id=lti_id, is_teacher=is_teacher,
-                                 first_name=first_name, last_name=last_name, profile_picture=user_image,
+                                 full_name=full_name, profile_picture=user_image,
                                  verified_email=True if lti_id else False)
 
         if lti_id is None:
@@ -185,9 +184,7 @@ class UserView(viewsets.ViewSet):
             user.email = user_email
             user.verified_email = True
         if user_full_name is not None:
-            splitname = user_full_name.split(' ')
-            user.first_name = splitname[0]
-            user.last_name = user_full_name[len(splitname[0])+1:]
+            user.full_name = user_full_name
         if is_teacher:
             user.is_teacher = is_teacher
 

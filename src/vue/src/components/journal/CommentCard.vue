@@ -19,7 +19,7 @@
                         </b-button>
                         <div v-html="comment.text"/>
                         <hr class="full-width"/>
-                        <b>{{ comment.author.first_name + ' ' + comment.author.last_name }}</b>
+                        <b>{{ comment.author.full_name }}</b>
                         <span v-if="comment.published && $root.beautifyDate(comment.last_edited) === $root.beautifyDate(comment.creation_date)" class="timestamp">
                             {{ $root.beautifyDate(comment.creation_date) }}<br/>
                         </span>

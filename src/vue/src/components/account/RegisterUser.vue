@@ -5,10 +5,8 @@
         <b-form @submit.prevent="onSubmit" @reset.prevent="onReset">
             <h2 v-if="!lti" class="field-heading">Username</h2>
             <b-input v-if="!lti" class="multi-form theme-input" v-model="form.username" placeholder="Username" required/>
-            <h2 v-if="!lti" class="field-heading">First name</h2>
-            <b-input v-if="!lti" class="multi-form theme-input" v-model="form.firstname" placeholder="First name" required/>
-            <h2 v-if="!lti" class="field-heading">Last name</h2>
-            <b-input v-if="!lti" class="multi-form theme-input" v-model="form.lastname" placeholder="Last name" required/>
+            <h2 v-if="!lti" class="field-heading">Full name</h2>
+            <b-input v-if="!lti" class="multi-form theme-input" v-model="form.fullname" placeholder="Full name" required/>
             <h2 class="field-heading">Password</h2>
             <b-input class="multi-form theme-input" v-model="form.password" type="password" placeholder="Password" required/>
             <h2 class="field-heading">Repeat password</h2>
@@ -43,8 +41,7 @@ export default {
                 username: '',
                 password: '',
                 password2: '',
-                firstname: '',
-                lastname: '',
+                fullname: '',
                 email: '',
                 ltiJWT: ''
             }
@@ -54,14 +51,13 @@ export default {
         onSubmit () {
             if (this.lti) {
                 this.form.username = this.lti.username
-                this.form.firstname = this.lti.firstname
-                this.form.lastname = this.lti.lastname
+                this.form.fullname = this.lti.fullname
                 this.form.email = this.lti.email
                 this.form.ltiJWT = this.lti.ltiJWT
             }
 
             if (validation.validatePassword(this.form.password, this.form.password2) && validation.validateEmail(this.form.email)) {
-                authAPI.register(this.form.username, this.form.password, this.form.firstname, this.form.lastname,
+                authAPI.register(this.form.username, this.form.password, this.form.fullname,
                     this.form.email, this.form.ltiJWT, {
                         customSuccessToast: this.lti ? '' : 'Registration successful! Please follow the instructions sent to ' + this.form.email +
                                                             ' to confirm your email address.'
@@ -89,8 +85,7 @@ export default {
             this.form.username = ''
             this.form.password = ''
             this.form.password2 = ''
-            this.form.firstname = ''
-            this.form.lastname = ''
+            this.form.fullname = ''
             this.form.email = ''
         }
     },

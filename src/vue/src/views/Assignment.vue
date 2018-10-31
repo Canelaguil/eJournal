@@ -200,7 +200,7 @@ export default {
             let self = this
 
             function compareFullName (a, b) {
-                return self.compare(a.student.name, b.student.name)
+                return self.compare(a.student.full_name, b.student.full_name)
             }
 
             function compareUsername (a, b) {
@@ -213,7 +213,7 @@ export default {
 
             function searchFilter (assignment) {
                 var username = assignment.student.username.toLowerCase()
-                var fullName = assignment.student.name.toLowerCase()
+                var fullName = assignment.student.full_name.toLowerCase()
                 var searchVariable = self.searchVariable.toLowerCase()
 
                 return username.includes(searchVariable) ||

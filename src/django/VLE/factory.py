@@ -22,7 +22,7 @@ def make_instance(allow_standalone_registration=None):
 
 
 def make_user(username, password, email, lti_id=None, profile_picture=None,
-              is_superuser=False, is_teacher=False, first_name=None, last_name=None, verified_email=False):
+              is_superuser=False, is_teacher=False, full_name=None, verified_email=False):
     """Create a user.
 
     Arguments:
@@ -36,10 +36,7 @@ def make_user(username, password, email, lti_id=None, profile_picture=None,
     user = User(username=username, email=email, lti_id=lti_id, is_superuser=is_superuser,
                 is_teacher=is_teacher, verified_email=verified_email)
 
-    if first_name:
-        user.first_name = first_name
-    if last_name:
-        user.last_name = last_name
+    user.full_name = full_name
 
     user.save()
     user.set_password(password)

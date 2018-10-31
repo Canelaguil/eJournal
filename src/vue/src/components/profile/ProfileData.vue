@@ -21,15 +21,9 @@
             <b-form-input :readonly="(storeLtiID) ? true : false"
                 :class="{'input-disabled': (storeLtiID) ? true : false}"
                 class="theme-input multi-form"
-                v-model="firstName"
+                v-model="fullName"
                 type="text"
-                placeholder="First name"/>
-            <b-form-input :readonly="(storeLtiID) ? true : false"
-                :class="{'input-disabled': (storeLtiID) ? true : false}"
-                class="theme-input multi-form"
-                v-model="lastName"
-                type="text"
-                placeholder="Last name"/>
+                placeholder="Full name"/>
             <email/>
 
             <b-button v-if="!storeLtiID" class="add-button multi-form float-right" @click="saveUserdata">
@@ -64,8 +58,7 @@ export default {
             showEmailValidationInput: true,
             emailVerificationToken: null,
             emailVerificationTokenMessage: null,
-            firstName: null,
-            lastName: null,
+            fullName: null,
             updateCropper: false
         }
     },
@@ -74,8 +67,7 @@ export default {
             storeUsername: 'user/username',
             storeLtiID: 'user/ltiID',
             storeProfilePic: 'user/profilePicture',
-            storeFirstName: 'user/firstName',
-            storeLastName: 'user/lastName'
+            storeFullName: 'user/fullName',
         })
     },
     methods: {
@@ -84,9 +76,9 @@ export default {
             this.$refs['cropperModal'].show()
         },
         saveUserdata () {
-            userAPI.update(0, {first_name: this.firstName, last_name: this.lastName}, {customSuccessToast: 'Saved profile data.'})
+            userAPI.update(0, {full_name: this.fullName}, {customSuccessToast: 'Saved profile data.'})
                 .then(_ => {
-                    this.$store.commit('user/SET_FULL_USER_NAME', {firstName: this.firstName, lastName: this.lastName})
+                    this.$store.commit('user/SET_FULL_USER_NAME', {fullName: this.fullName})
                 })
         },
         fileHandler (dataURL) {
@@ -114,13 +106,12 @@ export default {
                 })
         },
         isChanged () {
-            return (this.firstName !== this.storeFirstName || this.lastName !== this.storeLastName)
+            return (this.fullName !== this.storeFullName)
         }
     },
     mounted () {
         this.profileImageDataURL = this.storeProfilePic
-        this.firstName = this.storeFirstName
-        this.lastName = this.storeLastName
+        this.fullName = this.storeFullName
     }
 }
 </script>

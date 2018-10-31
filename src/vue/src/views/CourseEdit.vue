@@ -335,7 +335,7 @@ export default {
 
             function searchFilter (user) {
                 var username = user.username.toLowerCase()
-                var fullName = user.first_name.toLowerCase() + ' ' + user.last_name.toLowerCase()
+                var fullName = user.full_name.toLowerCase()
                 var searchVariable = self.searchVariable.toLowerCase()
 
                 return username.includes(searchVariable) ||

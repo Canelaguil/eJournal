@@ -68,7 +68,7 @@ def send_email_feedback(user, files, topic, ftype, feedback, user_agent, url):
     f_body += "THE FEEDBACK:\n{}".format(feedback[0])
 
     r_subject = "[eJournal] Submitted feedback"
-    r_body = "Hi {},\n\n".format(user.first_name)
+    r_body = "Hi {},\n\n".format(user.full_name)
     r_body += "Thank you for your feedback! Below you will find a copy of your given feedback. "
     r_body += "If you supplied attachments, then they are added to this e-mail as well.\n\n"
     r_body += "The feedback:\n\n{}\n\n".format(feedback[0])

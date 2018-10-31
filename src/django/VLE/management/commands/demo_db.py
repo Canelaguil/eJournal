@@ -28,8 +28,7 @@ class Command(BaseCommand):
                 "username": "Student",
                 "email": "thamj@msn.com",
                 "verified_email": True,
-                "first_name": "Jan",
-                "last_name": "Klaassen",
+                "full_name": "Jan Klaassen",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False,
@@ -37,8 +36,7 @@ class Command(BaseCommand):
                 "username": "Student2",
                 "email": "test@test1.test",
                 "verified_email": True,
-                "first_name": "Henk",
-                "last_name": "Doorn",
+                "full_name": "Henk Doorn",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False,
@@ -46,8 +44,7 @@ class Command(BaseCommand):
                 "username": "Student3",
                 "email": "test@test2.test",
                 "verified_email": True,
-                "first_name": "Siemen",
-                "last_name": "Gerry",
+                "full_name": "Siemen Gerry",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False,
@@ -55,8 +52,7 @@ class Command(BaseCommand):
                 "username": "Student4",
                 "email": "test@test3.test",
                 "verified_email": True,
-                "first_name": "Annet",
-                "last_name": "Stien",
+                "full_name": "Annet Stien",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False,
@@ -64,8 +60,7 @@ class Command(BaseCommand):
                 "username": "Student5",
                 "email": "test@test4.test",
                 "verified_email": True,
-                "first_name": "Maarten",
-                "last_name": "van den Wijngaerd",
+                "full_name": "Maarten van den Wijngaerd",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": False,
@@ -73,8 +68,7 @@ class Command(BaseCommand):
                 "username": "Teacher",
                 "email": "test@test5.test",
                 "verified_email": True,
-                "first_name": "Marco",
-                "last_name": "Polo",
+                "full_name": "Marco Polo",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": True
@@ -82,8 +76,7 @@ class Command(BaseCommand):
                 "username": "Teacher2",
                 "email": "test@test6.test",
                 "verified_email": True,
-                "first_name": "Manfred",
-                "last_name": "Sigurdsson",
+                "full_name": "Manfred Sigurdsson",
                 "pass": "pass",
                 "is_superuser": False,
                 "is_teacher": True
@@ -91,8 +84,7 @@ class Command(BaseCommand):
                 "username": "Admin",
                 "email": "test@test7.test",
                 "verified_email": True,
-                "first_name": "Best",
-                "last_name": "Admin",
+                "full_name": "Best Admin",
                 "pass": "pass",
                 "is_superuser": True,
                 "is_teacher": True
@@ -102,8 +94,8 @@ class Command(BaseCommand):
         self.users = []
         for u in users_examples:
             self.users.append(factory.make_user(u['username'], u['pass'], u['email'], is_superuser=u['is_superuser'],
-                                                is_teacher=u['is_teacher'], first_name=u['first_name'],
-                                                last_name=u['last_name'], verified_email=u['verified_email']))
+                                                is_teacher=u['is_teacher'], full_name=u['full_name'],
+                                                verified_email=u['verified_email']))
 
     def gen_courses(self):
         """Generate the courses PAV and Beeldbewerken."""

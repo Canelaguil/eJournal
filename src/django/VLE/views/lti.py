@@ -143,10 +143,7 @@ def lti_launch(request):
                 query['username'] = params['custom_username']
 
                 if 'custom_user_full_name' in params:
-                    fullname = params['custom_user_full_name']
-                    splitname = fullname.split(' ')
-                    query['firstname'] = splitname[0]
-                    query['lastname'] = fullname[len(splitname[0])+1:]
+                    query['fullname'] = params['custom_user_full_name']
 
                 if 'custom_user_email' in params:
                     query['email'] = params['custom_user_email']

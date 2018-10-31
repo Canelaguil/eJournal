@@ -6,7 +6,7 @@
                     <img class="profile-picture-sm" :src="user.profile_picture">
                 </b-col>
                 <b-col cols="9">
-                    <b>{{ user.name }}</b> ({{ user.role }})<br/>
+                    <b>{{ user.fullname }}</b> ({{ user.role }})<br/>
                     {{ user.username }}
                 </b-col>
             </b-col>
@@ -76,7 +76,7 @@ export default {
     },
     methods: {
         removeFromCourse () {
-            if (confirm('Are you sure you want to remove "' + this.user.name + '" from this course?')) {
+            if (confirm('Are you sure you want to remove "' + this.user.fullname + '" from this course?')) {
                 participationAPI.delete(this.cID, this.user.id, {responseSuccessToast: true}).then(data => {
                     if (this.$store.getters['user/uID'] === this.user.id) {
                         this.$store.dispatch('user/populateStore').catch(_ => {
