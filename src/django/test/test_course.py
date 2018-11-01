@@ -9,19 +9,19 @@ class CourseAPITest(TestCase):
         self.create_params = {'name': 'test_course', 'abbreviation': 'TC'}
 
     def test_rest(self):
-        # Test the basic rest functionallity as a superuser
+        # Test the basic rest functionality as a superuser
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       update_params={'abbreviation': 'TC2'},
                       user=factory.Admin())
 
-        # Test the basic rest functionallity as a teacher
+        # Test the basic rest functionality as a teacher
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       update_params={'abbreviation': 'TC2'},
                       user=factory.Teacher())
 
-        # Test the basic rest functionallity as a student
+        # Test the basic rest functionality as a student
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       create_status=403,
