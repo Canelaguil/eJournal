@@ -1,6 +1,10 @@
 from test.factory.assignment import AssignmentFactory
 from test.factory.course import CourseFactory
 from test.factory.user import UserFactory, TeacherFactory, AdminFactory
+from test.factory.format import FormatFactory
+from test.factory.group import GroupFactory, LtiGroupFactory
+from test.factory.lti import LtiFactory
+from test.factory.participation import ParticipationFactory, GroupParticipationFactory
 
 Assignment = AssignmentFactory
 Course = CourseFactory
@@ -8,3 +12,13 @@ Course = CourseFactory
 User = UserFactory
 Teacher = TeacherFactory
 Admin = AdminFactory
+
+Format = FormatFactory
+
+Group = GroupFactory
+LtiGroup = LtiGroupFactory
+
+Lti = LtiFactory
+
+Participation = ParticipationFactory
+GroupParticipation = GroupParticipationFactory

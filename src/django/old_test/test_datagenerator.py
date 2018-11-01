@@ -13,15 +13,6 @@ class CommandsTestCase(TestCase):
     Tests preset_db, demo_db and random_db.
     """
 
-    def setUp(self):
-        """Setup."""
-        self.args = []
-        self.opts = {}
-
     def test_presetdb(self):
         """Test preset_db."""
         call_command('preset_db', *self.args, **self.opts)
-
-    def test_demodb(self):
-        """Test demo_db."""
-        call_command('demo_db', *self.args, **self.opts)

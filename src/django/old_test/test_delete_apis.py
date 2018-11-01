@@ -13,21 +13,6 @@ class DeleteApiTests(TestCase):
         self.username, self.password, self.user = test.set_up_user_and_auth('test', 'test123', 'testt@testt.com')
         self.course = factory.make_course("Beeldbewerken", "BB")
 
-    def test_delete_course(self):
-        """Test delete_course"""
-        login = test.logging_in(self, self.username, self.password)
-
-        bb = factory.make_course("Beeldbewerken", "BB")
-        factory.make_course("Portfolio Academische Vaardigheden", "PAV")
-
-        role = factory.make_role_default_no_perms("teacher", bb, can_delete_course=True)
-        factory.make_participation(user=self.user, course=bb, role=role)
-
-        test.api_del_call(self, '/courses/' + str(bb.pk) + '/', login)
-
-        self.assertEquals(Course.objects.filter(name="Beeldbewerken").count(), 1)
-        self.assertEquals(Course.objects.filter(name="Portfolio Academische Vaardigheden").count(), 1)
-
     def delete_user_from_course(self):
         """Test delete_user_from_course"""
         login = test.logging_in(self, self.username, self.password)

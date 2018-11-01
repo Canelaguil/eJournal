@@ -158,5 +158,6 @@ def call(obj, function, url, params=None,
     except (AttributeError, ValueError):
         result = response
 
-    assert response.status_code == status, 'Request status did not equal the expected response. Result:' + result
+    assert response.status_code == status, \
+        'Request status did not match the expected response. {}: {}'.format(response.status_code, result)
     return result
