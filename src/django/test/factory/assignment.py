@@ -9,7 +9,7 @@ class AssignmentFactory(factory.django.DjangoModelFactory):
     # description = 'Logboek for all your logging purposes'
     # author = factory.SubFactory('test.factory.user.TeacherFactory')
 
-    format = factory.RelatedFactory('test.factory.format.FormatFactory', 'assignment')
+    format = factory.SubFactory('test.factory.format.FormatFactory', 'assignment')
 
     @factory.post_generation
     def courses(self, create, extracted):
