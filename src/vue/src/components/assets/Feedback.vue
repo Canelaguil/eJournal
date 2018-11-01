@@ -50,7 +50,7 @@
 
 <script>
 import icon from 'vue-awesome/components/Icon'
-import feedback from '@/api/feedback'
+import feedbackAPI from '@/api/feedback'
 
 export default {
     data () {
@@ -109,11 +109,7 @@ export default {
                     }
                 }
 
-                feedback.sendFeedback(data)
-                    .then(response => {
-                        this.$toasted.success(response.data.description)
-                    })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
+                feedbackAPI.sendFeedback(data, {responseSuccessToast: true})
 
                 this.resetFeedback()
                 return 'feedbackSent'

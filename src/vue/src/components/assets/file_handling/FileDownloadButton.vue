@@ -7,8 +7,7 @@
 
 <script>
 import icon from 'vue-awesome/components/Icon'
-import userAPI from '@/api/user.js'
-import genericUtils from '@/utils/generic_utils.js'
+import userAPI from '@/api/user'
 
 export default {
     props: {
@@ -40,18 +39,17 @@ export default {
         fileDownload (e) {
             userAPI.download(this.authorUID, this.fileName, this.entryID, this.nodeID, this.contentID)
                 .then(response => {
-                    let blob = new Blob([response.data], { type: response.headers['content-type'] })
-                    let link = document.createElement('a')
-                    link.href = window.URL.createObjectURL(blob)
-                    link.download = this.fileName
-                    document.body.appendChild(link)
-                    link.click()
-                    link.remove()
-                }, error => {
-                    genericUtils.displayArrayBufferRequestError(this, error)
-                })
-                .catch(_ => {
-                    this.$toasted.error('Error creating file.')
+                    try {
+                        let blob = new Blob([response.data], { type: response.headers['content-type'] })
+                        let link = document.createElement('a')
+                        link.href = window.URL.createObjectURL(blob)
+                        link.download = this.fileName
+                        document.body.appendChild(link)
+                        link.click()
+                        link.remove()
+                    } catch (_) {
+                        this.$toasted.error('Error creating file.')
+                    }
                 })
         }
     }

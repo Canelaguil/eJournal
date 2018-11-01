@@ -30,10 +30,7 @@ export default {
         addUserToCourse () {
             if (confirm('Are you sure you want to add "' + this.user.name + '" to this course?')) {
                 participationAPI.create({course_id: this.cID, user_id: this.user.id})
-                    .then(_ => {
-                        this.$emit('add-participant', this.user)
-                    })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
+                    .then(_ => { this.$emit('add-participant', this.user) })
             }
         }
     },

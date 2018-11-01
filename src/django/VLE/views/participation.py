@@ -121,14 +121,16 @@ class ParticipationView(viewsets.ViewSet):
         user = User.objects.get(pk=user_id)
         course = Course.objects.get(pk=pk)
         participation = Participation.objects.get(user=user, course=course)
+        request.user.check_permission('can_edit_course_user_group', course)
 
         if role_name:
             request.user.check_permission('can_edit_course_roles', course)
             participation.role = Role.objects.get(name=role_name, course=course)
 
         if group_name:
-            request.user.check_permission('can_edit_course_user_group', course)
             participation.group = Group.objects.get(name=group_name, course=course)
+        elif 'group' in request.data:
+            participation.group = None
 
         participation.save()
         serializer = UserSerializer(participation.user, context={'course': course})

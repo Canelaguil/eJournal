@@ -56,9 +56,9 @@
 
         <div v-if="stats" slot="right-content-column">
             <h3>Insights</h3>
-            <statistics-card :subject="'Needs marking'" :num="stats.needs_marking"/>
+            <statistics-card :subject="'Needs marking'" :num="stats.needsMarking"/>
             <statistics-card :subject="'Unpublished grades'" :num="stats.unpublished"/>
-            <statistics-card :subject="'Average points'" :num="stats.average_points"/>
+            <statistics-card :subject="'Average points'" :num="stats.averagePoints"/>
         </div>
     </content-columns>
 </template>
@@ -124,27 +124,20 @@ export default {
             .then(assignment => {
                 this.loadingJournals = false
                 this.assignmentJournals = assignment.journals
-                this.stats = assignment.stats
-            })
-            .catch(error => {
-                this.$toasted.error(error.response.data.description)
             })
 
         if (this.$hasPermission('can_view_course_users')) {
             groupAPI.getAllFromCourse(this.cID)
-                .then(groups => {
-                    this.groups = groups
-                })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
+                .then(groups => { this.groups = groups })
         }
 
         participationAPI.get(this.cID)
             .then(participant => {
-                if (participant.group.name) {
+                /* Group can be null */
+                if (participant.group && participant.group.name) {
                     this.selectedFilterGroupOption = participant.group.name
                 }
             })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
 
         if (this.$route.query.sort === 'sortFullName' ||
             this.$route.query.sort === 'sortUsername' ||
@@ -157,9 +150,6 @@ export default {
         }
     },
     methods: {
-        customisePage () {
-            this.$toasted.info('Wishlist: Customise page')
-        },
         handleEdit () {
             this.$router.push({
                 name: 'FormatEdit',
@@ -171,17 +161,16 @@ export default {
         },
         publishGradesAssignment () {
             if (confirm('Are you sure you want to publish all grades for each journal?')) {
-                assignmentAPI.update(this.aID, {published: true})
+                assignmentAPI.update(this.aID, {published: true}, {
+                    customErrorToast: 'Error while publishing all grades for this assignment.',
+                    customSuccessToast: 'Published all grades for this assignment.'
+                })
                     .then(_ => {
-                        this.$toasted.success('Published all grades for this assignment.')
                         assignmentAPI.get(this.aID, this.cID)
                             .then(assignment => {
                                 this.assignmentJournals = assignment.journals
                                 this.stats = assignment.stats
                             })
-                    })
-                    .catch(_ => {
-                        this.$toasted.error('Error while publishing all grades for this assignment.')
                     })
             }
         },
@@ -203,6 +192,20 @@ export default {
         },
         toggleOrder () {
             this.order = !this.order
+        },
+        calcStats (filteredJournals) {
+            var needsMarking = 0
+            var unpublished = 0
+            var points = 0
+
+            for (var i = 0; i < filteredJournals.length; i++) {
+                needsMarking += filteredJournals[i]['stats']['submitted'] - filteredJournals[i]['stats']['graded']
+                unpublished += filteredJournals[i]['stats']['submitted'] - filteredJournals[i]['stats']['published']
+                points += filteredJournals[i]['stats']['acquired_points']
+            }
+            this.stats['needsMarking'] = needsMarking
+            this.stats['unpublished'] = unpublished - needsMarking
+            this.stats['averagePoints'] = points / filteredJournals.length
         }
     },
     computed: {
@@ -232,11 +235,7 @@ export default {
 
             function groupFilter (assignment) {
                 if (self.selectedFilterGroupOption) {
-                    if (!assignment.student.group) {
-                        return assignment.student.group === self.selectedFilterGroupOption
-                    } else {
-                        return assignment.student.group.includes(self.selectedFilterGroupOption)
-                    }
+                    return assignment.student.group === self.selectedFilterGroupOption
                 }
 
                 return true
@@ -252,6 +251,7 @@ export default {
             }
 
             this.updateQuery()
+            this.calcStats(store.state.filteredJournals.filter(groupFilter))
 
             return store.state.filteredJournals.filter(groupFilter).slice()
         }

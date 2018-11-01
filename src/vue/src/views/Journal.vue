@@ -12,11 +12,6 @@ import breadCrumb from '@/components/assets/BreadCrumb.vue'
 export default {
     name: 'Journal',
     props: ['cID', 'aID', 'jID'],
-    methods: {
-        customisePage () {
-            this.$toasted.info('Wishlist: Customise page')
-        }
-    },
     components: {
         'content-columns': contentColumns,
         'bread-crumb': breadCrumb,

@@ -171,8 +171,8 @@ class EntryView(viewsets.ViewSet):
 
             for content in content_list:
                 field_id, data, content_id = utils.required_params(content, 'id', 'data', 'contentID')
-                field = Field.objects.get(pk=int(field_id))
-                old_content = entry.content_set.get(pk=int(content_id))
+                field = Field.objects.get(pk=field_id)
+                old_content = entry.content_set.get(pk=content_id)
                 validators.validate_entry_content(data, field)
 
                 if old_content.field.pk != int(field_id):

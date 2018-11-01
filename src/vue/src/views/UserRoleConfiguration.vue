@@ -169,17 +169,15 @@ export default {
             return false
         },
         update () {
-            roleAPI.update(this.cID, this.roleConfig)
+            roleAPI.update(this.cID, this.roleConfig, {customSuccessToast: 'Course roles successfully updated.'})
                 .then(_ => {
                     this.originalRoleConfig = this.deepCopyRoles(this.roleConfig)
                     this.defaultRoles = Array.from(this.roles)
-                    this.$toasted.success('Course roles successfully updated.')
                     this.checkPermission()
                     this.$nextTick(function () {
                         this.isChanged = false
                     })
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         formatPermissionString (str) {
             /* Converts underscores to spaces and capatilises the first letter. */
@@ -190,13 +188,11 @@ export default {
             if (confirm('Are you sure you want to delete the role "' + role + '" from this course?')) {
                 if (this.defaultRoles.includes(role)) {
                     /* handle server update. */
-                    roleAPI.delete(this.cID, role)
+                    roleAPI.delete(this.cID, role, {customSuccessToast: 'Role deleted successfully!'})
                         .then(_ => {
                             this.deleteRoleLocalConfig(role)
                             this.deleteRoleServerLoadedConfig(role)
-                            this.$toasted.success('Role deleted successfully!')
                         })
-                        .catch(error => this.$toasted.error(error.response.data.description))
                 } else {
                     this.deleteRoleLocalConfig(role)
                 }
@@ -220,7 +216,6 @@ export default {
                     this.$store.commit('user/UPDATE_PERMISSIONS', { permissions: coursePermissions, key: 'course' + this.cID })
                     if (!this.$hasPermission('can_edit_course_roles')) { this.$router.push({ name: 'Home' }) }
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         checkChanged () {
             for (var i = 0; i < this.roleConfig.length; i++) {
@@ -256,7 +251,6 @@ export default {
                     this.setRoleConfig = true
                 })
             })
-            .catch(error => { this.$toasted.error(error.response.data.description) })
     },
     components: {
         'content-single-table-column': contentSingleTableColumn,

@@ -24,7 +24,7 @@
 
 <script>
 import Switch from '@/components/assets/SwitchComponent.vue'
-import userAPI from '@/api/user.js'
+import userAPI from '@/api/user'
 
 export default {
     props: ['userData'],
@@ -33,20 +33,12 @@ export default {
     },
     methods: {
         getGradeNotification (isActive) {
-            userAPI.update(0, {grade_notifications: isActive})
-                .then(user => {
-                    this.$store.commit('user/SET_GRADE_NOTIFICATION', user.grade_notifications)
-                    this.$toasted.success('Grade notification setting updated successfully.')
-                })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
+            userAPI.update(0, {grade_notifications: isActive}, {customSuccessToast: 'Grade notification setting updated successfully.'})
+                .then(user => { this.$store.commit('user/SET_GRADE_NOTIFICATION', user.grade_notifications) })
         },
         getCommentNotification (isActive) {
-            userAPI.update(0, {comment_notifications: isActive})
-                .then(user => {
-                    this.$store.commit('user/SET_COMMENT_NOTIFICATION', user.comment_notifications)
-                    this.$toasted.success('Comment notification setting updated successfully.')
-                })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
+            userAPI.update(0, {comment_notifications: isActive}, {customSuccessToast: 'Comment notification setting updated successfully.'})
+                .then(user => { this.$store.commit('user/SET_COMMENT_NOTIFICATION', user.comment_notifications) })
         }
     }
 }

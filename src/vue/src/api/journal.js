@@ -1,34 +1,33 @@
 import auth from '@/api/auth'
 
 export default {
-
-    get (id) {
-        return auth.get('journals/' + id)
+    get (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('journals/' + id, null, connArgs)
             .then(response => response.data.journal)
     },
 
-    create (data) {
-        return auth.create('journals', data)
+    create (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.create('journals', data, connArgs)
             .then(response => response.data.journal)
     },
 
-    update (id, data = null) {
-        return auth.update('journals/' + id, data)
+    update (id, data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('journals/' + id, data, connArgs)
             .then(response => response.data.journal)
     },
 
-    delete (id) {
-        return auth.delete('journals/' + id)
+    delete (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.delete('journals/' + id, null, connArgs)
             .then(response => response.data)
     },
 
-    getNodes (id) {
-        return auth.get('nodes', {journal_id: id})
+    getNodes (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('nodes', {journal_id: id}, connArgs)
             .then(response => response.data.nodes)
     },
 
-    getFromAssignment (cID, aID) {
-        return auth.get('journals', {course_id: cID, assignment_id: aID})
+    getFromAssignment (cID, aID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('journals', {course_id: cID, assignment_id: aID}, connArgs)
             .then(response => response.data.journals)
     }
 }

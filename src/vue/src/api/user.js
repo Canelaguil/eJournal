@@ -1,62 +1,41 @@
 import auth from '@/api/auth'
 
 export default {
-
-    get (id = 0) {
-        return auth.get('users/' + id)
+    update (id, data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('users/' + id, data, connArgs)
             .then(response => response.data.user)
     },
 
-    create (data) {
-        return auth.create('users', data)
-            .then(response => response.data.user)
-    },
-
-    update (id = 0, data = null) {
-        return auth.update('users/' + id, data)
-            .then(response => response.data.user)
-    },
-
-    delete (id = 0) {
-        return auth.delete('users/' + id)
-            .then(response => response.data)
-    },
-
-    download (id = 0, fileName, entryID, nodeID, contentID) {
+    download (id, fileName, entryID, nodeID, contentID, connArgs = auth.DEFAULT_CONN_ARGS) {
         return auth.downloadFile('users/' + id + '/download', {
             file_name: fileName,
             entry_id: entryID,
             node_id: nodeID,
             content_id: contentID
-        })
+        }, connArgs)
     },
 
-    GDPR (id = 0) {
-        return auth.downloadFile('users/' + id + '/GDPR/')
+    GDPR (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.downloadFile('users/' + id + '/GDPR/', null, connArgs)
     },
 
     /* Update user file. */
-    uploadUserFile (data) {
-        return auth.uploadFile('/users/upload/', data)
-    },
-
-    /* Get user file. */
-    getUserFile (fileName, authorUID) {
-        return auth.downloadFile('/get_user_file/' + fileName + '/' + authorUID + '/')
+    uploadUserFile (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.uploadFile('/users/upload/', data, connArgs)
     },
 
     /* Upload an image that is base64 encoded. */
-    updateProfilePictureBase64 (file) {
-        return auth.post('users/set_profile_picture/', { file: file })
+    updateProfilePictureBase64 (file, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.post('users/set_profile_picture/', {file: file}, connArgs)
     },
 
     /* Verify email adress using a given token. */
-    verifyEmail (token) {
-        return auth.post('/verify_email/', { token: token })
+    verifyEmail (token, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.post('/verify_email/', {token: token}, connArgs)
     },
 
     /* Request an email verification token for the given users email adress. */
-    requestEmailVerification () {
-        return auth.post('/request_email_verification/')
+    requestEmailVerification (connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.post('/request_email_verification/', null, connArgs)
     }
 }

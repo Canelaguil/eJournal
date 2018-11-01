@@ -62,19 +62,16 @@ export default {
 
             if (validation.validatePassword(this.form.password, this.form.password2) && validation.validateEmail(this.form.email)) {
                 authAPI.register(this.form.username, this.form.password, this.form.firstname, this.form.lastname,
-                    this.form.email, this.form.ltiJWT)
+                    this.form.email, this.form.ltiJWT, {
+                        customSuccessToast: this.lti ? '' : 'Registration successful! Please follow the instructions sent to ' + this.form.email +
+                                                            ' to confirm your email address.'
+                    })
                     .then(_ => {
-                        if (!this.lti) {
-                            this.$toasted.success('Registration successful! Please follow the instructions sent to ' + this.form.email +
-                                                  ' to confirm your email address.')
-                        }
                         this.$store.dispatch('user/login', { username: this.form.username, password: this.form.password })
                             .then(_ => { this.$emit('handleAction') })
                             .catch(_ => { this.$toasted.error('Error logging in with your newly created account, please contact a system administrator or try registering again.') })
                     })
                     .catch(error => {
-                        this.$toasted.error(error.response.data.description || 'Could not register due to an unkown error.')
-
                         if (error.response.status === statuses.FORBIDDEN) {
                             this.$router.push({
                                 name: 'ErrorPage',

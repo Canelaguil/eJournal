@@ -1,33 +1,33 @@
 import auth from '@/api/auth'
 
 export default {
-    get (id) {
-        return auth.get('participations/' + id)
+    get (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('participations/' + id, null, connArgs)
             .then(response => response.data.participant)
     },
 
-    getEnrolled (id) {
-        return auth.get('participations', {course_id: id})
+    getEnrolled (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('participations', {course_id: id}, connArgs)
             .then(response => response.data.participants)
     },
 
-    create (data) {
-        return auth.create('participations', data)
+    create (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.create('participations', data, connArgs)
             .then(response => response.data.participant)
     },
 
-    update (id, data) {
-        return auth.update('participations/' + id, data)
+    update (id, data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('participations/' + id, data, connArgs)
             .then(response => response.data.participant)
     },
 
-    delete (cID, uID) {
-        return auth.delete('participations/' + cID, {user_id: uID})
+    delete (cID, uID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.delete('participations/' + cID, {user_id: uID}, connArgs)
             .then(response => response.data)
     },
 
-    getUnenrolled (id) {
-        return auth.get('participations/unenrolled', {course_id: id})
+    getUnenrolled (id, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('participations/unenrolled', {course_id: id}, connArgs)
             .then(response => response.data.participants)
     }
 

@@ -62,7 +62,6 @@ export default {
                         }
                         this.$emit('handleAction', course.id)
                     })
-                    .catch(error => { this.$toasted.error(error.response.data.description) })
             } else {
                 this.$toasted.error('One or more required fields are empty.')
             }

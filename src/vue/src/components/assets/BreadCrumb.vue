@@ -28,7 +28,7 @@
 import icon from 'vue-awesome/components/Icon'
 import store from '@/Store.vue'
 
-import common from '@/api/common'
+import commonAPI from '@/api/common'
 
 export default {
     components: {
@@ -100,15 +100,12 @@ export default {
             }
 
             if (crumbsMissingDisplayName.length > 0) {
-                common.getNames(request)
+                commonAPI.getNames(request)
                     .then(names => {
                         for (var crumb of crumbsMissingDisplayName) {
                             crumb.displayName = names[this.settings.namedViews[crumb.routeName].apiReturnValue]
                             this.cachedMap[crumb.route] = crumb.displayName
                         }
-                    })
-                    .catch(error => {
-                        this.$toasted.error(error.response.data.description)
                     })
                     .then(_ => { store.setCachedMap(this.cachedMap) })
             }

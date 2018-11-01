@@ -13,15 +13,14 @@
 <script>
 import contentSingleColumn from '@/components/columns/ContentSingleColumn.vue'
 import icon from 'vue-awesome/components/Icon'
-import userAPI from '@/api/user.js'
+import userAPI from '@/api/user'
 
 export default {
     name: 'EmailVerification',
     props: ['token'],
     mounted () {
-        userAPI.verifyEmail(this.token)
+        userAPI.verifyEmail(this.token, {responseSuccessToast: true})
             .then(response => {
-                this.$toasted.success(response.data.description)
                 this.$store.commit('user/EMAIL_VERIFIED')
                 this.$router.push({ name: 'Home' })
             })

@@ -77,8 +77,7 @@ export default {
     methods: {
         removeFromCourse () {
             if (confirm('Are you sure you want to remove "' + this.user.name + '" from this course?')) {
-                participationAPI.delete(this.cID, this.user.id).then(data => {
-                    this.$toasted.success(data.description)
+                participationAPI.delete(this.cID, this.user.id, {responseSuccessToast: true}).then(data => {
                     if (this.$store.getters['user/uID'] === this.user.id) {
                         this.$store.dispatch('user/populateStore').catch(_ => {
                             this.$toasted.error('The website might be out of sync, please login again.')
@@ -86,8 +85,6 @@ export default {
                         this.$router.push({name: 'Home'})
                     }
                     this.$emit('delete-participant', this.user)
-                }, error => {
-                    this.$toasted.error(error.response.data.description)
                 })
             }
         }
@@ -108,8 +105,6 @@ export default {
                             this.$toasted.error('The website might be out of sync, please login again.')
                         })
                     }
-                }, error => {
-                    this.$toasted.error(error.response.data.description)
                 })
             }
         },
@@ -120,9 +115,6 @@ export default {
                 this.selectedGroup = val
                 this.$emit('update:group', val)
                 participationAPI.update(this.cID, {user_id: this.user.id, group: this.selectedGroup, role: this.selectedRole})
-                    .catch(error => {
-                        this.$toasted.error(error.response.data.description)
-                    })
             }
         },
         group: function (newVal) {

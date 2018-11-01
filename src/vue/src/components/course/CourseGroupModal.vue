@@ -30,7 +30,7 @@
 <script>
 import icon from 'vue-awesome/components/Icon'
 import groupCard from '@/components/group/GroupCard.vue'
-import groupApi from '@/api/group.js'
+import groupAPI from '@/api/group'
 
 export default {
     name: 'CourseGroupModal',
@@ -52,17 +52,12 @@ export default {
     },
     methods: {
         createUserGroup () {
-            groupApi.create({
-                name: this.form.groupName,
-                course_id: this.cID,
-                lti_id: this.lti_id
-            })
+            groupAPI.create({name: this.form.groupName, course_id: this.cID, lti_id: this.lti_id},
+                {customSuccessToast: 'Successfully created group.'})
                 .then(group => {
                     this.$emit('create-group', group)
-                    this.$toasted.success('Successfully created group.')
                     this.resetFormInput()
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         resetFormInput (evt) {
             /* Reset our form values */

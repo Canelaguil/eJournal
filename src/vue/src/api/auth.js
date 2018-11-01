@@ -2,12 +2,80 @@ import connection from '@/api/connection'
 import statuses from '@/utils/constants/status_codes.js'
 import router from '@/router'
 import store from '@/store'
+import sanitization from '@/utils/sanitization.js'
+import genericUtils from '@/utils/generic_utils.js'
 
-const errorsToRedirect = new Set([
+const ERRORS_TO_REDIRECT = new Set([
     statuses.FORBIDDEN,
     statuses.NOT_FOUND,
     statuses.INTERNAL_SERVER_ERROR
 ])
+
+/*
+ * Defines how success and error responses are handled and toasted by default.
+ *
+ * Changes can be made by overwriting the DEFAULT_CONN_ARGS keys in an API call.
+ * Handled errors are redirected by default when present in ERRORS_TO_REDIRECT unless redirect set to false.
+ * Handled errors messages default to: response.data.description, unless customErrorToast set.
+ * Handled successes do not redirect or display a message unless:
+ *    - responseSuccessToast set, toasting the response description
+ *    - customSuccessToast is set, toasting the given message.
+ */
+const DEFAULT_CONN_ARGS = {
+    redirect: true,
+    customSuccessToast: false,
+    responseSuccessToast: false,
+    customErrorToast: false
+}
+
+/* Sets default connection arguments to missing keys, otherwise use the given connArgs value. */
+function packConnArgs (connArgs) {
+    if (!(connArgs instanceof Object) || Object.keys(connArgs).length === 0) {
+        throw Error('Connection arguments should be a non emtpy object.')
+    }
+
+    for (let key in connArgs) {
+        if (!(key in DEFAULT_CONN_ARGS)) { throw Error('Unkown connection argument key: ' + key) }
+    }
+
+    return {...DEFAULT_CONN_ARGS, ...connArgs}
+}
+
+/* Toasts an error safely, escaping html and parsing an array buffer. */
+function toastError (error, connArgs) {
+    if (!connArgs.customErrorToast) {
+        var data
+        if (error.response.data instanceof ArrayBuffer) {
+            data = genericUtils.parseArrayBuffer(error.response.data)
+        } else {
+            data = error.response.data
+        }
+
+        /* The Django throttle module uses detail as description. */
+        var message = data.description ? data.description : data.detail
+        if (message) { router.app.$toasted.error(sanitization.escapeHtml(message)) }
+    } else {
+        router.app.$toasted.error(sanitization.escapeHtml(connArgs.customErrorToast))
+    }
+}
+
+/* Lowers the connection count and toast a success message if a custom one is provided or responseSuccessToast is set. */
+function handleSuccess (resp, connArgs) {
+    setTimeout(function () { store.commit('connection/CLOSE_API_CALL') }, 300)
+
+    if (connArgs.responseSuccessToast) {
+        var message
+        if (resp.data instanceof ArrayBuffer) {
+            message = genericUtils.parseArrayBuffer(resp.data).description
+        } else {
+            message = resp.data.description
+        }
+
+        if (message) { router.app.$toasted.success(sanitization.escapeHtml(message)) }
+    } else if (connArgs.customSuccessToast) {
+        router.app.$toasted.success(sanitization.escapeHtml(connArgs.customSuccessToast))
+    }
+}
 
 /*
  * Redirects the following unsuccessful request responses:
@@ -17,14 +85,17 @@ const errorsToRedirect = new Set([
  * The response is thrown and further promise handling should take place.
  * This because this is generic response handling, and we dont know what should happen in case of an error.
  */
-function handleError (error, noRedirect = false) {
+function handleError (error, connArgs) {
     const response = error.response
     const status = response.status
 
-    if (!noRedirect && status === statuses.UNAUTHORIZED) {
+    setTimeout(function () { store.commit('connection/CLOSE_API_CALL') }, 300)
+
+    if (connArgs.redirect && status === statuses.UNAUTHORIZED) {
         store.commit('user/LOGOUT')
         router.push({name: 'Login'})
-    } else if (!noRedirect && errorsToRedirect.has(status)) {
+        toastError(error, connArgs)
+    } else if (connArgs.redirect && ERRORS_TO_REDIRECT.has(status)) {
         router.push({name: 'ErrorPage',
             params: {
                 code: status,
@@ -32,49 +103,43 @@ function handleError (error, noRedirect = false) {
                 description: response.data.description
             }
         })
+    } else {
+        toastError(error, connArgs)
     }
 
     throw error
 }
 
-function validatedSend (func, url, data = null, noRedirect = false) {
+function validatedSend (func, url, data, connArgs) {
+    connArgs = packConnArgs(connArgs)
+
     store.commit('connection/OPEN_API_CALL')
     return func(url, data).then(
         resp => {
-            setTimeout(function () {
-                store.commit('connection/CLOSE_API_CALL')
-            }, 300)
+            handleSuccess(resp, connArgs)
             return resp
         }, error =>
             store.dispatch('user/validateToken', error).then(_ =>
                 func(url, data).then(resp => {
-                    setTimeout(function () {
-                        store.commit('connection/CLOSE_API_CALL')
-                    }, 300)
+                    handleSuccess(resp, connArgs)
                     return resp
                 })
             )
     ).catch(error => {
-        setTimeout(function () {
-            store.commit('connection/CLOSE_API_CALL')
-        }, 300)
-        return handleError(error, noRedirect)
+        return handleError(error, connArgs)
     })
 }
 
-function unvalidatedSend (func, url, data = null, noRedirect = true) {
+function unvalidatedSend (func, url, data = null, connArgs = DEFAULT_CONN_ARGS) {
+    connArgs = packConnArgs(connArgs)
+
     store.commit('connection/OPEN_API_CALL')
     return func(url, data).then(
         resp => {
-            setTimeout(function () {
-                store.commit('connection/CLOSE_API_CALL')
-            }, 300)
+            handleSuccess(resp, connArgs)
             return resp
         }, error => {
-            setTimeout(function () {
-                store.commit('connection/CLOSE_API_CALL')
-            }, 300)
-            return handleError(error, noRedirect)
+            return handleError(error, connArgs)
         })
 }
 
@@ -93,9 +158,10 @@ function improveUrl (url, data = null) {
  * Previous functions are 'private', following are 'public'.
  */
 export default {
+    DEFAULT_CONN_ARGS: DEFAULT_CONN_ARGS,
 
     /* Create a user and add it to the database. */
-    register (username, password, firstname, lastname, email, jwtParams = null) {
+    register (username, password, firstname, lastname, email, jwtParams = null, connArgs = DEFAULT_CONN_ARGS) {
         return unvalidatedSend(connection.conn.post, improveUrl('users'), {
             username: username,
             password: password,
@@ -103,48 +169,51 @@ export default {
             last_name: lastname,
             email: email,
             jwt_params: jwtParams
-        })
+        }, connArgs)
             .then(response => { return response.data.user })
     },
 
     /* Change password. */
-    changePassword (newPassword, oldPassword) {
-        return this.update('users/password', { new_password: newPassword, old_password: oldPassword })
+    changePassword (newPassword, oldPassword, connArgs = DEFAULT_CONN_ARGS) {
+        return this.update('users/password', {new_password: newPassword, old_password: oldPassword}, connArgs)
     },
 
     /* Forgot password.
      * Checks if a user is known by the given email or username. Sends an email with a link to reset the password. */
-    forgotPassword (username, email) {
-        return unvalidatedSend(connection.conn.post, improveUrl('forgot_password'), {username: username, email: email})
+    forgotPassword (username, email, connArgs = DEFAULT_CONN_ARGS) {
+        return unvalidatedSend(connection.conn.post, improveUrl('forgot_password'), {username: username, email: email}, connArgs)
     },
 
     /* Recover password */
-    recoverPassword (username, recoveryToken, newPassword) {
-        return unvalidatedSend(connection.conn.post, improveUrl('recover_password'), {username: username, recovery_token: recoveryToken, new_password: newPassword})
+    recoverPassword (username, recoveryToken, newPassword, connArgs = DEFAULT_CONN_ARGS) {
+        return unvalidatedSend(connection.conn.post, improveUrl('recover_password'), {
+            username: username,
+            recovery_token: recoveryToken,
+            new_password: newPassword
+        }, connArgs)
     },
 
-    get (url, data = null, noRedirect = false) {
-        return validatedSend(connection.conn.get, improveUrl(url, data), null, noRedirect)
+    get (url, data, connArgs) {
+        return validatedSend(connection.conn.get, improveUrl(url, data), null, connArgs)
     },
-    post (url, data, noRedirect = false) {
-        return validatedSend(connection.conn.post, improveUrl(url), data, noRedirect)
+    post (url, data, connArgs) {
+        return validatedSend(connection.conn.post, improveUrl(url), data, connArgs)
     },
-    patch (url, data, noRedirect = false) {
-        return validatedSend(connection.conn.patch, improveUrl(url), data, noRedirect)
+    patch (url, data, connArgs) {
+        return validatedSend(connection.conn.patch, improveUrl(url), data, connArgs)
     },
-    delete (url, data = null, noRedirect = false) {
-        return validatedSend(connection.conn.delete, improveUrl(url, data), null, noRedirect)
+    delete (url, data, connArgs) {
+        return validatedSend(connection.conn.delete, improveUrl(url, data), null, connArgs)
     },
-    uploadFile (url, data, noRedirect = false) {
-        return validatedSend(connection.connFile.post, improveUrl(url), data, noRedirect)
+    uploadFile (url, data, connArgs) {
+        return validatedSend(connection.connFile.post, improveUrl(url), data, connArgs)
     },
-    uploadFileEmail (url, data, noRedirect = false) {
-        return validatedSend(connection.connFileEmail.post, improveUrl(url), data, noRedirect)
+    uploadFileEmail (url, data, connArgs) {
+        return validatedSend(connection.connFileEmail.post, improveUrl(url), data, connArgs)
     },
-    downloadFile (url, data, noRedirect = false) {
-        return validatedSend(connection.connFile.get, improveUrl(url, data), null, noRedirect)
+    downloadFile (url, data, connArgs) {
+        return validatedSend(connection.connFile.get, improveUrl(url, data), null, connArgs)
     },
-
-    create (url, data, noRedirect = false) { return this.post(url, data, noRedirect) },
-    update (url, data, noRedirect = false) { return this.patch(url, data, noRedirect) }
+    create (url, data, connArgs) { return this.post(url, data, connArgs) },
+    update (url, data, connArgs) { return this.patch(url, data, connArgs) }
 }

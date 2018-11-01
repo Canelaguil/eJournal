@@ -37,31 +37,22 @@ export default {
     },
     methods: {
         updateGroupName () {
-            console.log(this.group)
             groupAPI.update(this.group.id, {
                 name: this.form.newGroupName
-            })
+            }, {customSuccessToast: 'Successfully updated the group.'})
                 .then(group => {
                     this.group = group
                     this.$emit('update-group', this.group)
-                    this.$toasted.success('Successfully updated the group.')
                     this.form.newGroupName = ''
                 })
-                .catch(error => { this.$toasted.error(error.response.data.description) })
         },
         removeGroup () {
             if (confirm('Are you sure you want to remove "' + this.group.name + '" from this course?')) {
-                groupAPI.delete(this.group.id).then(data => {
-                    this.$toasted.success(data.description)
+                groupAPI.delete(this.group.id, {responseSuccessToast: true}).then(_ => {
                     this.$emit('delete-group', this.group)
-                }, error => {
-                    this.$toasted.error(error.response.data.description)
                 })
             }
         }
-    },
-    created () {
-        this.groupName = this.group
     },
     components: {
         'icon': icon

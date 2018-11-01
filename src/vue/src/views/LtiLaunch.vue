@@ -16,7 +16,7 @@
 import contentSingleColumn from '@/components/columns/ContentSingleColumn.vue'
 import ltiCreateLinkCourse from '@/components/lti/LtiCreateLinkCourse.vue'
 import ltiCreateLinkAssignment from '@/components/lti/LtiCreateLinkAssignment.vue'
-import ltiAPI from '@/api/ltilaunch.js'
+import ltiAPI from '@/api/lti'
 import router from '@/router'
 import courseAPI from '@/api/course.js'
 import assignmentAPI from '@/api/assignment.js'
@@ -178,8 +178,6 @@ export default {
                     .catch(error => {
                         if (error.response.status === 404) {
                             this.states.state = this.states.new_assign
-                        } else {
-                            this.$toasted.error(error.response.description)
                         }
                     })
                 break

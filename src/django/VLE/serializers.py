@@ -192,10 +192,14 @@ class AssignmentSerializer(serializers.ModelSerializer):
             return None
 
     def get_stats(self, assignment):
-        if 'user' not in self.context:
+        if 'user' not in self.context or 'course' not in self.context or not self.context['course']:
             return None
 
-        journals = JournalSerializer(assignment.journal_set.all(), many=True).data
+        course = self.context['course']
+        users = course.participation_set.filter(role__can_have_journal=True).values('user')
+        queryset = assignment.journal_set.filter(user__in=users)
+        journals = JournalSerializer(queryset, many=True).data
+
         if not journals:
             return None
         stats = {}
@@ -205,6 +209,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
                                         for x in journals]) - stats['needs_marking']
         points = [x['stats']['acquired_points'] for x in journals]
         stats['average_points'] = round(st.mean(points), 2)
+
         return stats
 
     def get_course(self, assignment):

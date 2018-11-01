@@ -2,17 +2,13 @@ import auth from '@/api/auth'
 
 export default {
     /* Common file for multi-purpose api calls. */
-    getNames (data) {
-        return auth.get('names/' + (data.cID || 0) + '/' + (data.aID || 0) + '/' + (data.jID || 0), null, true)
+    getNames (data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('names/' + (data.cID || 0) + '/' + (data.aID || 0) + '/' + (data.jID || 0), null, connArgs)
             .then(response => response.data.names)
     },
 
-    getPermissions (courseID = null) {
-        if (courseID) {
-            return auth.get('roles/0', {course_id: courseID})
-                .then(response => response.data.role)
-        }
-        return auth.get('roles/0')
+    getPermissions (courseID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('roles/0', {course_id: courseID}, connArgs)
             .then(response => response.data.role)
     }
 }
