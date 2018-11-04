@@ -56,9 +56,9 @@
 
         <div v-if="stats" slot="right-content-column">
             <h3>Insights</h3>
-            <statistics-card :subject="'Needs marking'" :num="stats.needs_marking"/>
+            <statistics-card :subject="'Needs marking'" :num="stats.needsMarking"/>
             <statistics-card :subject="'Unpublished grades'" :num="stats.unpublished"/>
-            <statistics-card :subject="'Average points'" :num="stats.average_points"/>
+            <statistics-card :subject="'Average points'" :num="stats.averagePoints"/>
         </div>
     </content-columns>
 </template>
@@ -124,7 +124,6 @@ export default {
             .then(assignment => {
                 this.loadingJournals = false
                 this.assignmentJournals = assignment.journals
-                this.stats = assignment.stats
             })
 
         if (this.$hasPermission('can_view_course_users')) {
@@ -193,6 +192,20 @@ export default {
         },
         toggleOrder () {
             this.order = !this.order
+        },
+        calcStats (filteredJournals) {
+            var needsMarking = 0
+            var unpublished = 0
+            var points = 0
+
+            for (var i = 0; i < filteredJournals.length; i++) {
+                needsMarking += filteredJournals[i]['stats']['submitted'] - filteredJournals[i]['stats']['graded']
+                unpublished += filteredJournals[i]['stats']['submitted'] - filteredJournals[i]['stats']['published']
+                points += filteredJournals[i]['stats']['acquired_points']
+            }
+            this.stats['needsMarking'] = needsMarking
+            this.stats['unpublished'] = unpublished - needsMarking
+            this.stats['averagePoints'] = points / filteredJournals.length
         }
     },
     computed: {
@@ -222,11 +235,7 @@ export default {
 
             function groupFilter (assignment) {
                 if (self.selectedFilterGroupOption) {
-                    if (!assignment.student.group) {
-                        return assignment.student.group === self.selectedFilterGroupOption
-                    } else {
-                        return assignment.student.group.includes(self.selectedFilterGroupOption)
-                    }
+                    return assignment.student.group === self.selectedFilterGroupOption
                 }
 
                 return true
@@ -242,6 +251,7 @@ export default {
             }
 
             this.updateQuery()
+            this.calcStats(store.state.filteredJournals.filter(groupFilter))
 
             return store.state.filteredJournals.filter(groupFilter).slice()
         }

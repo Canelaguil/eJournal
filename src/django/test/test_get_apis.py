@@ -21,12 +21,14 @@ class GetApiTests(TestCase):
 
     def setUp(self):
         """Set up the test file."""
-        self.username, self.password, self.user = test.set_up_user_and_auth('test', 'test123', 'testtt@te.com')
+        self.username, self.password, self.user = test.set_up_user_and_auth('test123', 'test123', 'testtt@te.com')
         self.rein_user, self.rein_pass, self.rein = test.set_up_user_and_auth("Rein", "123", 're@rein.com')
         self.no_perm_user, self.no_perm_pass, self.no_permission_user = test.set_up_user_and_auth("no_perm", "123",
                                                                                                   'sigh@sigh.com')
         self.course = factory.make_course("Beeldbewerken", "BB")
         self.lars = factory.make_user("Lars", "123", "l@l.com")
+        self.student1 = factory.make_user("Student1", "123", "Student1.com")
+        self.student2 = factory.make_user("Student2", "123", "Student2.com")
         self.not_found_pk = 9999
 
     def test_get_course_data(self):
@@ -58,9 +60,12 @@ class GetApiTests(TestCase):
 
         self.assertEquals(len(response.json()['participants']), 3)
 
-        response = test.api_get_call(self, '/participations/unenrolled/', login, params={'course_id': self.course.pk})
+        response = test.api_get_call(self,
+                                     '/participations/unenrolled/',
+                                     login,
+                                     params={'course_id': self.course.pk, 'unenrolled_query': 'test123'})
 
-        self.assertEquals(len(response.json()['participants']), 2)
+        self.assertEquals(len(response.json()['participants']), 1)
         self.assertEquals(response.json()['participants'][0]['username'], self.username)
 
         # permissions and authorization check for the api call.
@@ -83,18 +88,42 @@ class GetApiTests(TestCase):
 
         login = test.logging_in(self, teacher_user, teacher_pass)
 
-        response = test.api_get_call(self, '/participations/unenrolled/', login, params={'course_id': self.course.pk})
-
-        self.assertEquals(len(response.json()['participants']), 2)
+        response = test.api_get_call(self,
+                                     '/participations/unenrolled/',
+                                     login,
+                                     params={'course_id': self.course.pk, 'unenrolled_query': 'test12'})
+        self.assertEquals(len(response.json()['participants']), 1)
         self.assertEquals(response.json()['participants'][0]['username'], self.username)
 
-        # permissions and authorization check for the api call.
+        response = test.api_get_call(self,
+                                     '/participations/unenrolled/',
+                                     login,
+                                     params={'course_id': self.course.pk, 'unenrolled_query': 'Student'})
+        self.assertEquals(len(response.json()['participants']), 2)
+
+        response = test.api_get_call(self,
+                                     '/participations/unenrolled/',
+                                     login,
+                                     params={'course_id': self.course.pk, 'unenrolled_query': 'no_perm'})
+        self.assertEquals(len(response.json()['participants']), 1)
+        self.assertEquals(response.json()['participants'][0]['username'], self.no_perm_user)
+
         login = test.logging_in(self, self.no_perm_user, self.no_perm_pass)
-        test.api_get_call(self, '/participations/unenrolled/', login, status=403, params={'course_id': self.course.pk})
-        test.test_unauthorized_api_get_call(self, '/participations/unenrolled/', params={'course_id': self.course.pk})
+        test.api_get_call(self,
+                          '/participations/unenrolled/',
+                          login,
+                          status=403,
+                          params={'course_id': self.course.pk, 'unenrolled_query': ''})
+        test.test_unauthorized_api_get_call(self,
+                                            '/participations/unenrolled/',
+                                            params={'course_id': self.course.pk, 'unenrolled_query': ''})
 
         test.set_up_participation(self.no_permission_user, self.course, 'Student')
-        test.api_get_call(self, '/participations/unenrolled/', login, status=403, params={'course_id': self.course.pk})
+        test.api_get_call(self,
+                          '/participations/unenrolled/',
+                          login,
+                          status=403,
+                          params={'course_id': self.course.pk, 'unenrolled_query': ''})
 
     def test_GDPR(self):
         # Test normal user

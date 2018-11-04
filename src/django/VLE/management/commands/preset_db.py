@@ -53,7 +53,7 @@ class Command(BaseCommand):
                 "is_superuser": False,
                 "is_teacher": False
             }, {
-                "username": "Student5",
+                "username": "zzhu",
                 "first_name": "Zi Long",
                 "last_name": "Zhu",
                 "pass": "pass",
