@@ -21,7 +21,6 @@ class InstanceSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
     role = serializers.SerializerMethodField()
     group = serializers.SerializerMethodField()
 
@@ -57,7 +56,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OwnUserSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
 
     class Meta:

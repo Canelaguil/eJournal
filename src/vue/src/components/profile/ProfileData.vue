@@ -67,7 +67,7 @@ export default {
             storeUsername: 'user/username',
             storeLtiID: 'user/ltiID',
             storeProfilePic: 'user/profilePicture',
-            storeFullName: 'user/fullName',
+            storeFullName: 'user/fullName'
         })
     },
     methods: {
