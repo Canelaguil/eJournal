@@ -78,7 +78,7 @@ export default {
         return {
             content: '',
             placeholderStatus: false,
-            initPlaceholder: false,
+            initTextStatus: false,
             placeholder: '',
             editor: null,
             config: {
@@ -177,7 +177,7 @@ export default {
 
                 this.placeholderStatus = true
                 this.$emit('content-update', null)
-            } else if (!this.initPlaceholder) {
+            } else if (!this.initTextStatus) {
                 this.$emit('content-update', this.content)
             }
         },
@@ -188,20 +188,25 @@ export default {
             this.config.selector = '#' + newID
             tinymce.init(this.config)
             tinymce.EditorManager.execCommand('mceAddControl', true, '#' + newID)
+            this.placeholderStatus = false
 
             if (this.stripHtml(this.givenContent) === '' && this.stripHtml(this.placeholder) !== '') {
-                this.initPlaceholder = true
+                this.initTextStatus = true
                 this.content = this.placeholder
                 this.editor.setContent(this.placeholder)
 
                 this.$nextTick(function () {
                     this.placeholderStatus = true
-                    this.initPlaceholder = false
+                    this.initTextStatus = false
                 })
             } else {
-                this.placeholderStatus = false
+                this.initTextStatus = true
                 this.content = this.givenContent
                 this.editor.setContent(this.givenContent)
+
+                this.$nextTick(function () {
+                    this.initTextStatus = false
+                })
             }
         }
     },
@@ -214,18 +219,22 @@ export default {
 
             if (this.stripHtml(this.givenContent) === '' && this.placeholderText !== '') {
                 this.content = this.placeholder
-
+                this.initTextStatus = true
                 editor.setContent(this.placeholder)
-                this.initPlaceholder = true
 
                 this.$nextTick(function () {
                     this.placeholderStatus = true
-                    this.initPlaceholder = false
+                    this.initTextStatus = false
                 })
             } else {
+                this.initTextStatus = true
                 this.content = this.givenContent
                 /* set content resets the default font for some reason */
                 editor.setContent(this.givenContent)
+
+                this.$nextTick(function () {
+                    this.initTextStatus = false
+                })
             }
 
             if (this.displayInline) {
@@ -440,6 +449,9 @@ export default {
 
 .mce-fullscreen
     padding-top: 70px
+
+// [id^="field-text-editor"]
+//     height: auto !important
 
 // Assume we're in a modal
 form .mce-fullscreen
