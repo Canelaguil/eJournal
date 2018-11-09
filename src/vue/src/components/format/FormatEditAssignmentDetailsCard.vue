@@ -34,6 +34,8 @@
                 v-model="assignmentDetails.points_possible"
                 placeholder="Points"
                 type="number"/>
+            hooi
+            <editor :id="'lol'" :givenContent="''" :footer="false" :inline="true" :placeholderText="'hahahhaa'"/>
             <b-row>
                 <b-col xl="4">
                     <h2 class="field-heading">Unlock date</h2>
@@ -60,6 +62,7 @@
 
 <script>
 import textEditor from '@/components/assets/TextEditor.vue'
+import textEditor2 from '@/components/assets/TextEditor2.vue'
 import icon from 'vue-awesome/components/Icon'
 
 export default {
@@ -71,7 +74,8 @@ export default {
     },
     components: {
         'text-editor': textEditor,
-        icon
+        icon,
+        'editor': textEditor2
     },
     data () {
         return {
