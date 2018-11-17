@@ -14,7 +14,7 @@
                     </div>
                     <div v-else-if="nodes[currentNode].type == 'p'">
                         <b-card class="no-hover" :class="getProgressBorderClass()">
-                            <h2 class="mb-2">Progress: {{ nodes[currentNode].target }} points</h2>
+                            <h2 class="mb-2">Goal: {{ nodes[currentNode].target }} points</h2>
                             <span v-if="progressPointsLeft > 0">
                                 <b>{{ progressNodes[nodes[currentNode].id] }}</b> out of <b>{{ nodes[currentNode].target }}</b> points.<br/>
                                 <b>{{ progressPointsLeft }}</b> more required before <b>{{ $root.beautifyDate(nodes[currentNode].deadline) }}</b>.

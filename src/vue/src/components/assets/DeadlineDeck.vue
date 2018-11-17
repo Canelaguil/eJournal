@@ -9,8 +9,11 @@
         </b-card>
 
         <div v-for="(d, i) in computedDeadlines" :key="i">
-            <b-link tag="b-button" :to="assignmentRoute(d.course.id, d.id, d.journal)">
-                <todo-card :deadline="d"/>
+            <b-link v-if="d.course" tag="b-button" :to="assignmentRoute(d.course.id, d.id, d.journal, d.is_published)">
+                <todo-card :deadline="d" :course="d.course" />
+            </b-link>
+            <b-link v-else v-for="(course, j) in d.courses" tag="b-button" :to="assignmentRoute(course.id, d.id, d.journal, d.is_published)"  :key="i + '-' + j">
+                <todo-card :deadline="d" :course="course" />
             </b-link>
         </div>
     </div>
@@ -32,7 +35,7 @@ export default {
         'todo-square': todoSquare
     },
     methods: {
-        assignmentRoute (cID, aID, jID) {
+        assignmentRoute (cID, aID, jID, isPublished) {
             var route = {
                 params: {
                     cID: cID,
@@ -40,19 +43,24 @@ export default {
                 }
             }
 
-            if (this.$hasPermission('can_view_all_journals', 'assignment', String(aID))) {
+            if (!isPublished) {
+                route.name = 'FormatEdit'
+            } else if (this.$hasPermission('can_view_all_journals', 'assignment', aID)) {
                 route.name = 'Assignment'
-                return route
+            } else {
+                route.name = 'Journal'
+                route.params.jID = jID
             }
-            route.name = 'Journal'
-            route.params.jID = jID
             return route
         }
     },
     computed: {
         computedDeadlines: function () {
             var counter = 0
+
             function compareDate (a, b) {
+                if (!a.deadline) { return 1 }
+                if (!b.deadline) { return -1 }
                 return new Date(a.deadline) - new Date(b.deadline)
             }
 
@@ -66,16 +74,17 @@ export default {
                 return (++counter <= 5)
             }
 
-            function filterNoEntries (deadline) {
-                return deadline.totalNeedsMarking !== 0
+            function filterNoEntries (assignment) {
+                return assignment.totalNeedsMarking !== 0
             }
 
+            var deadlines = this.deadlines.slice()
             if (this.selectedSortOption === 'sortDate') {
-                return this.deadlines.slice().sort(compareDate).filter(filterTop)
+                return deadlines.sort(compareDate).filter(filterTop)
             } else if (this.selectedSortOption === 'sortNeedsMarking') {
-                return this.deadlines.slice().sort(compareMarkingNeeded).filter(filterTop).filter(filterNoEntries)
+                return deadlines.sort(compareMarkingNeeded).filter(filterTop).filter(filterNoEntries)
             } else {
-                return this.deadlines.slice().sort(compareDate).filter(filterTop)
+                return deadlines.sort(compareDate).filter(filterTop)
             }
         }
     }

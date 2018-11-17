@@ -39,6 +39,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
 ALLOWED_HOSTS = ['*']
+TIME_ZONE = 'Europe/Amsterdam'
 
 DATABASES = {
     'default': {

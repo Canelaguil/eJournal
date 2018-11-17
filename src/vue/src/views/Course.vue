@@ -80,7 +80,7 @@ export default {
     },
     methods: {
         loadAssignments () {
-            assignmentAPI.getAllFromCourse(this.cID)
+            assignmentAPI.list(this.cID)
                 .then(assignments => { this.assignments = assignments })
 
             assignmentAPI.getUpcoming(this.cID)

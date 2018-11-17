@@ -28,7 +28,7 @@ export default {
     },
     methods: {
         loadAssignments () {
-            assignmentAPI.getAllFromCourse(this.page.cID)
+            assignmentAPI.list(this.page.cID)
                 .then(assignments => { this.assignments = assignments })
         },
         linkAssignment (aID, aLtiCouples) {
