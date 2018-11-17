@@ -7,10 +7,10 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 
 import VLE.factory as factory
-import VLE.lti_grade_passback as lti_grade
 import VLE.utils.generic_utils as utils
+import VLE.utils.grading as grading_utils
 import VLE.utils.responses as response
-from VLE.models import Assignment, Course, Entry, Lti_ids
+from VLE.models import Assignment, Course, Lti_ids
 from VLE.serializers import AssignmentSerializer
 from VLE.utils.error_handling import VLEMissingRequiredKey, VLEParamWrongType
 
@@ -168,40 +168,41 @@ class AssignmentView(viewsets.ViewSet):
             success -- with the new assignment data
 
         """
-        # Get data\
         pk, = utils.required_typed_params(kwargs, (int, 'pk'))
         assignment = Assignment.objects.get(pk=pk)
+
+        response_data = {}
+
+        # Publish the assignment
         published, = utils.optional_params(request.data, 'published')
+        if published:
+            request.user.check_permission('can_publish_grades', assignment)
+            grading_utils.publish_all_assignment_grades(assignment, published)
+            response_data['published'] = published
+
         # Remove data that must not be changed by the serializer
         req_data = request.data
         req_data.pop('published', None)
         if not (request.user.is_superuser or request.user == assignment.author):
             req_data.pop('author', None)
+        if not req_data:
+            return response.success(response_data)
 
-        response_data = {}
+        # Add LTI ids
+        if 'lti_id' in req_data:
+            factory.make_lti_ids(lti_id=req_data['lti_id'], for_model=Lti_ids.ASSIGNMENT, assignment=assignment)
 
-        # Publish is possible and asked for
-        if published:
-            request.user.check_permission('can_publish_grades', assignment)
-            self.publish(request, assignment)
-            response_data['published'] = published
+        # Check if the assignment can be unpublished
+        is_published, = utils.optional_params(request.data, 'is_published')
+        if not assignment.can_unpublish() and is_published is False:
+            return response.bad_request('You cannot unpublish an assignment that already has submissions.')
 
-        # Update assignment data is possible and asked for
-        if req_data:
-            if 'lti_id' in req_data:
-                factory.make_lti_ids(lti_id=req_data['lti_id'], for_model=Lti_ids.ASSIGNMENT, assignment=assignment)
-
-            # If a entry has been submitted to one of the journals of the journal it cannot be unpublished
-            if assignment.is_published and 'is_published' in req_data and not req_data['is_published'] and \
-               Entry.objects.filter(node__journal__assignment=assignment).exists():
-                return response.bad_request(
-                    'You are not allowed to unpublish an assignment that already has submissions.')
-
-            serializer = AssignmentSerializer(assignment, data=req_data, context={'user': request.user}, partial=True)
-            if not serializer.is_valid():
-                response.bad_request()
-            serializer.save()
-            response_data['assignment'] = serializer.data
+        # Update the other data
+        serializer = AssignmentSerializer(assignment, data=req_data, context={'user': request.user}, partial=True)
+        if not serializer.is_valid():
+            response.bad_request()
+        serializer.save()
+        response_data['assignment'] = serializer.data
 
         return response.success(response_data)
 
@@ -272,31 +273,3 @@ class AssignmentView(viewsets.ViewSet):
                         AssignmentSerializer(assignment, context={'user': request.user, 'course': course}).data)
 
         return response.success({'upcoming': deadline_list})
-
-    @action(methods=['patch'], detail=True)
-    def published_state(self, request, *args, **kwargs):
-        """Update the grade publish status for whole assignment.
-
-        Arguments:
-        request -- the request that was send with
-            published -- new published state
-        pk -- assignment ID
-
-        Returns a json string if it was successful or not.
-        """
-        assignment_id, = utils.required_typed_params(kwargs, (int, 'pk'))
-        published, = utils.required_params(request.data, 'published')
-        assignment = Assignment.objects.get(pk=assignment_id)
-
-        request.user.check_permission('can_publish_grades', assignment)
-
-        self.publish(request, assignment, published)
-
-        return response.success(payload={'new_published': published})
-
-    def publish(self, request, assignment, published=True):
-        utils.publish_all_assignment_grades(assignment, published)
-        if published:
-            for journal in assignment.journal_set.all():
-                if journal.sourcedid is not None and journal.grade_url is not None:
-                    lti_grade.replace_result(journal)

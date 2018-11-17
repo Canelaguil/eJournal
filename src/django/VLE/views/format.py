@@ -7,7 +7,7 @@ from rest_framework import viewsets
 
 import VLE.utils.generic_utils as utils
 import VLE.utils.responses as response
-from VLE.models import Assignment, Entry
+from VLE.models import Assignment
 from VLE.serializers import (AssignmentDetailsSerializer, AssignmentSerializer,
                              FormatSerializer)
 
@@ -64,29 +64,31 @@ class FormatView(viewsets.ViewSet):
             success -- with the new assignment data
 
         """
-        assignment_id = pk
         assignment_details, templates, presets, unused_templates, removed_presets, removed_templates \
             = utils.required_params(request.data, "assignment_details", "templates", "presets",
                                     "unused_templates", "removed_presets", "removed_templates")
 
-        assignment = Assignment.objects.get(pk=assignment_id)
+        assignment = Assignment.objects.get(pk=pk)
         format = assignment.format
-
-        # If a entry has been submitted to one of the journals of the journal it cannot be unpublished
-        if assignment.is_published and 'is_published' in assignment_details and not assignment_details['is_published'] \
-           and Entry.objects.filter(node__journal__assignment=assignment).exists():
-            return response.bad_request('You are not allowed to unpublish an assignment that already has submissions.')
-
         request.user.check_permission('can_edit_assignment', assignment)
 
-        serializer = AssignmentSerializer(assignment, data=assignment_details,
-                                          context={'user': request.user}, partial=True)
+        # Check if the assignment can be unpublished
+        is_published, = utils.optional_params(assignment_details, 'is_published')
+        if not assignment.can_unpublish() and is_published is False:
+            return response.bad_request('You cannot unpublish an assignment that already has submissions.')
+
+        # Remove data that must not be changed by the serializer
+        req_data = assignment_details
+        req_data.pop('published', None)
+        if not (request.user.is_superuser or request.user == assignment.author):
+            req_data.pop('author', None)
+
+        # Update the assignment details
+        serializer = AssignmentSerializer(assignment, data=req_data, context={'user': request.user}, partial=True)
         if not serializer.is_valid():
             return response.bad_request('Invalid data.')
-
         serializer.save()
 
-        format.save()
         template_map = {}
         utils.update_presets(assignment, presets, template_map)
         utils.update_templates(format.available_templates, templates, template_map)

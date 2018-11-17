@@ -6,8 +6,8 @@ class AssignmentFactory(factory.django.DjangoModelFactory):
         model = 'VLE.Assignment'
 
     name = 'Logboek'
-    # description = 'Logboek for all your logging purposes'
-    # author = factory.SubFactory('test.factory.user.TeacherFactory')
+    description = 'Logboek for all your logging purposes'
+    author = factory.SubFactory('test.factory.user.TeacherFactory')
 
     format = factory.SubFactory('test.factory.format.FormatFactory')
 

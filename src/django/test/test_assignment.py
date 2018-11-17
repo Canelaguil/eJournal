@@ -3,6 +3,8 @@ from test.utils import api
 
 from django.test import TestCase
 
+from VLE.models import Entry
+
 
 class AssignmentAPITest(TestCase):
     def setUp(self):
@@ -42,6 +44,7 @@ class AssignmentAPITest(TestCase):
                    user=factory.User(), status=403)
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
                    user=self.teacher)
+        Entry.objects.filter(node__journal__assignment=assignment['id'])
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
                    user=factory.Admin())
 
