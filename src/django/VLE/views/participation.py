@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
@@ -161,6 +162,7 @@ class ParticipationView(viewsets.ViewSet):
         Arguments:
         request -- request data
             course_id -- course ID
+            unenrolled_query -- query that needs to match with the unenrolled users
 
         Returns:
         On failure:
@@ -171,12 +173,29 @@ class ParticipationView(viewsets.ViewSet):
         On success:
             success -- list of all the users and their role
         """
-        course_id, = utils.required_params(request.query_params, "course_id")
+        course_id, unenrolled_query = utils.required_params(request.query_params, 'course_id', 'unenrolled_query')
+        if ' ' in unenrolled_query:
+            first_name = unenrolled_query.split(' ', 1)[0]
+            last_name = unenrolled_query.split(' ', 1)[1]
 
         course = Course.objects.get(pk=course_id)
-
         request.user.check_permission('can_add_course_users', course)
 
         ids_in_course = course.participation_set.all().values('user__id')
         users = User.objects.all().exclude(id__in=ids_in_course)
-        return response.success({'participants': UserSerializer(users, many=True).data})
+
+        if len(unenrolled_query) < 5:
+            user = users.filter(username=unenrolled_query)
+            if user:
+                return response.success({'participants': UserSerializer(user, many=True).data})
+            else:
+                return response.success({'participants': []})
+
+        found_users = users.filter(Q(username__contains=unenrolled_query) |
+                                   Q(first_name__contains=unenrolled_query) |
+                                   Q(last_name__contains=unenrolled_query))
+
+        if ' ' in unenrolled_query:
+            found_users = found_users | users.filter(first_name__contains=first_name, last_name__contains=last_name)
+
+        return response.success({'participants': UserSerializer(found_users, many=True).data})

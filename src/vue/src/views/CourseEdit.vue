@@ -45,13 +45,15 @@
                 <b-col class="d-flex flex-wrap">
                     <b-button v-if="$hasPermission('can_delete_course')"
                         @click.prevent.stop="deleteCourse()"
-                        class="multi-form delete-button flex-grow-1">
+                        class="multi-form delete-button flex-grow-1"
+                        :class="{ 'mr-2' : $hasPermission('can_edit_course_roles') | $hasPermission('can_edit_course_details') }">
                         <icon name="trash"/>
                         Delete Course
                     </b-button>
                     <b-button v-if="$hasPermission('can_edit_course_roles')"
                         @click.prevent.stop="routeToEditCourseRoles"
-                        class="multi-form change-button flex-grow-1">
+                        class="multi-form change-button flex-grow-1"
+                        :class="{ 'mr-2' : $hasPermission('can_edit_course_details') }">
                         <icon name="cog"/>
                         Manage Permissions
                     </b-button>
@@ -82,15 +84,30 @@
                 <h2 class="mb-2">Manage course members</h2>
                 <div class="d-flex">
                     <input
+                        v-if="viewEnrolled"
                         class="theme-input flex-grow-1 no-width multi-form mr-2"
                         type="text"
                         v-model="searchVariable"
                         placeholder="Search..."/>
-                    <b-button v-if="viewEnrolled" v-on:click.stop @click="toggleEnroled" class="multi-form">
+                    <input
+                        v-if="!viewEnrolled"
+                        class="theme-input flex-grow-1 no-width multi-form mr-2"
+                        type="text"
+                        v-model="unenrolledQuery"
+                        placeholder="Name or username with at least 5 characters"
+                        @keyup.enter="searchUnenrolled"/>
+                    <b-button
+                        v-if="!viewEnrolled"
+                        class="multi-form mr-2"
+                        @click="searchUnenrolled">
+                        <icon name="search"/>
+                        Search users
+                    </b-button>
+                    <b-button v-if="viewEnrolled" v-on:click.stop @click="toggleEnrolled" class="multi-form">
                         <icon name="users"/>
                         Enrolled
                     </b-button>
-                    <b-button v-if="!viewEnrolled" v-on:click.stop @click="toggleEnroled" class="multi-form">
+                    <b-button v-if="!viewEnrolled" v-on:click.stop @click="toggleEnrolled" class="multi-form">
                         <icon name="user-plus"/>
                         Unenrolled
                     </b-button>
@@ -119,6 +136,12 @@
                 </div>
                 <b-col sm="8" class="d-flex flex-wrap">
                 </b-col>
+            </b-card>
+
+            <b-card class="no-hover" v-if="!viewEnrolled && !this.unenrolledStudents.length">
+                <div class="float-left">
+                    <b>{{ unenrolledQueryDescription }}</b>
+                </div>
             </b-card>
 
             <course-participant-card v-if="viewEnrolled"
@@ -178,7 +201,9 @@ export default {
             numTeachers: 0,
             roles: [],
             viewEnrolled: true,
-            order: false
+            order: false,
+            unenrolledQuery: '',
+            unenrolledQueryDescription: 'Search unenrolled users in the search field above.'
         }
     },
     watch: {
@@ -236,9 +261,6 @@ export default {
             this.participants = this.participants.filter(function (item) {
                 return user.id !== item.id
             })
-            if (this.unenrolledLoaded === true) {
-                this.unenrolledStudents.push(user)
-            }
         },
         addParticipantLocally (user) {
             this.unenrolledStudents = this.unenrolledStudents.filter(function (item) {
@@ -264,11 +286,6 @@ export default {
                     .then(users => { this.participants = users })
             }
         },
-        loadUnenrolledStudents () {
-            participationAPI.getUnenrolled(this.cID)
-                .then(users => { this.unenrolledStudents = users })
-            this.unenrolledLoaded = !this.unenrolledLoaded
-        },
         routeToEditCourseRoles () {
             this.$router.push({
                 name: 'UserRoleConfiguration',
@@ -283,8 +300,11 @@ export default {
         toggleOrder () {
             this.order = !this.order
         },
-        toggleEnroled () {
+        toggleEnrolled () {
             this.viewEnrolled = !this.viewEnrolled
+            this.unenrolledStudents = []
+            this.unenrolledQuery = ''
+            this.unenrolledQueryDescription = 'Search unenrolled users in the search field above.'
         },
         deepCopyCourse (course) {
             var copyCourse = {
@@ -310,6 +330,19 @@ export default {
                 }
             }
             this.numTeachers = this.participants.filter(p => p.role === 'Teacher').length
+        },
+        searchUnenrolled () {
+            this.unenrolledQuery = this.unenrolledQuery.trim()
+            participationAPI.getUnenrolled(this.cID, this.unenrolledQuery)
+                .then(users => {
+                    this.unenrolledStudents = users
+                    if (!this.unenrolledStudents.length) {
+                        this.unenrolledQueryDescription = 'No users found'
+                    } else {
+                        this.$toasted.success('Succesfully found user(s).')
+                    }
+                })
+                .catch(error => { this.$toasted.error(error.response.data.description) })
         }
     },
     computed: {
@@ -350,9 +383,6 @@ export default {
             /* Switch view list with drop down menu and load unenrolled
                students when accessing other students at first time. */
             if (!this.viewEnrolled) {
-                if (this.unenrolledLoaded === false) {
-                    this.loadUnenrolledStudents()
-                }
                 viewList = this.unenrolledStudents
             }
 
