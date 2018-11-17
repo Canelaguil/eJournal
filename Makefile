@@ -1,11 +1,15 @@
 #
 # TEST COMMANDS
 #
-
+ifdef test
+TOTEST=-k ${test}
+else
+TOTEST=
+endif
 test-back:
 	pep8 ./src/django --max-line-length=120 --exclude='./src/django/VLE/migrations','./src/django/VLE/settings*'
 	bash -c 'source ./venv/bin/activate && flake8 --max-line-length=120 src/django --exclude="src/django/VLE/migrations/*","src/django/VLE/settings/*","src/django/VLE/settings.py" && deactivate'
-	bash -c "source ./venv/bin/activate && pytest --cov=VLE --cov-config .coveragerc src/django/test && deactivate"
+	bash -c "source ./venv/bin/activate && pytest --cov=VLE --cov-config .coveragerc src/django/test ${TOTEST} && deactivate"
 	bash -c 'source ./venv/bin/activate && isort -rc src/django/ && deactivate'
 
 test-front:
