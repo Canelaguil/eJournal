@@ -26,12 +26,12 @@ class UserAPITest(TestCase):
         # Test get all users
         api.get(self, 'users', user=student, status=403)
         get_resp = api.get(self, 'users', user=admin)['users']
-        assert len(get_resp) == 2, 'Test is the admin got all the users'
+        assert len(get_resp) == 2, 'Test if the admin got all the users'
 
         # Test get own user
         get_resp = api.get(self, 'users', params={'pk': 0}, user=student)['user']
-        assert 'id' in get_resp, 'Test is the student got userdata'
-        assert 'grade_notifications' in get_resp, 'Test is the student got all their userdata'
+        assert 'id' in get_resp, 'Test if the student got userdata'
+        assert 'grade_notifications' in get_resp, 'Test if the student got all their userdata'
 
         # Check if a user cant see other users data
         api.get(self, 'users', params={'pk': admin.pk}, user=student, status=403)
@@ -41,8 +41,8 @@ class UserAPITest(TestCase):
 
         # Test get user as admin
         get_resp = api.get(self, 'users', params={'pk': student.pk}, user=admin)['user']
-        assert 'id' in get_resp, 'Test is the student got userdata'
-        assert 'grade_notifications' in get_resp, 'Test is the student got all their userdata'
+        assert 'id' in get_resp, 'Test if the student got userdata'
+        assert 'grade_notifications' in get_resp, 'Test if the student got all their userdata'
 
     def test_create(self):
         params = dict(self.create_params)
