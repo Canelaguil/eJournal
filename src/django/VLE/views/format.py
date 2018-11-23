@@ -65,8 +65,8 @@ class FormatView(viewsets.ViewSet):
 
         """
         assignment_details, templates, presets, unused_templates, removed_presets, removed_templates \
-            = utils.required_params(request.data, "assignment_details", "templates", "presets",
-                                    "unused_templates", "removed_presets", "removed_templates")
+            = utils.required_params(request.data, 'assignment_details', 'templates', 'presets',
+                                    'unused_templates', 'removed_presets', 'removed_templates')
 
         assignment = Assignment.objects.get(pk=pk)
         format = assignment.format
@@ -75,10 +75,10 @@ class FormatView(viewsets.ViewSet):
         # Check if the assignment can be unpublished
         is_published, = utils.optional_params(assignment_details, 'is_published')
         if not assignment.can_unpublish() and is_published is False:
-            return response.bad_request('You cannot unpublish an assignment that already has submissions.')
+            return response.bad_request("You cannot unpublish an assignment that already has submissions.")
 
         # Remove data that must not be changed by the serializer
-        req_data = assignment_details
+        req_data = assignment_details or {}
         req_data.pop('published', None)
         if not (request.user.is_superuser or request.user == assignment.author):
             req_data.pop('author', None)

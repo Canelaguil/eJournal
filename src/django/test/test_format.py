@@ -1,5 +1,6 @@
 import test.factory as factory
 from test.utils import api
+import VLE.serializers as serialize
 
 from django.test import TestCase
 
@@ -12,13 +13,34 @@ class AssignmentAPITest(TestCase):
         self.assignment = factory.Assignment(courses=[self.course])
         self.template = factory.Template()
         self.format = factory.Format(assignment=self.assignment)
-        self.format.unused_templates.add(self.template)
-        self.create_params = {'name': 'test', 'description': 'test_description', 'course_id': self.course.pk}
+        self.format.available_templates.add(self.template)
+        self.update_dict = {
+            'assignment_details': {
+                'name': 'Colloq',
+                'description': 'description1',
+                'is_published': True
+            },
+            'templates': serialize.TemplateSerializer(self.format.available_templates.all(), many=True).data,
+            'removed_presets': [],
+            'removed_templates': [],
+            'presets': [],
+            'unused_templates': []
+        }
 
     def test_update(self):
-        api.update(self, 'formats', params={'pk': self.assignment.pk, 's': 5},
-                   user=factory.User(), status=403)
-        api.update(self, 'formats', params={'pk': self.assignment.pk},
-                   user=self.teacher)
-        api.update(self, 'formats', params={'pk': self.assignment.pk},
-                   user=factory.Admin())
+        # TODO: Improve template testing
+        api.update(self, 'formats', params={
+                'pk': self.assignment.pk, 'assignment_details': None,
+                'templates': [], 'presets': [], 'unused_templates': [], 'removed_presets': [],
+                'removed_templates': []
+            }, user=factory.User(), status=403)
+        api.update(self, 'formats', params={
+                'pk': self.assignment.pk, 'assignment_details': None,
+                'templates': [], 'presets': [], 'unused_templates': [], 'removed_presets': [],
+                'removed_templates': []
+            }, user=self.teacher)
+        api.update(self, 'formats', params={
+                'pk': self.assignment.pk, 'assignment_details': None,
+                'templates': [], 'presets': [], 'unused_templates': [], 'removed_presets': [],
+                'removed_templates': []
+            }, user=factory.Admin())

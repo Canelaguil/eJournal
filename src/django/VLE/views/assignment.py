@@ -198,7 +198,7 @@ class AssignmentView(viewsets.ViewSet):
         # Check if the assignment can be unpublished
         is_published, = utils.optional_params(request.data, 'is_published')
         if not assignment.can_unpublish() and is_published is False:
-            return response.bad_request('You cannot unpublish an assignment that already has submissions.')
+            return response.bad_request("You cannot unpublish an assignment that already has submissions.")
 
         # Update the other data
         serializer = AssignmentSerializer(assignment, data=req_data, context={'user': request.user}, partial=True)
