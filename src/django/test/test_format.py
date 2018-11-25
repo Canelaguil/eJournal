@@ -1,11 +1,12 @@
 import test.factory as factory
 from test.utils import api
-import VLE.serializers as serialize
 
 from django.test import TestCase
 
+import VLE.serializers as serialize
 
-class AssignmentAPITest(TestCase):
+
+class FormatAPITest(TestCase):
     def setUp(self):
         self.teacher = factory.Teacher()
         self.admin = factory.Admin()

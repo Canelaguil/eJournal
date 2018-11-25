@@ -19,4 +19,4 @@ class IsOnline(TestCase):
     def test_online(self):
         """Test if server is online."""
         response = self.c.get('/admin', follow=True)
-        self.assertEquals(response.status_code, 200)
+        assert response.status_code == 200, 'The admin panel should be reachable'

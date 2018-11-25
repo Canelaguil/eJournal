@@ -437,7 +437,7 @@ class Assignment(models.Model):
         return super(Assignment, self).save(*args, **kwargs)
 
     def can_unpublish(self):
-        return self.is_published and Entry.objects.filter(node__journal__assignment=self).exists()
+        return not (self.is_published and Entry.objects.filter(node__journal__assignment=self).exists())
 
     def __str__(self):
         """toString."""

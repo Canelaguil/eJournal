@@ -6,6 +6,7 @@ from test.factory.template import TemplateFactory
 from test.factory.group import GroupFactory, LtiGroupFactory
 from test.factory.lti import LtiFactory
 from test.factory.participation import ParticipationFactory, GroupParticipationFactory
+from test.factory.journal import JournalFactory
 
 Assignment = AssignmentFactory
 Course = CourseFactory
@@ -24,3 +25,5 @@ Lti = LtiFactory
 
 Participation = ParticipationFactory
 GroupParticipation = GroupParticipationFactory
+
+Journal = JournalFactory
