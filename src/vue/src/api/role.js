@@ -11,8 +11,8 @@ export default {
             .then(response => response.data)
     },
 
-    getFromCourse (id, connArgs = auth.DEFAULT_CONN_ARGS) {
-        return auth.get('roles', {course_id: id}, connArgs)
+    getFromCourse (cID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('roles', {course_id: cID}, connArgs)
             .then(response => response.data.roles)
     }
 }
