@@ -39,12 +39,13 @@ def forgot_password(request):
     # We are retrieving the username based on either the username or email
     try:
         user = User.objects.get(username=username)
+        email = 'your recovery address'
     except User.DoesNotExist:
         user = User.objects.get(email=email)
 
     email_handling.send_password_recovery_link(user)
     return response.success(
-        description='An email was sent to {}, please follow the email for instructions.'.format(user.email))
+        description='An email was sent to {}, please follow the email for instructions.'.format(email))
 
 
 @api_view(['POST'])

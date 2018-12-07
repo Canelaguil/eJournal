@@ -3,22 +3,21 @@
         <b-row align-h="between">
             <b-col cols="12" sm="6">
                 <b-badge
-                    v-if="lti"
+                    v-if="assignment.lti_couples > 0"
                     class="ml-2 mt-2 info"
                     v-b-tooltip.hover
                     title="Linked via LTI">
                     LTI
                 </b-badge>
                 <b-badge
-                    v-if="!published"
+                    v-if="!assignment.is_published"
                     class="ml-2 mt-2"
                     v-b-tooltip.hover
                     title="Not visible to students:
                     click to edit">
                     Unpublished
                 </b-badge>
-                <h2 class="float-left">{{ line1 }}</h2>
-                {{ line2 }}
+                <h2 class="float-left">{{ assignment.name }}</h2>
             </b-col>
             <b-col cols="12" sm="6">
                 <slot></slot>
@@ -29,6 +28,6 @@
 
 <script>
 export default {
-    props: ['line1', 'line2', 'lti', 'published']
+    props: ['assignment']
 }
 </script>

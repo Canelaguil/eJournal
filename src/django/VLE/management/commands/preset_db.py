@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 "is_superuser": False,
                 "is_teacher": False
             }, {
-                "username": "Student5",
+                "username": "zzhu",
                 "full_name": "Zi Long Zhu",
                 "pass": "pass",
                 "is_superuser": False,
@@ -84,7 +84,7 @@ class Command(BaseCommand):
         courses_examples = [
             {
                 "name": "Portfolio Academische Vaardigheden 1",
-                "abbr": "PAV",
+                "abbr": "PAV1",
                 "students": [0, 1, 2, 3, 4],
                 "teachers": [5],
                 "start_date": faker.date("2018-09-01"),
@@ -92,7 +92,7 @@ class Command(BaseCommand):
             },
             {
                 "name": "Portfolio Academische Vaardigheden 2",
-                "abbr": "PAV",
+                "abbr": "PAV2",
                 "students": [0, 1, 2, 3, 4],
                 "teachers": [5],
                 "start_date": faker.date("2018-09-01"),

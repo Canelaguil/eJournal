@@ -27,13 +27,15 @@ class VLEPermissionError(Exception):
     def __init__(self, permission=None, message=None):
         if message:
             super(VLEPermissionError, self).__init__(message)
-        else:
+        elif permission:
             super(VLEPermissionError, self).__init__('User does not have permission ' + permission)
+        else:
+            super(VLEPermissionError, self).__init__('User does not have the necessery permissions.')
 
 
 class VLEParticipationError(Exception):
-    def __init__(self, obj):
-        super(VLEParticipationError, self).__init__('User is not participating in ' + str(obj))
+    def __init__(self, obj, logged_user):
+        super(VLEParticipationError, self).__init__('User is not participating in ' + obj.to_string(logged_user))
 
 
 class ErrorMiddleware:

@@ -22,35 +22,22 @@ class OAuthRequestValidater(object):
         self.oauth_server = oauth2.Server()
         signature_method = oauth2.SignatureMethod_HMAC_SHA1()
         self.oauth_server.add_signature_method(signature_method)
-        self.oauth_consumer = oauth2.Consumer(
-            self.consumer_key, self.consumer_secret
-        )
+        self.oauth_consumer = oauth2.Consumer(self.consumer_key, self.consumer_secret)
 
     def parse_request(self, request):
         """
         Parses a django request to return the method, url, header and post data.
         """
-        return request.method, request.build_absolute_uri(), request.META, \
-            request.POST.dict()
+        return request.method, request.build_absolute_uri(), request.META, request.POST.dict()
 
     def is_valid(self, request):
         """
         Checks if the signature of the given request is valid based on the
         consumers secret en key
         """
-        try:
-            method, url, head, param = self.parse_request(request)
-
-            oauth_request = oauth2.Request.from_request(
-                method, url, headers=head, parameters=param)
-
-            self.oauth_server.verify_request(oauth_request,
-                                             self.oauth_consumer, {})
-
-        except (oauth2.Error, ValueError) as err:
-            return False, err
-        # Signature was valid
-        return True, None
+        method, url, head, param = self.parse_request(request)
+        oauth_request = oauth2.Request.from_request(method, url, headers=head, parameters=param)
+        self.oauth_server.verify_request(oauth_request, self.oauth_consumer, {})
 
     @classmethod
     def check_signature(cls, key, secret, request):
@@ -59,13 +46,14 @@ class OAuthRequestValidater(object):
         https://github.com/simplegeo/python-oauth2.
         """
         validator = OAuthRequestValidater(key, secret)
-        return validator.is_valid(request)
+        validator.is_valid(request)
 
 
 def roles_to_list(params):
     roles = list()
-    for role in params['roles'].split(','):
-        roles.append(role.split('/')[-1].lower())
+    if 'roles' in params:
+        for role in params['roles'].split(','):
+            roles.append(role.split('/')[-1].lower())
     return roles
 
 

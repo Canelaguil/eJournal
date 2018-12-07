@@ -161,31 +161,35 @@ export default {
     DEFAULT_CONN_ARGS: DEFAULT_CONN_ARGS,
 
     /* Create a user and add it to the database. */
-    register (username, password, fullname, email, jwtParams = null) {
+    register (username, password, full_name, email, jwtParams = null, connArgs = DEFAULT_CONN_ARGS) {
         return unvalidatedSend(connection.conn.post, improveUrl('users'), {
             username: username,
             password: password,
             full_name: fullname,
             email: email,
             jwt_params: jwtParams
-        })
+        }, connArgs)
             .then(response => { return response.data.user })
     },
 
     /* Change password. */
-    changePassword (newPassword, oldPassword) {
-        return this.update('users/password', {new_password: newPassword, old_password: oldPassword})
+    changePassword (newPassword, oldPassword, connArgs = DEFAULT_CONN_ARGS) {
+        return this.update('users/password', {new_password: newPassword, old_password: oldPassword}, connArgs)
     },
 
     /* Forgot password.
      * Checks if a user is known by the given email or username. Sends an email with a link to reset the password. */
-    forgotPassword (username, email) {
-        return unvalidatedSend(connection.conn.post, improveUrl('forgot_password'), {username: username, email: email})
+    forgotPassword (username, email, connArgs = DEFAULT_CONN_ARGS) {
+        return unvalidatedSend(connection.conn.post, improveUrl('forgot_password'), {username: username, email: email}, connArgs)
     },
 
     /* Recover password */
-    recoverPassword (username, recoveryToken, newPassword) {
-        return unvalidatedSend(connection.conn.post, improveUrl('recover_password'), {username: username, recovery_token: recoveryToken, new_password: newPassword})
+    recoverPassword (username, recoveryToken, newPassword, connArgs = DEFAULT_CONN_ARGS) {
+        return unvalidatedSend(connection.conn.post, improveUrl('recover_password'), {
+            username: username,
+            recovery_token: recoveryToken,
+            new_password: newPassword
+        }, connArgs)
     },
 
     get (url, data, connArgs) {

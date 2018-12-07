@@ -107,18 +107,6 @@ export default {
 @import '~sass/modules/colors.sass'
 @import '~sass/partials/shadows.sass'
 
-.text-white
-    color: white
-
-.fill-white
-    fill: white
-
-.fill-red
-    fill: $theme-red
-
-.fill-green
-    fill: $theme-green
-
 .timeline-node-circle-border
     border-radius: 50% !important
     background-color: white

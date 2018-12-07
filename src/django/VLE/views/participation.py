@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
@@ -121,14 +122,16 @@ class ParticipationView(viewsets.ViewSet):
         user = User.objects.get(pk=user_id)
         course = Course.objects.get(pk=pk)
         participation = Participation.objects.get(user=user, course=course)
+        request.user.check_permission('can_edit_course_user_group', course)
 
         if role_name:
             request.user.check_permission('can_edit_course_roles', course)
             participation.role = Role.objects.get(name=role_name, course=course)
 
         if group_name:
-            request.user.check_permission('can_edit_course_user_group', course)
             participation.group = Group.objects.get(name=group_name, course=course)
+        elif 'group' in request.data:
+            participation.group = None
 
         participation.save()
         serializer = UserSerializer(participation.user, context={'course': course})
@@ -159,6 +162,7 @@ class ParticipationView(viewsets.ViewSet):
         Arguments:
         request -- request data
             course_id -- course ID
+            unenrolled_query -- query that needs to match with the unenrolled users
 
         Returns:
         On failure:
@@ -169,12 +173,22 @@ class ParticipationView(viewsets.ViewSet):
         On success:
             success -- list of all the users and their role
         """
-        course_id, = utils.required_params(request.query_params, "course_id")
+        course_id, unenrolled_query = utils.required_params(request.query_params, 'course_id', 'unenrolled_query')
 
         course = Course.objects.get(pk=course_id)
-
         request.user.check_permission('can_add_course_users', course)
 
         ids_in_course = course.participation_set.all().values('user__id')
         users = User.objects.all().exclude(id__in=ids_in_course)
-        return response.success({'participants': UserSerializer(users, many=True).data})
+
+        if len(unenrolled_query) < 5:
+            user = users.filter(username=unenrolled_query)
+            if user:
+                return response.success({'participants': UserSerializer(user, many=True).data})
+            else:
+                return response.success({'participants': []})
+
+        found_users = users.filter(Q(username__contains=unenrolled_query) |
+                                   Q(full_name__contains=unenrolled_query))
+
+        return response.success({'participants': UserSerializer(found_users, many=True).data})

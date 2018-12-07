@@ -2,10 +2,10 @@
     <b-card class="no-hover">
         <div v-for="a in assignments" :key="a.id">
             <div v-if="a.lti_couples">
-                <assignment-card class="orange-border" @click.native="linkAssignment(a.id, a.lti_couples)" :line1="a.name"/>
+                <assignment-card class="orange-border" @click.native="linkAssignment(a.id, a.lti_couples)" :assignment="a"/>
             </div>
             <div v-else>
-                <assignment-card class="green-border" @click.native="linkAssignment(a.id, a.lti_couples)" :line1="a.name"/>
+                <assignment-card class="green-border" @click.native="linkAssignment(a.id, a.lti_couples)" :assignment="a"/>
             </div>
         </div>
     </b-card>
@@ -28,11 +28,11 @@ export default {
     },
     methods: {
         loadAssignments () {
-            assignmentAPI.getAllFromCourse(this.page.cID)
+            assignmentAPI.list(this.page.cID)
                 .then(assignments => { this.assignments = assignments })
         },
         linkAssignment (aID, aLtiCouples) {
-            if (!aLtiCouples || confirm('This assignment is already linked to ' + aLtiCouples + ' other assignment(s) from the learning-environment, are you sure you also want to link it?')) {
+            if (!aLtiCouples || confirm('This assignment is already linked to ' + (aLtiCouples > 1 ? aLtiCouples + ' ' : 'an') + 'other assignment' + (aLtiCouples > 1 ? 's' : '') + ' from the learning-environment, are you sure you also want to link it?')) {
                 assignmentAPI.update(aID, {lti_id: this.lti.ltiAssignID,
                     points_possible: this.lti.ltiPointsPossible,
                     is_published: this.lti.ltiAssignPublished,

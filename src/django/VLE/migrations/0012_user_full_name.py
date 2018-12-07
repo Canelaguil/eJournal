@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('VLE', '0010_auto_20181027_1403'),
+        ('VLE', '0011_entry_vle_coupling'),
     ]
 
     operations = [

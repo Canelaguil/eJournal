@@ -31,7 +31,7 @@ LTI_ROLE_CONFIG_PATH = BASE_DIR + '/../lti/role_config.json'
 
 with open(LTI_ROLE_CONFIG_PATH) as role_config:
     ROLES = json.load(role_config)
-    LTI_ROLES = dict((ROLES[k], k) for k in ROLES)
+    LTI_ROLES = {value: key for (key, value) in ROLES.items()}
 
 BASELINK = '{{BASELINK}}'
 if BASELINK[-1] == '/':

@@ -27,12 +27,11 @@
                     <tr v-for="permission in permissions" :key="permission">
                         <td class="permission-column">{{ formatPermissionString(permission) }}</td>
                         <td v-for="role in roles" :key="role + '-' + permission">
-                            <custom-checkbox
+                            <!-- eslint-disable -->
+                            <b-form-checkbox
                                 :class="{ 'input-disabled': essentialPermission(role, permission) }"
-                                @checkbox-toggle="updateRole"
-                                :role="role"
-                                :permission="permission"
-                                :receivedState="setState(role, permission)"/>
+                                v-model="roleConfig[getIndex(role)][permission]"/>
+                            <!-- eslint-enable -->
                         </td>
                     </tr>
                 </tbody>
@@ -74,7 +73,6 @@
 <script>
 import breadCrumb from '@/components/assets/BreadCrumb.vue'
 import contentSingleTableColumn from '@/components/columns/ContentSingleTableColumn.vue'
-import customCheckbox from '@/components/assets/CustomCheckbox.vue'
 import icon from 'vue-awesome/components/Icon'
 import roleAPI from '@/api/role'
 import commonAPI from '@/api/common'
@@ -115,14 +113,8 @@ export default {
         essentialPermission (role, permission) {
             return this.essentialPermissions[role] && this.essentialPermissions[role].includes(permission)
         },
-        updateRole (list) {
-            var role = list[0]
-            var permission = list[1]
-            var state = list[2]
-
-            var i = this.roleConfig.findIndex(p => p.name === role)
-
-            this.roleConfig[i][permission] = (state ? 1 : 0)
+        getIndex (role) {
+            return this.roleConfig.findIndex(p => p.name === role)
         },
         callocRoleObject (role) {
             /* Initialises a role object with the given name, the pages cID
@@ -159,14 +151,6 @@ export default {
         focusRoleNameInput () {
             /* Ensures the modal name field is focused upon the modal opening. */
             this.$refs.roleNameInput.focus()
-        },
-        setState (role, permission) {
-            var correctRole = (this.roleConfig.filter(arg => { return arg.name === role }))[0]
-            if (correctRole !== undefined) {
-                return correctRole[permission] === true
-            }
-
-            return false
         },
         update () {
             roleAPI.update(this.cID, this.roleConfig, {customSuccessToast: 'Course roles successfully updated.'})
@@ -255,7 +239,6 @@ export default {
     components: {
         'content-single-table-column': contentSingleTableColumn,
         'bread-crumb': breadCrumb,
-        'custom-checkbox': customCheckbox,
         icon
     },
     beforeRouteLeave (to, from, next) {
@@ -279,6 +262,9 @@ export default {
 .table td
     text-align: center
     align-items: center
+    .custom-checkbox
+        margin: 0px
+        padding-left: 2em
 
 .permission-column
     text-align: left !important

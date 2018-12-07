@@ -139,6 +139,10 @@ export default {
         id: function () {
             this.content = this.givenContent
             this.editor.setContent(this.givenContent)
+        },
+        givenContent: function () {
+            this.content = this.givenContent
+            this.editor.setContent(this.givenContent)
         }
     },
     methods: {

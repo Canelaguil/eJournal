@@ -27,15 +27,12 @@ def required_params(post, *keys):
 def optional_params(post, *keys):
     """Get optional post parameters, filling them as None if not present."""
     if keys and not post:
-        raise VLEMissingRequiredKey()
+        return [None] * len(keys)
 
     result = []
     for key in keys:
-        if key in post:
-            if post[key] == '':
-                result.append(None)
-            else:
-                result.append(post[key])
+        if key in post and post[key] != '':
+            result.append(post[key])
         else:
             result.append(None)
     return result
@@ -53,6 +50,23 @@ def required_typed_params(post, *keys):
             raise VLEParamWrongType(err)
         except KeyError as err:
             raise VLEMissingRequiredKey(err)
+
+    return result
+
+
+def optional_typed_params(post, *keys):
+    if keys and not post:
+        return [None] * len(keys)
+
+    result = []
+    for func, key in keys:
+        if key in post and post[key] != '':
+            try:
+                result.append(func(post[key]))
+            except ValueError as err:
+                raise VLEParamWrongType(err)
+        else:
+            result.append(None)
 
     return result
 # END: API-POST functions

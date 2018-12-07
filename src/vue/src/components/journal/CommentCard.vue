@@ -9,17 +9,21 @@
                 <img class="profile-picture-sm no-hover" :src="comment.author.profile_picture">
                 <b-card class="no-hover comment-card" :class="$root.getBorderClass($route.params.cID)">
                     <div v-if="!editCommentStatus[index]">
-                        <b-button v-if="$store.getters['user/uID'] == comment.author.id" class="ml-2 delete-button float-right multi-form" @click="deleteComment(comment.id)">
-                            <icon name="trash"/>
-                            Delete
-                        </b-button>
-                        <b-button v-if="$store.getters['user/uID'] == comment.author.id" class="ml-2 change-button float-right multi-form" @click="editCommentView(index, true, comment.text)">
-                            <icon name="edit"/>
-                            Edit
-                        </b-button>
-                        <div v-html="comment.text"/>
+                        <sandboxed-iframe :content="comment.text"/>
                         <hr class="full-width"/>
                         <b>{{ comment.author.full_name }}</b>
+                        <icon
+                            v-if="$store.getters['user/uID'] == comment.author.id"
+                            name="trash"
+                            class="float-right trash-icon"
+                            @click.native="deleteComment(comment.id)"
+                        />
+                        <icon
+                            v-if="$store.getters['user/uID'] == comment.author.id"
+                            name="edit" scale="1.07"
+                            class="float-right ml-2 edit-icon"
+                            @click.native="editCommentView(index, true, comment.text)"
+                        />
                         <span v-if="comment.published && $root.beautifyDate(comment.last_edited) === $root.beautifyDate(comment.creation_date)" class="timestamp">
                             {{ $root.beautifyDate(comment.creation_date) }}<br/>
                         </span>
@@ -77,6 +81,7 @@
 <script>
 import icon from 'vue-awesome/components/Icon'
 import textEditor from '@/components/assets/TextEditor.vue'
+import sandboxedIframe from '@/components/assets/SandboxedIframe.vue'
 
 import commentAPI from '@/api/comment'
 
@@ -92,7 +97,8 @@ export default {
     },
     components: {
         'text-editor': textEditor,
-        icon
+        icon,
+        sandboxedIframe
     },
     data () {
         return {
@@ -198,4 +204,7 @@ export default {
     .comment-card
         .card-body
             padding-bottom: 5px
+            .trash-icon, .edit-icon
+                margin-top: 4px
+                margin-left: 4px
 </style>

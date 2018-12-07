@@ -6,7 +6,7 @@
                 <icon name="circle-o-notch" spin scale='1.3'/>
             </div>
         </transition>
-        <b-navbar-brand :to="{ name: 'Home' }" class="brand-name"><span>e</span>Journal</b-navbar-brand>
+        <b-navbar-brand :to="{ name: 'Home' }" class="brand-name text-shadow"><span>e</span>Journal</b-navbar-brand>
 
         <b-navbar-toggle class="ml-auto mr-auto" target="nav-collapse" aria-expanded="false" aria-controls="nav-collapse">
             <span class="nav-collapse__icon nav-collapse__icon--open">
@@ -19,8 +19,14 @@
 
         <b-collapse is-nav id="nav-collapse">
             <b-navbar-nav class="mr-auto">
-                <b-nav-item :to="{ name : 'Home' }">Courses</b-nav-item>
-                <b-nav-item :to="{ name : 'AssignmentsOverview' }">Assignments</b-nav-item>
+                <b-nav-item :to="{ name : 'Home' }">
+                    <icon name="home"/>
+                    Courses
+                </b-nav-item>
+                <b-nav-item :to="{ name : 'AssignmentsOverview' }">
+                    <icon name="edit"/>
+                    Assignments
+                </b-nav-item>
             </b-navbar-nav>
         </b-collapse>
 
@@ -101,6 +107,15 @@ export default {
     font-family: 'Roboto Condensed', sans-serif
     font-size: 1.3em
     height: 70px
+    .nav-link
+        svg
+            fill: grey !important
+        &:hover
+            svg
+                fill: $theme-medium-grey !important
+        &.active
+            svg
+                fill: $theme-orange !important
     .brand-name
         font-weight: bold
         font-size: 25px
