@@ -6,7 +6,7 @@
                     <img class="profile-picture-sm" :src="user.profile_picture">
                 </b-col>
                 <b-col cols="9">
-                    <b>{{ user.fullname }}</b> ({{ user.role }})<br/>
+                    <b>{{ user.full_name }}</b> ({{ user.role }})<br/>
                     {{ user.username }}
                 </b-col>
             </b-col>

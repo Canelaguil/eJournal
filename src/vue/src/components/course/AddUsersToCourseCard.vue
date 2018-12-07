@@ -1,7 +1,7 @@
 <template>
     <b-card :class="$root.getBorderClass(user.id)" class="no-hover">
         <div class="float-left">
-            <b>{{ user.fullname }}</b><br>
+            <b>{{ user.full_name }}</b><br>
             {{ user.username }}
         </div>
         <b-button v-if="$hasPermission('can_add_course_users')"
