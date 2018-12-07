@@ -4,13 +4,6 @@ import django.utils.timezone
 from django.db import migrations, models
 
 
-def combine_names(apps, schema_editor):
-    User = apps.get_model('VLE', 'User')
-    for user in User.objects.all():
-        user.full_name = '%s %s' % (user.first_name, user.last_name)
-        user.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -18,7 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(combine_names),
         migrations.RenameField('comment', 'timestamp', 'creation_date'),
         migrations.RenameField('entry', 'createdate', 'creation_date'),
         migrations.AlterField(
