@@ -7,6 +7,7 @@ from rest_framework import viewsets
 
 import VLE.lti_grade_passback as lti_grade
 import VLE.utils.generic_utils as utils
+import VLE.utils.grading as grading
 import VLE.utils.responses as response
 from VLE.models import Assignment, Course, Journal
 from VLE.serializers import JournalSerializer
@@ -108,6 +109,9 @@ class JournalView(viewsets.ViewSet):
         if not request.user.is_superuser:
             return response.forbidden('You are not allowed to edit this journal.')
 
+        self.admin_update(request, journal)
+
+    def admin_update(self, request, journal):
         req_data = request.data
         if 'published' in req_data:
             del req_data['published']
@@ -119,6 +123,9 @@ class JournalView(viewsets.ViewSet):
         return response.success({'journal': serializer.data})
 
     def publish(self, request, journal, published=True):
-        utils.publish_all_journal_grades(journal, published)
+        grading.publish_all_journal_grades(journal, published)
         payload = lti_grade.replace_result(journal)
-        return response.success({'lti_info': payload})
+        if payload and 'code_mayor' in payload and payload['code_mayor'] == 'success':
+            return response.success({'lti_info': payload})
+        else:
+            return response.bad_request({'lti_info': payload})
