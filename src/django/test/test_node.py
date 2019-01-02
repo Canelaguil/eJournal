@@ -12,11 +12,8 @@ class NodeAPITest(TestCase):
         self.journal = factory.Journal(user=self.student)
 
     def test_get(self):
-        # TODO: Improve template testing
         api.get(self, 'nodes', params={'journal_id': self.journal.pk}, user=self.student)
         api.get(self, 'nodes', params={'journal_id': self.journal.pk}, user=factory.Admin())
         api.get(self, 'nodes', params={'journal_id': self.journal.pk}, user=self.teacher, status=403)
-        print(self.journal.assignment.courses.first().author)
-        print(self.journal.assignment.courses.first())
         api.get(self, 'nodes', params={'journal_id': self.journal.pk},
                 user=self.journal.assignment.courses.first().author)
