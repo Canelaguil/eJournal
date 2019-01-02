@@ -33,3 +33,6 @@ class NodeAPITest(TestCase):
         # 400 is because its not coupled to LTI, and thus cannot really publish grades
         # this will be checked in the lti testing
         api.update(self, 'journals', params={'pk': self.journal.pk, 'published': True}, user=self.teacher, status=400)
+
+        # Check if the admin can update the journal
+        api.update(self, 'journals', params={'pk': self.journal.pk, 'user': factory.User().pk}, user=factory.Admin())

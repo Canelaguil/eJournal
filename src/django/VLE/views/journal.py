@@ -109,7 +109,7 @@ class JournalView(viewsets.ViewSet):
         if not request.user.is_superuser:
             return response.forbidden('You are not allowed to edit this journal.')
 
-        self.admin_update(request, journal)
+        return self.admin_update(request, journal)
 
     def admin_update(self, request, journal):
         req_data = request.data
@@ -117,7 +117,7 @@ class JournalView(viewsets.ViewSet):
             del req_data['published']
         serializer = JournalSerializer(journal, data=req_data, partial=True)
         if not serializer.is_valid():
-            response.bad_request()
+            return response.bad_request()
         serializer.save()
 
         return response.success({'journal': serializer.data})
