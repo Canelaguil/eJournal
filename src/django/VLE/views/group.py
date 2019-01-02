@@ -111,7 +111,7 @@ class GroupView(viewsets.ViewSet):
         if Group.objects.filter(name=name, course=course).exists():
             return response.bad_request('Course group with that name already exists.')
 
-        serializer = GroupSerializer(group, data={'name': new_group_name}, partial=True)
+        serializer = GroupSerializer(group, data={'name': name}, partial=True)
         if not serializer.is_valid():
             response.bad_request()
 

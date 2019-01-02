@@ -1,4 +1,5 @@
 import factory
+import test.factory.course
 
 
 class AssignmentFactory(factory.django.DjangoModelFactory):
@@ -23,3 +24,6 @@ class AssignmentFactory(factory.django.DjangoModelFactory):
                 p.user = self.author,
                 p.course = course
                 p.role = factory.SubFactory('test.factory.role.TeacherRoleFactory')
+        else:
+            course = test.factory.course.CourseFactory()
+            self.courses.add(course)

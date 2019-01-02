@@ -16,6 +16,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
     student_role = factory.RelatedFactory('test.factory.role.StudentRoleFactory', 'course')
     ta_role = factory.RelatedFactory('test.factory.role.TaRoleFactory', 'course')
+    author = factory.SubFactory('test.factory.user.TeacherFactory')
 
     @factory.post_generation
     def author_participation(self, create, extracted):
@@ -27,9 +28,6 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
         if extracted:
             return extracted
-
-        if not self.author:
-            return
 
         participation = VLE.models.Participation(course=self, user=self.author, role=role)
         participation.save()

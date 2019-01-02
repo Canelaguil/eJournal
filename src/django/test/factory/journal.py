@@ -1,4 +1,5 @@
 import factory
+import VLE.models
 
 
 class JournalFactory(factory.django.DjangoModelFactory):
@@ -9,20 +10,7 @@ class JournalFactory(factory.django.DjangoModelFactory):
     assignment = factory.SubFactory('test.factory.assignment.AssignmentFactory')
 
     @factory.post_generation
-    def author(self, create, extracted):
-        if not create:
-            return
-
-        if extracted:
-            self.user = extracted
-            if not self.assignment.courses.exists():
-                print(factory.SubFactory('test.factory.course.CourseFactory').course)
-                self.assignment.courses.add(factory.SubFactory('test.factory.course.CourseFactory'))
-            for course in self.assignment.courses.all():
-                p = factory.SubFactory('test.factory.participation.ParticipationFactory')
-                p.user = extracted,
-                p.course = course
-                p.role = factory.SubFactory('test.factory.role.StudentRoleFactory')
-                print(course)
-            print(self.assignment.courses.all())
-            print(self.user)
+    def add_user_to_assignment(self, create, extracted):
+        for course in self.assignment.courses.all():
+            role = VLE.models.Role.objects.get(course=course, name='Student')
+            VLE.models.Participation.objects.create(course=course, user=self.user, role=role)

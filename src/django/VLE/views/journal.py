@@ -71,7 +71,6 @@ class JournalView(viewsets.ViewSet):
 
         """
         journal = Journal.objects.get(pk=pk)
-
         request.user.check_can_view(journal)
 
         serializer = JournalSerializer(journal)
