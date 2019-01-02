@@ -1,5 +1,6 @@
-import factory
 import test.factory.course
+
+import factory
 
 
 class AssignmentFactory(factory.django.DjangoModelFactory):
