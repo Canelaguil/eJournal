@@ -1,9 +1,7 @@
 <template>
     <content-single-column>
         <bread-crumb>&nbsp;</bread-crumb>
-        <b-card v-if="!accountCreated" class="blue-border no-hover card-last-elem-button">
-            <register-user @handleAction="accountCreated=true"/>
-        </b-card>
+        <register-user v-if="!accountCreated" class="blue-border" @handleAction="accountCreated=true"/>
         <b-card v-if="accountCreated" class="blue-border no-hover">
             <b-form @submit.prevent="verifyEmail">
                 <h2 class="field-heading">Email verification token</h2>

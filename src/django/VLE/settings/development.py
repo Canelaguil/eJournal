@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 import json
+import os
 
 import VLE.settings.email as email_config
 from VLE.settings.base import *
@@ -28,9 +29,9 @@ LTI_ROLE_CONFIG_PATH = BASE_DIR + '/../../lti/role_config.json'
 
 with open(LTI_ROLE_CONFIG_PATH) as role_config:
     ROLES = json.load(role_config)
-    LTI_ROLES = dict((ROLES[k], k) for k in ROLES)
+    LTI_ROLES = {value: key for (key, value) in ROLES.items()}
 
-USER_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024
+USER_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
 USER_MAX_TOTAL_STORAGE_BYTES = 100 * 1024 * 1024
 USER_MAX_EMAIL_ATTACHMENT_BYTES = 10 * 1024 * 1024
 
@@ -41,10 +42,33 @@ MIDDLEWARE = ['corsheaders.middleware.CorsMiddleware'] + MIDDLEWARE
 ALLOWED_HOSTS = ['*']
 TIME_ZONE = 'Europe/Amsterdam'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'VLE.db'),
+if 'TRAVIS' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE':   'django.db.backends.postgresql_psycopg2',
+            'NAME':     'travisci',
+            'USER':     'postgres',
+            'PASSWORD': '',
+            'HOST':     'localhost',
+            'PORT':     '',
+            'TEST': {
+                'NAME': 'test_travisci'
+            }
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'ejournal',
+            'USER': 'ejournal_development_user',
+            'PASSWORD': 'development',
+            'HOST': 'localhost',
+            'PORT': '',
+            'TEST': {
+                'NAME': 'test_ejournal'
+            }
+        }
+    }
+
 DEBUG = True

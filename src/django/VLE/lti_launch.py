@@ -4,7 +4,8 @@ import oauth2
 from django.conf import settings
 
 import VLE.factory as factory
-from VLE.models import Journal, Lti_ids, Role, User
+import VLE.utils.generic_utils as utils
+from VLE.models import Group, Journal, Lti_ids, Participation, Role, User
 
 
 class OAuthRequestValidater(object):
@@ -22,35 +23,22 @@ class OAuthRequestValidater(object):
         self.oauth_server = oauth2.Server()
         signature_method = oauth2.SignatureMethod_HMAC_SHA1()
         self.oauth_server.add_signature_method(signature_method)
-        self.oauth_consumer = oauth2.Consumer(
-            self.consumer_key, self.consumer_secret
-        )
+        self.oauth_consumer = oauth2.Consumer(self.consumer_key, self.consumer_secret)
 
     def parse_request(self, request):
         """
         Parses a django request to return the method, url, header and post data.
         """
-        return request.method, request.build_absolute_uri(), request.META, \
-            request.POST.dict()
+        return request.method, request.build_absolute_uri(), request.META, request.POST.dict()
 
     def is_valid(self, request):
         """
         Checks if the signature of the given request is valid based on the
         consumers secret en key
         """
-        try:
-            method, url, head, param = self.parse_request(request)
-
-            oauth_request = oauth2.Request.from_request(
-                method, url, headers=head, parameters=param)
-
-            self.oauth_server.verify_request(oauth_request,
-                                             self.oauth_consumer, {})
-
-        except (oauth2.Error, ValueError) as err:
-            return False, err
-        # Signature was valid
-        return True, None
+        method, url, head, param = self.parse_request(request)
+        oauth_request = oauth2.Request.from_request(method, url, headers=head, parameters=param)
+        self.oauth_server.verify_request(oauth_request, self.oauth_consumer, {})
 
     @classmethod
     def check_signature(cls, key, secret, request):
@@ -59,18 +47,19 @@ class OAuthRequestValidater(object):
         https://github.com/simplegeo/python-oauth2.
         """
         validator = OAuthRequestValidater(key, secret)
-        return validator.is_valid(request)
+        validator.is_valid(request)
 
 
 def roles_to_list(params):
     roles = list()
-    for role in params['roles'].split(','):
-        roles.append(role.split('/')[-1].lower())
+    if 'roles' in params:
+        for role in params['roles'].split(','):
+            roles.append(role.split('/')[-1].lower())
     return roles
 
 
-def check_user_lti(request):
-    """Check is an user with the lti_id exists"""
+def get_user_lti(request):
+    """Check if a user with the lti_id exists"""
     lti_user_id = request['user_id']
 
     users = User.objects.filter(lti_id=lti_user_id)
@@ -100,19 +89,47 @@ def create_lti_query_link(query):
 
 
 def check_course_lti(request, user, role):
-    """Check is an course with the lti_id exists"""
-    course_id = request['custom_course_id']
-    lti_couples = Lti_ids.objects.filter(lti_id=course_id, for_model=Lti_ids.COURSE)
+    """Check if a course with the lti_id exists.
 
-    if lti_couples.count() > 0:
-        course = lti_couples[0].course
-        if user not in course.users.all():
-            for r in settings.ROLES:
-                if r in role or r == 'Student':
-                    factory.make_participation(user, course, Role.objects.get(name=r, course=course))
-                    break
+    If it does, put the user in the group with the right group and role."""
+    course_id = request['custom_course_id']
+    lti_couple = Lti_ids.objects.filter(lti_id=course_id, for_model=Lti_ids.COURSE).first()
+
+    if not lti_couple:
+        return None
+
+    course = lti_couple.course
+    lti_id, = utils.optional_params(request, 'custom_section_id')
+    # If the user is participatant, but not yet in a group, put the user in the Canvas related group.
+    if user.is_participant(course):
+        participation = Participation.objects.get(course=course, user=user)
+        if not participation.group and lti_id:
+            groups = Group.objects.filter(lti_id=lti_id, course=course)
+            if groups.exists():
+                participation.group = groups[0]
+            else:
+                group = factory.make_course_group(lti_id, course, lti_id)
+                participation.group = group
+
+            participation.save()
         return course
-    return None
+
+    participation = None
+    for r in settings.ROLES:
+        if r in role:
+            participation = factory.make_participation(user, course, Role.objects.get(name=r, course=course))
+            break
+    if not participation:
+        participation = factory.make_participation(user, course, Role.objects.get(name='Student', course=course))
+
+    groups = Group.objects.filter(lti_id=lti_id, course=course)
+    if groups.exists():
+        participation.group = groups[0]
+    else:
+        group = factory.make_course_group(lti_id, course, lti_id)
+        participation.group = group
+    participation.save()
+    return course
 
 
 def check_assignment_lti(request):
@@ -121,10 +138,9 @@ def check_assignment_lti(request):
     lti_couples = Lti_ids.objects.filter(lti_id=assign_id, for_model=Lti_ids.ASSIGNMENT)
     if lti_couples.count() > 0:
         assignment = lti_couples[0].assignment
-        # TODO: When custom_assignment_publish is propperly configures, uncomment this
-        # if 'custom_assignment_publish' in request:
-        #     assignment.is_published = request['custom_assignment_publish'] == 'true'
-        # assignment.save()
+        if 'custom_assignment_publish' in request:
+            assignment.is_published = request['custom_assignment_publish']
+        assignment.save()
         return assignment
     return None
 

@@ -43,7 +43,9 @@ function packConnArgs (connArgs) {
 
 /* Toasts an error safely, escaping html and parsing an array buffer. */
 function toastError (error, connArgs) {
-    if (!connArgs.customErrorToast) {
+    if (connArgs.customErrorToast) {
+        router.app.$toasted.error(sanitization.escapeHtml(connArgs.customErrorToast))
+    } else if (connArgs.customErrorToast !== '') {
         var data
         if (error.response.data instanceof ArrayBuffer) {
             data = genericUtils.parseArrayBuffer(error.response.data)
@@ -54,8 +56,6 @@ function toastError (error, connArgs) {
         /* The Django throttle module uses detail as description. */
         var message = data.description ? data.description : data.detail
         if (message) { router.app.$toasted.error(sanitization.escapeHtml(message)) }
-    } else {
-        router.app.$toasted.error(sanitization.escapeHtml(connArgs.customErrorToast))
     }
 }
 

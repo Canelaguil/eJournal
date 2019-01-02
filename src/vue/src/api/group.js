@@ -18,5 +18,10 @@ export default {
     getAllFromCourse (cID, connArgs = auth.DEFAULT_CONN_ARGS) {
         return auth.get('groups', {course_id: cID}, connArgs)
             .then(response => response.data.groups)
+    },
+
+    getDataNose (cID, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.get('groups/datanose', {course_id: cID}, connArgs)
+            .then(response => response.data.groups)
     }
 }

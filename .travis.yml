@@ -5,7 +5,7 @@ sudo: enabled
 before_install:
   - npm install -g npm@latest
 install:
-  - make setup-no-input
+  - make setup-travis
   - pip install codecov
 script: make test
 after_success:
@@ -14,3 +14,8 @@ branches:
   only:
     - master
     - develop
+services:
+  - postgresql
+addons:
+  # NOTE Travis is not compatible with postgres version 10+ (23/11/2018)
+  postgresql: "9.6"

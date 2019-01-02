@@ -121,7 +121,8 @@ export default {
                     points_possible: this.lti.ltiPointsPossible,
                     unlock_date: this.lti.ltiAssignUnlock.slice(0, -9),
                     due_date: this.lti.ltiAssignDue.slice(0, -9),
-                    lock_date: this.lti.ltiAssignLock.slice(0, -9)
+                    lock_date: this.lti.ltiAssignLock.slice(0, -9),
+                    is_published: this.lti.ltiAssignPublished
                 }).then(assignment => {
                     this.page.aID = assignment.id
                     this.updateState(this.states.finish_t)
@@ -166,7 +167,7 @@ export default {
                 this.handleAssignmentChoice = true
                 break
             case this.states.check_assign:
-                assignmentAPI.getWithLti(this.lti.ltiAssignID)
+                assignmentAPI.getWithLti(this.lti.ltiAssignID, {redirect: false, customErrorToast: ''})
                     .then(assignment => {
                         if (assignment === undefined) {
                             this.states.state = this.states.new_assign

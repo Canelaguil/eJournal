@@ -45,7 +45,7 @@ class UpdateApiTests(TestCase):
         factory.make_participation(teacher, self.course, teacher_role)
 
         login = test.logging_in(self, teacher_user, teacher_pass)
-        result = test.api_get_call(self, '/roles/', login, params={'course_id': 1})
+        result = test.api_get_call(self, '/roles/', login, params={'course_id': self.course.pk})
 
         roles = result.json()['roles']
         for role in roles:
@@ -53,7 +53,7 @@ class UpdateApiTests(TestCase):
                 role['can_grade'] = 1
 
         roles.append(serialize.RoleSerializer(factory.make_role_default_no_perms('test_role', self.course)).data)
-        test.api_patch_call(self, '/roles/1/', {'roles': roles}, login)
+        test.api_patch_call(self, '/roles/{}/'.format(self.course.pk), {'roles': roles}, login)
 
         role_test = Role.objects.get(name='TA2', course=self.course)
         self.assertTrue(role_test.can_grade)
@@ -138,7 +138,7 @@ class UpdateApiTests(TestCase):
         factory.make_participation(self.user_role, course, ta_role)
         factory.make_participation(self.user, course, student_role)
 
-        user_role = Participation.objects.get(user=self.user_role, course=2).role.name
+        user_role = Participation.objects.get(user=self.user_role, course=course).role.name
         self.assertEquals(user_role, 'TA')
 
         test.api_patch_call(

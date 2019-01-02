@@ -72,7 +72,7 @@ class DataBaseTests(TestCase):
         """Test the on_delete relations in the database."""
         self.f1.delete()
         self.assertEquals(Field.objects.filter(title='test0').count(), 0)
-        self.assertEquals(Content.objects.get(pk=1).field, None)
+        self.assertEquals(Content.objects.get(pk=self.c1.pk).field, None)
 
         self.et1.delete()
         self.et2.delete()

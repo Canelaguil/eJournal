@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import store from '@/store'
+import routerConstraints from '@/utils/constants/router_constraints.js'
 import Home from '@/views/Home'
 import Journal from '@/views/Journal'
 import Assignment from '@/views/Assignment'
@@ -113,33 +114,20 @@ var router = new Router({
     }]
 })
 
-const permissionlessContent = new Set([
-    'Login',
-    'LtiLogin',
-    'LtiLaunch',
-    'Register',
-    'ErrorPage',
-    'PasswordRecovery',
-    'EmailVerification',
-    'Guest'
-])
-
-const unavailableWhenLoggedIn = new Set([
-    'Login',
-    'Guest',
-    'Register'
-])
-
 router.beforeEach((to, from, next) => {
     const loggedIn = store.getters['user/loggedIn']
-    router.app.previousPage = from
 
-    if (loggedIn && unavailableWhenLoggedIn.has(to.name)) {
+    if (from.name) {
+        router.app.previousPage = from
+    }
+
+    if (loggedIn && routerConstraints.UNAVAILABLE_WHEN_LOGGED_IN.has(to.name)) {
         next({name: 'Home'})
-    } else if (!loggedIn && !permissionlessContent.has(to.name)) {
+    } else if (!loggedIn && !routerConstraints.PERMISSIONLESS_CONTENT.has(to.name)) {
         store.dispatch('user/validateToken')
             .then(_ => { next() })
             .catch(_ => {
+                router.app.previousPage = to
                 next({name: 'Login'})
             })
     } else { next() }

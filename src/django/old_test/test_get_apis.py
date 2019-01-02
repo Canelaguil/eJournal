@@ -333,17 +333,17 @@ class GetApiTests(TestCase):
         teacher_role = factory.make_role_teacher("TE", self.course)
         factory.make_participation(teacher, self.course, teacher_role)
         login = test.logging_in(self, teacher_user, teacher_pass)
-        result = test.api_get_call(self, '/roles/', login, params={'course_id': 1})
+        result = test.api_get_call(self, '/roles/', login, params={'course_id': self.course.pk})
         self.assertEquals(len(result.json()['roles']), 6)
 
         # permissions and authorization check for the api call.
         login = test.logging_in(self, self.no_perm_user, self.no_perm_pass)
         test.test_unauthorized_api_get_call(self, '/roles/', params={'course_id': 1})
-        test.api_get_call(self, '/roles/', login, params={'course_id': 1}, status=403)
+        test.api_get_call(self, '/roles/', login, params={'course_id': self.course.pk}, status=403)
         test.api_get_call(self, '/roles/', login, params={'course_id': self.not_found_pk}, status=404)
 
         test.set_up_participation(self.no_permission_user, self.course, 'Student')
-        test.api_get_call(self, '/roles/', login, params={'course_id': 1}, status=403)
+        test.api_get_call(self, '/roles/', login, params={'course_id': self.course.pk}, status=403)
 
     def test_get_user_teacher_courses(self):
         """Test get user teacher course function."""

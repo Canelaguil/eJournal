@@ -102,7 +102,7 @@
                 :nodeID="nodeID"
                 :contentID="completeContent[i].contentID"
             />
-            <div v-else-if="field.type == 'rt'" v-html="completeContent[i].data"/>
+            <sandboxed-iframe v-else-if="field.type == 'rt'" :content="completeContent[i].data"/>
             <a v-else-if="field.type == 'u'" :href="completeContent[i].data">{{ completeContent[i].data }}</a>
             <span v-else-if="field.type == 's'">{{ completeContent[i].data }}</span>
         </div>
@@ -116,6 +116,7 @@ import urlInput from '@/components/assets/UrlInput.vue'
 import fileDownloadButton from '@/components/assets/file_handling/FileDownloadButton.vue'
 import imageFileDisplay from '@/components/assets/file_handling/ImageFileDisplay.vue'
 import pdfDisplay from '@/components/assets/PdfDisplay.vue'
+import sandboxedIframe from '@/components/assets/SandboxedIframe.vue'
 
 export default {
     props: {
@@ -145,7 +146,8 @@ export default {
         'url-input': urlInput,
         'pdf-display': pdfDisplay,
         'file-download-button': fileDownloadButton,
-        'image-file-display': imageFileDisplay
+        'image-file-display': imageFileDisplay,
+        sandboxedIframe
     },
     methods: {
         // from https://stackoverflow.com/a/9102270

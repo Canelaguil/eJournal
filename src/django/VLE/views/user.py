@@ -24,6 +24,17 @@ from VLE.utils import email_handling, file_handling
 from VLE.views import lti
 
 
+def get_lti_params(request, *keys):
+    jwt_params, = utils.optional_params(request.data, 'jwt_params')
+    if jwt_params:
+        lti_params = lti.decode_lti_params(jwt_params)
+    else:
+        lti_params = {'empty': ''}
+    values = utils.optional_params(lti_params, *keys)
+    values.append(settings.ROLES['Teacher'] in lti_launch.roles_to_list(lti_params))
+    return values
+
+
 class UserView(viewsets.ViewSet):
     def list(self, request):
         """Get all users.
@@ -95,13 +106,11 @@ class UserView(viewsets.ViewSet):
         On succes:
             success -- with the newly created user data
         """
-        jwt_params, = utils.optional_params(request.data, 'jwt_params')
-        if jwt_params:
-            lti_params = lti.decode_lti_params(jwt_params)
-            lti_id, user_image = utils.optional_params(lti_params, 'user_id', 'custom_user_image')
-            is_teacher = settings.ROLES['Teacher'] in lti_launch.roles_to_list(lti_params)
-        else:
-            lti_id, user_image, is_teacher = None, None, False
+
+        lti_id, user_image, full_name, email, is_teacher = get_lti_params(
+            request, 'user_id', 'custom_user_image', 'custom_user_full_name', 'custom_user_email')
+        if full_name:
+            first_name, last_name = lti.split_fullname(full_name)
 
         if lti_id is None:
             # Check if instance allows standalone registration if user did not register through some LTI instance
@@ -113,8 +122,9 @@ class UserView(viewsets.ViewSet):
             except Instance.DoesNotExist:
                 pass
 
+            first_name, last_name, email = utils.optional_params(request.data, 'first_name', 'last_name', 'email')
+
         username, password = utils.required_params(request.data, 'username', 'password')
-        first_name, last_name, email = utils.optional_params(request.data, 'first_name', 'last_name', 'email')
 
         if email and User.objects.filter(email=email).exists():
             return response.bad_request('User with this email already exists.')
@@ -170,14 +180,8 @@ class UserView(viewsets.ViewSet):
 
         user = User.objects.get(pk=pk)
 
-        jwt_params, = utils.optional_params(request.data, 'jwt_params')
-        if jwt_params:
-            lti_params = lti.decode_lti_params(jwt_params)
-            lti_id, user_email, user_full_name, user_image = utils.optional_params(
-                lti_params, 'user_id', 'custom_user_email', 'custom_user_full_name', 'custom_user_image')
-            is_teacher = settings.ROLES['Teacher'] in lti_launch.roles_to_list(lti_params)
-        else:
-            lti_id, user_email, user_full_name, user_image, is_teacher = None, None, None, None, False
+        lti_id, user_email, user_full_name, user_image, is_teacher = get_lti_params(
+            request, 'user_id', 'custom_user_email', 'custom_user_full_name', 'custom_user_image')
 
         if user_image is not None:
             user.profile_picture = user_image
@@ -185,9 +189,7 @@ class UserView(viewsets.ViewSet):
             user.email = user_email
             user.verified_email = True
         if user_full_name is not None:
-            splitname = user_full_name.split(' ')
-            user.first_name = splitname[0]
-            user.last_name = user_full_name[len(splitname[0])+1:]
+            user.first_name, user.last_name = lti.split_fullname(user_full_name)
         if is_teacher:
             user.is_teacher = is_teacher
 

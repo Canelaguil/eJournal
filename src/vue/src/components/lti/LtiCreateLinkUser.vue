@@ -28,7 +28,8 @@
             ref="createUserRef"
             title="Register new eJournal account"
             size="lg"
-            hide-footer>
+            hide-footer
+            no-enforce-focus>
                 <register-user @handleAction="handleRegistered" :lti="lti"/>
         </b-modal>
 

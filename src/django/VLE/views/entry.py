@@ -75,8 +75,7 @@ class EntryView(viewsets.ViewSet):
             entry = factory.make_entry(template)
             node = factory.make_node(journal, entry)
 
-        if journal.sourcedid is not None and journal.grade_url is not None:
-            lti_grade.needs_grading(journal, node.id)
+        lti_grade.needs_grading(journal, node)
 
         for content in content_list:
             data, field_id = utils.required_params(content, 'data', 'id')
@@ -201,7 +200,7 @@ class EntryView(viewsets.ViewSet):
             serializer.save()
         except ValueError:
             return response.bad_request('Invalid grade or published state.')
-        if published and journal.sourcedid is not None and journal.grade_url is not None:
+        if published:
             payload = lti_grade.replace_result(journal)
         else:
             payload = dict()

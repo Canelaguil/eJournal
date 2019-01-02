@@ -121,9 +121,5 @@ class JournalView(viewsets.ViewSet):
 
     def publish(self, request, journal, published=True):
         utils.publish_all_journal_grades(journal, published)
-        if journal.sourcedid is not None and journal.grade_url is not None:
-            payload = lti_grade.replace_result(journal)
-        else:
-            payload = None
-
+        payload = lti_grade.replace_result(journal)
         return response.success({'lti_info': payload})

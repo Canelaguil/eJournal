@@ -208,9 +208,6 @@ export default {
     text-align: center
     padding-bottom: 7px
 
-.move-icon
-    fill: $theme-dark-grey
-
 .field-card:hover .move-icon, .field-card:hover .trash-icon
     fill: $theme-dark-blue !important
 

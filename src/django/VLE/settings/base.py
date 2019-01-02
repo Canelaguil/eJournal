@@ -21,6 +21,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, MEDIA_URL)
 
 # TODO Whitelist image extensions
 
+GROUP_API = 'https://api.datanose.nl/Groups/{}'
+
 # TODO Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 

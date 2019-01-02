@@ -5,7 +5,7 @@
         <span v-if="comparePoints">{{ message }}</span>
         <b-progress class="shadow progress-bar-box" color="white" :max="totalPoints">
             <b-progress-bar class="own-bar"
-                            :value="comparePoints === -1 ? currentPoints : Math.min(currentPoints, comparePoints)"/>
+                            :value="zeroIfNull(comparePoints === -1 ? currentPoints : Math.min(currentPoints, comparePoints))"/>
             <b-progress-bar class="compare-bar"
                             :value="Math.abs(comparePoints - currentPoints)"
                             v-if="comparePoints !== -1 && comparePoints > currentPoints"/>
@@ -29,9 +29,14 @@ export default {
             default: -1
         }
     },
+    methods: {
+        zeroIfNull (val) {
+            return (val === null) ? 0 : val
+        }
+    },
     computed: {
         progressPercentage () {
-            return (this.currentPoints / this.totalPoints * 100).toFixed(0)
+            return this.zeroIfNull(this.currentPoints / this.totalPoints * 100).toFixed(0)
         },
         difference () {
             return Math.round(Math.abs((this.comparePoints - this.currentPoints) * 100)) / 100

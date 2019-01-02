@@ -65,10 +65,16 @@ class canEnterThroughLTI(TestCase):
 
     def test_select_user(self):
         """Hopefully select a user."""
-        selected_user = lti.check_user_lti({
+        selected_user = lti.get_user_lti({
             'user_id': self.user.lti_id,
         })
         self.assertEquals(selected_user, self.user)
+
+    def test_split_fullname(self):
+        """Hopefully splits the fullname correctly."""
+        firstname, lastname = lti_view.split_fullname('Test Tester')
+        self.assertEquals(firstname, 'Test')
+        self.assertEquals(lastname, 'Tester')
 
     def test_lti_launch_no_user_no_info(self):
         """Hopefully gives redirect with state = NO_USER."""
@@ -82,7 +88,7 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.NO_USER), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.NO_USER.value), response.url)
 
     def test_lti_launch_no_user(self):
         """Hopefully gives redirect with state = NO_USER."""
@@ -99,7 +105,7 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.NO_USER), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.NO_USER.value), response.url)
 
     def test_lti_launch_user(self):
         """Hopefully gives redirect with state = LOGGED_IN."""
@@ -114,7 +120,7 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.LOGGED_IN), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.LOGGED_IN.value), response.url)
 
     def test_lti_launch_multiple_roles(self):
         """Hopefully gives redirect with state = LOGGED_IN."""
@@ -130,7 +136,7 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.LOGGED_IN), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.LOGGED_IN.value), response.url)
         self.assertTrue(User.objects.filter(lti_id='awefd')[0].is_teacher)
 
     def test_lti_launch_unknown_role(self):
@@ -147,7 +153,7 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.LOGGED_IN), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.LOGGED_IN.value), response.url)
 
     def test_lti_launch_wrong_signature(self):
         """Hopefully gives redirect with state = BAD_AUTH."""
@@ -158,7 +164,7 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.BAD_AUTH), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.BAD_AUTH.value), response.url)
 
     def test_lti_launch_key_error(self):
         """Hopefully gives redirect with state = KEY_ERR."""
@@ -173,18 +179,31 @@ class canEnterThroughLTI(TestCase):
         request = self.factory.post('http://127.0.0.1:8000/lti/launch', self.request)
         response = lti_view.lti_launch(request)
         self.assertEquals(response.status_code, 302)
-        self.assertIn('state={0}'.format(lti_view.KEY_ERR), response.url)
+        self.assertIn('state={0}'.format(lti_view.LTI_STATES.KEY_ERR.value), response.url)
 
     def test_get_lti_params_from_jwt_invalid(self):
-        """Hopefully returns the lti course and assignment data."""
+        """Hopefully returns an error."""
         login = test.logging_in(self, self.username, self.password)
         self.request["user_id"] = "awefd"
         jwt_params = jwt.encode(self.request, 'fa12f4', algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=401)
         self.assertIn('Invalid', response.content.decode('utf-8'))
 
+    def test_get_lti_params_from_jwt_wrong_user(self):
+        """Hopefully returns an error that tells wrong user logged in."""
+        login = test.logging_in(self, self.username, self.password)
+        self.request["user_id"] = "12def"
+        self.username, self.password, self.user = test.set_up_user_and_auth('TestUser2', 'Pass', 'ltiTest2@test.com')
+        self.user.lti_id = '12def'
+        self.user.verified_email = True
+        self.user.save()
+        jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
+        response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=403)
+        self.assertIn("The user specified that should be logged in according to the request is not the logged in user.",
+                      response.content.decode('utf-8'))
+
     def test_get_lti_params_from_jwt_unauthorized(self):
-        """Hopefully returns the lti course and assignment data."""
+        """Hopefully returns forbidden."""
         self.request["user_id"] = "awefd"
         jwt_params = jwt.encode(self.request, 'fa12f4', algorithm='HS256').decode('utf-8')
         request = self.factory.get('/get_lti_params_from_jwt/{0}/'.format(jwt_params))
@@ -203,10 +222,11 @@ class canEnterThroughLTI(TestCase):
     def test_get_lti_params_from_jwt_course_teacher(self):
         """Hopefully returns the lti course and assignment data."""
         login = test.logging_in(self, self.username, self.password)
+        del self.request["custom_assignment_publish"]
         self.request["user_id"] = "awefd"
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.NEW_COURSE), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.NEW_COURSE.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_course_student(self):
         """Hopefully returns the lti course and assignment data."""
@@ -224,7 +244,7 @@ class canEnterThroughLTI(TestCase):
         self.request["user_id"] = "awefd"
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.NEW_ASSIGN), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.NEW_ASSIGN.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_no_context_label(self):
         """Hopefully returns the lti course data."""
@@ -233,7 +253,7 @@ class canEnterThroughLTI(TestCase):
         del self.request['context_label']
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.NEW_COURSE), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.NEW_COURSE.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_assignment_student(self):
         """Hopefully returns the lti assignment data."""
@@ -253,7 +273,7 @@ class canEnterThroughLTI(TestCase):
         self.request["user_id"] = "awefd"
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.FINISH_T), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.FINISH_T.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_journal_student(self):
         """Hopefully returns the lti journal data."""
@@ -264,7 +284,7 @@ class canEnterThroughLTI(TestCase):
         self.request["roles"] = settings.ROLES["Student"]
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.FINISH_S), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.FINISH_S.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_multiple_roles(self):
         """Test case for when multible roles are given ."""
@@ -275,7 +295,7 @@ class canEnterThroughLTI(TestCase):
         self.request["roles"] = 'Learner,Instructor'
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.FINISH_T), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.FINISH_T.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_unknown_role(self):
         """Test case for when a unknown role is given ."""
@@ -286,7 +306,7 @@ class canEnterThroughLTI(TestCase):
         self.request["roles"] = 'urn:lti:instrole:ims/lis/Administrator'
         jwt_params = jwt.encode(self.request, settings.SECRET_KEY, algorithm='HS256').decode('utf-8')
         response = test.api_get_call(self, '/get_lti_params_from_jwt/{0}/'.format(jwt_params), login=login, status=200)
-        self.assertIn('"state": "{0}"'.format(lti_view.FINISH_S), response.content.decode('utf-8'))
+        self.assertIn('"state": "{0}"'.format(lti_view.LTI_STATES.FINISH_S.value), response.content.decode('utf-8'))
 
     def test_get_lti_params_from_jwt_key_Error(self):
         """Hopefully returns the lti course data."""

@@ -23,8 +23,10 @@
         <lticm:property name="assignment_lock">$Canvas.assignment.lockAt</lticm:property>
         <lticm:property name="assignment_due">$Canvas.assignment.dueAt</lticm:property>
         <lticm:property name="assignment_points">$Canvas.assignment.pointsPossible</lticm:property>
+        <lticm:property name="assignment_publish">$Canvas.assignment.published</lticm:property>
         <lticm:property name="course_name">$Canvas.course.name</lticm:property>
         <lticm:property name="course_id">$Canvas.course.id</lticm:property>
+        <lticm:property name="section_id">$Canvas.course.sectionIds</lticm:property>
         <lticm:property name="course_start">$Canvas.course.startAt</lticm:property>
         <lticm:property name="group_context_id">$Canvas.group.contextIds</lticm:property>
       </blti:custom>

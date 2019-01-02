@@ -9,8 +9,8 @@ from rest_framework import serializers
 
 import VLE.permissions as permissions
 from VLE.models import (Assignment, Comment, Content, Course, Entry, Field,
-                        Format, Group, Instance, Journal, Node, Participation,
-                        PresetNode, Role, Template, User)
+                        Format, Group, Instance, Journal, Lti_ids, Node,
+                        Participation, PresetNode, Role, Template, User)
 
 
 class InstanceSerializer(serializers.ModelSerializer):
@@ -104,11 +104,16 @@ class OwnUserSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    lti_linked = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         exclude = ('author', 'users', )
         read_only_fields = ('id', )
         depth = 1
+
+    def get_lti_linked(self, course):
+        return Lti_ids.objects.filter(course=course.pk).exists()
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -148,7 +153,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', )
 
     def get_deadline(self, assignment):
-        # Student dealines
+        # Student deadlines
         if 'user' in self.context and self.context['user'] and \
            self.context['user'].has_permission('can_have_journal', assignment):
             journal = Journal.objects.get(assignment=assignment, user=self.context['user'])
@@ -179,7 +184,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
     def _get_student_deadline(self, nodes):
         """Get student deadline.
 
-        This function gets the first upcomming deadline.
+        This function gets the first upcoming deadline.
         It checks for the first entrydeadline that still need to submitted and still can be, or for the first
         progressnode that is not yet fullfilled.
         """
@@ -251,7 +256,7 @@ class AssignmentSerializer(serializers.ModelSerializer):
             .values('node__entry__grade') \
             .aggregate(Sum('node__entry__grade'))['node__entry__grade__sum']
         if stats['average_points']:
-            stats['average_points'] /= len(journal_set.filter(user__in=users))
+            stats['average_points'] /= journal_set.filter(user__in=users).count()
 
         return stats
 
