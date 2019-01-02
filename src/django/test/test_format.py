@@ -34,7 +34,7 @@ class FormatAPITest(TestCase):
                 'pk': self.assignment.pk, 'assignment_details': None,
                 'templates': [], 'presets': [], 'unused_templates': [], 'removed_presets': [],
                 'removed_templates': []
-            }, user=factory.User(), status=403)
+            }, user=factory.Student(), status=403)
         api.update(self, 'formats', params={
                 'pk': self.assignment.pk, 'assignment_details': None,
                 'templates': [], 'presets': [], 'unused_templates': [], 'removed_presets': [],

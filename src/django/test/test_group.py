@@ -31,12 +31,12 @@ class GroupAPITest(TestCase):
         api.test_rest(self, 'groups',
                       create_params=self.create_params, get_status=405, get_is_create=False,
                       create_status=403,
-                      user=factory.User())
+                      user=factory.Student())
 
     def test_get(self):
         # Test all groups from course
         api.get(self, 'groups', user=self.teacher, status=400)
-        api.get(self, 'groups', params={'course_id': self.course.pk}, user=factory.User(), status=403)
+        api.get(self, 'groups', params={'course_id': self.course.pk}, user=factory.Student(), status=403)
         api.get(self, 'groups', params={'course_id': self.course.pk}, user=factory.Admin())
         get_resp = api.get(self, 'groups', params={'course_id': self.course.pk}, user=self.teacher)['groups']
         assert in_response(get_resp, self.group), 'Group that is added to  the course, should also be returned'
@@ -58,7 +58,7 @@ class GroupAPITest(TestCase):
 
         # Test student
         api.create(self, 'groups', params={'course_id': self.course.pk, 'name': 'Test'},
-                   user=factory.User(), status=403)
+                   user=factory.Student(), status=403)
 
     def test_update(self):
         # Test required params
@@ -75,6 +75,6 @@ class GroupAPITest(TestCase):
         api.update(self, 'groups', params={'pk': self.group.pk, 'name': 'other_duplicate'}, user=factory.Admin())
 
     def test_delete(self):
-        api.delete(self, 'groups', params={'pk': self.group.pk}, user=factory.User(), status=403)
+        api.delete(self, 'groups', params={'pk': self.group.pk}, user=factory.Student(), status=403)
         api.delete(self, 'groups', params={'pk': self.group.pk}, user=factory.Teacher(), status=403)
         api.delete(self, 'groups', params={'pk': self.group.pk}, user=factory.Admin())

@@ -8,7 +8,7 @@ from django.test import TestCase
 class CourseAPITest(TestCase):
     def setUp(self):
         self.create_params = {'name': 'test_course', 'abbreviation': 'TC'}
-        self.student = factory.User()
+        self.student = factory.Student()
         self.teacher1 = factory.Teacher()
         self.teacher2 = factory.Teacher()
         self.admin = factory.Admin()
@@ -34,7 +34,7 @@ class CourseAPITest(TestCase):
         api.test_rest(self, 'courses',
                       create_params=self.create_params,
                       create_status=403,
-                      user=factory.User())
+                      user=factory.Student())
 
     def test_get(self):
         factory.Participation(user=self.teacher2, course=self.course2)

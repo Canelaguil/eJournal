@@ -20,7 +20,7 @@ class UserAPITest(TestCase):
                       user=factory.Admin())
 
     def test_get(self):
-        student = factory.User()
+        student = factory.Student()
         admin = factory.Admin()
 
         # Test get all users
@@ -73,8 +73,8 @@ class UserAPITest(TestCase):
         # TODO: test lti_user
 
     def test_update(self):
-        user = factory.User()
-        user2 = factory.User()
+        user = factory.Student()
+        user2 = factory.Student()
         admin = factory.Admin()
 
         # Test update the own user
@@ -93,9 +93,9 @@ class UserAPITest(TestCase):
         # TODO: test lti_user
 
     def test_delete(self):
-        user = factory.User()
-        user2 = factory.User()
-        user3 = factory.User()
+        user = factory.Student()
+        user2 = factory.Student()
+        user3 = factory.Student()
         admin = factory.Admin()
         admin2 = factory.Admin()
 
@@ -118,7 +118,7 @@ class UserAPITest(TestCase):
         api.get(self, 'users', params={'pk': admin2.pk}, user=admin, status=404)
 
     def test_password(self):
-        user = factory.User()
+        user = factory.Student()
 
         userfactory.DEFAULT_PASSWORD
         # Test with wrong password
@@ -135,8 +135,8 @@ class UserAPITest(TestCase):
                    params={'old_password': userfactory.DEFAULT_PASSWORD, 'new_password': 'Pa$$word1'}, user=user)
 
     def test_gdpr(self):
-        user = factory.User()
-        user2 = factory.User()
+        user = factory.Student()
+        user2 = factory.Student()
         admin = factory.Admin()
 
         # Test if users cant access other data

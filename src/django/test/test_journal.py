@@ -6,7 +6,7 @@ from django.test import TestCase
 
 class NodeAPITest(TestCase):
     def setUp(self):
-        self.student = factory.User()
+        self.student = factory.Student()
         self.admin = factory.Admin()
         self.journal = factory.Journal(user=self.student)
         self.teacher = self.journal.assignment.courses.first().author
@@ -35,4 +35,4 @@ class NodeAPITest(TestCase):
         api.update(self, 'journals', params={'pk': self.journal.pk, 'published': True}, user=self.teacher, status=400)
 
         # Check if the admin can update the journal
-        api.update(self, 'journals', params={'pk': self.journal.pk, 'user': factory.User().pk}, user=factory.Admin())
+        api.update(self, 'journals', params={'pk': self.journal.pk, 'user': factory.Student().pk}, user=factory.Admin())

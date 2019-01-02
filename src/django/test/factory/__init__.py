@@ -11,7 +11,7 @@ from test.factory.journal import JournalFactory
 Assignment = AssignmentFactory
 Course = CourseFactory
 
-User = UserFactory
+Student = UserFactory
 Teacher = TeacherFactory
 Admin = AdminFactory
 

@@ -32,7 +32,7 @@ class AssignmentAPITest(TestCase):
         api.test_rest(self, 'assignments',
                       create_params=self.create_params,
                       create_status=403,
-                      user=factory.User())
+                      user=factory.Student())
 
     def test_update(self):
         assignment = api.create(self, 'assignments', params=self.create_params, user=self.teacher)['assignment']
@@ -40,7 +40,7 @@ class AssignmentAPITest(TestCase):
         # Try to publish the assignment
         # TODO: Test cannot publish when there are entries inside
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
-                   user=factory.User(), status=403)
+                   user=factory.Student(), status=403)
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
                    user=self.teacher)
         api.update(self, 'assignments', params={'pk': assignment['id'], 'published': True},
