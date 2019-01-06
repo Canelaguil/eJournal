@@ -52,29 +52,20 @@ class EntryView(viewsets.ViewSet):
         if assignment.is_locked():
             return response.forbidden('The assignment is locked, no entries can be added.')
 
+        # Check if its an entry for a specific node
         if node_id:
             node = Node.objects.get(pk=node_id, journal=journal)
-
-            if not (node.preset and node.preset.forced_template == template):
-                return response.forbidden('Invalid template for preset node.')
-
-            if node.type != Node.ENTRYDEADLINE:
-                return response.bad_request('Passed node is not an EntryDeadline node.')
-
-            if node.entry:
-                return response.bad_request('Passed node already contains an entry.')
-
-            if node.preset.is_due():
-                return response.bad_request('The deadline has already passed.')
-
-            node.entry = factory.make_entry(template)
-            node.save()
-        elif not assignment.format.available_templates.filter(pk=template.pk).exists():
-            return response.forbidden('Entry template is not available.')
-        else:
+            resp = self.add_entry_to_node(node, template)
+            if resp is not True:
+                return resp
+        # If not, check for available templates
+        elif assignment.format.available_templates.filter(pk=template.pk).exists():
             entry = factory.make_entry(template)
             node = factory.make_node(journal, entry)
+        else:
+            return response.forbidden('Entry template is not available.')
 
+        # Notify teacher on new entry
         lti_grade.needs_grading(journal, node)
 
         for content in content_list:
@@ -92,6 +83,7 @@ class EntryView(viewsets.ViewSet):
 
                 file_handling.make_permanent_file_content(user_file, created_content, node)
 
+        # Delete old userfiles
         file_handling.remove_temp_user_files(request.user)
 
         # Find the new index of the new node so that the client can automatically scroll to it.
@@ -106,6 +98,23 @@ class EntryView(viewsets.ViewSet):
             'added': added,
             'nodes': timeline.get_nodes(journal, request.user)
         })
+
+    def add_entry_to_node(self, node, template):
+        if not (node.preset and node.preset.forced_template == template):
+            return response.forbidden('Invalid template for preset node.')
+
+        if node.type != Node.ENTRYDEADLINE:
+            return response.bad_request('Passed node is not an EntryDeadline node.')
+
+        if node.entry:
+            return response.bad_request('Passed node already contains an entry.')
+
+        if node.preset.is_due():
+            return response.bad_request('The deadline has already passed.')
+
+        node.entry = factory.make_entry(template)
+        node.save()
+        return True
 
     def partial_update(self, request, *args, **kwargs):
         """Update an existing entry.

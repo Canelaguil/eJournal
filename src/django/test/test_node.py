@@ -7,7 +7,6 @@ from django.test import TestCase
 class NodeAPITest(TestCase):
     def setUp(self):
         self.student = factory.Student()
-        self.admin = factory.Admin()
         self.journal = factory.Journal(user=self.student)
         self.teacher = self.journal.assignment.courses.first().author
 
