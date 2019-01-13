@@ -23,14 +23,14 @@ def get_sorted_nodes(journal):
     ).order_by('sort_deadline')
 
 
-def get_nodes(journal, user):
+def get_nodes(journal, user=None):
     """Convert a journal to a list of node dictionaries.
 
     First sorts the nodes on date, then attempts to add an
     add-node if the user can add to the journal, the subsequent
     progress node is in the future and maximally one.
     """
-    can_add = journal.user == user and user.has_permission('can_have_journal', journal.assignment)
+    can_add = user and journal.user == user and user.has_permission('can_have_journal', journal.assignment)
 
     node_list = []
     for node in get_sorted_nodes(journal):

@@ -130,10 +130,10 @@ export default {
                 this.tempNode.entry.published = this.published
 
                 if (this.published) {
-                    entryAPI.update(this.entryNode.entry.id, {grade: this.grade, published: 1}, {customSuccessToast: 'Grade updated and published.'})
+                    entryAPI.grade(this.entryNode.entry.id, {grade: this.grade, published: 1}, {customSuccessToast: 'Grade updated and published.'})
                         .then(_ => { this.$emit('check-grade') })
                 } else {
-                    entryAPI.update(this.entryNode.entry.id, {grade: this.grade, published: 0}, {customSuccessToast: 'Grade updated but not published.'})
+                    entryAPI.grade(this.entryNode.entry.id, {grade: this.grade, published: 0}, {customSuccessToast: 'Grade updated but not published.'})
                         .then(_ => { this.$emit('check-grade') })
                 }
             }

@@ -16,6 +16,11 @@ export default {
             .then(response => response.data.entry)
     },
 
+    grade (id, data, connArgs = auth.DEFAULT_CONN_ARGS) {
+        return auth.update('entries/' + id + '/grade', data, connArgs)
+            .then(response => response.data.entry)
+    },
+
     delete (id, connArgs = auth.DEFAULT_CONN_ARGS) {
         return auth.delete('entries/' + id, null, connArgs)
             .then(response => response.data)

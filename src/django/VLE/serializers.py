@@ -390,14 +390,14 @@ class EntrySerializer(serializers.ModelSerializer):
 
     def get_grade(self, entry):
         # TODO: Add permission can_view_grade
-        if 'user' not in self.context:
+        if 'user' not in self.context or not self.context['user']:
             return None
         if entry.published or self.context['user'].has_permission('can_grade', entry.node.journal.assignment):
             return entry.grade
         return None
 
     def get_comments(self, entry):
-        if 'comments' not in self.context:
+        if 'comments' not in self.context or not self.context['comments']:
             return None
         return CommentSerializer(Comment.objects.filter(entry=entry), many=True).data
 

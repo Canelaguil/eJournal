@@ -4,7 +4,8 @@ Entry utilities.
 A library with utilities related to entries.
 """
 from VLE.models import Field
-from VLE.utils import file_handling
+import VLE.timeline as timeline
+from VLE.utils import file_handling, generic_utils
 from VLE.utils.error_handling import VLEMissingRequiredField
 
 
@@ -24,6 +25,12 @@ def patch_entry_content(user, entry, old_content, field, data, assignment):
 
     old_content.data = data
     old_content.save()
+
+
+def get_node_index(journal, node, user):
+    for i, result_node in enumerate(timeline.get_nodes(journal, user)):
+        if result_node['nID'] == node.id:
+            return i
 
 
 def check_required_fields(template, content):
