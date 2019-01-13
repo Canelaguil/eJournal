@@ -1,9 +1,9 @@
 import test.factory as factory
+from datetime import date, timedelta
 from test.utils import api
 
 from django.test import TestCase
 
-from datetime import date, timedelta
 
 class EntryAPITest(TestCase):
     def setUp(self):

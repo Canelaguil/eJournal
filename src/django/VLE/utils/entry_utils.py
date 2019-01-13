@@ -3,10 +3,9 @@ Entry utilities.
 
 A library with utilities related to entries.
 """
-from VLE.utils import file_handling
-
-from VLE.utils.error_handling import VLEMissingRequiredField
 from VLE.models import Field
+from VLE.utils import file_handling
+from VLE.utils.error_handling import VLEMissingRequiredField
 
 
 def patch_entry_content(user, entry, old_content, field, data, assignment):

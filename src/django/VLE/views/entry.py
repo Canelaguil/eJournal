@@ -16,7 +16,8 @@ import VLE.utils.generic_utils as utils
 import VLE.utils.responses as response
 import VLE.validators as validators
 from VLE.models import Comment, Entry, Field, Journal, Node, Template
-from VLE.utils import file_handling, entry_utils
+from VLE.utils import entry_utils as entry_utils
+from VLE.utils import file_handling
 
 
 class EntryView(viewsets.ViewSet):
