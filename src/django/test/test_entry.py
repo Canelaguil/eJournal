@@ -1,9 +1,10 @@
 import test.factory as factory
+from datetime import date, timedelta
 from test.utils import api
-from VLE.models import Field
+
 from django.test import TestCase
 
-from datetime import date, timedelta
+from VLE.models import Field
 
 
 class EntryAPITest(TestCase):
