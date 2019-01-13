@@ -38,6 +38,11 @@ class VLEParticipationError(Exception):
         super(VLEParticipationError, self).__init__('User is not participating in ' + obj.to_string(logged_user))
 
 
+class VLEMissingRequiredField(Exception):
+    def __init__(self, field):
+        super(VLEMissingRequiredField, self).__init__('Missing required field: ' + field.to_string())
+
+
 class ErrorMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -55,6 +60,8 @@ class ErrorMiddleware:
         # Variable exceptions
         elif isinstance(exception, VLEMissingRequiredKey):
             return response.key_error(str(exception))
+        elif isinstance(exception, VLEMissingRequiredField):
+            return response.bad_request(str(exception))
         elif isinstance(exception, VLEParamWrongType):
             return response.value_error(str(exception))
 

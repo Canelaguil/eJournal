@@ -3,6 +3,7 @@ from test.utils import api
 
 from django.test import TestCase
 
+from datetime import date, timedelta
 
 class EntryAPITest(TestCase):
     def setUp(self):
@@ -16,14 +17,21 @@ class EntryAPITest(TestCase):
         self.format.unused_templates.add(factory.Template())
 
     def test_create(self):
-        # Check if students cannot update journals
-        create_params = {
+        valid_create_params = {
             'journal_id': self.journal.pk,
             'template_id': self.format.available_templates.first().pk,
-            'content': []
+            'content': [{'data': 'test title', 'id': 1}, {'data': 'test summary', 'id': 2}]
         }
+        resp = api.create(self, 'entries', params=valid_create_params, user=self.student)
 
-        resp = api.create(self, 'entries', params=create_params, user=self.student)
-        print(resp)
+        # Check if students cannot update journals without required parts filled in
+        create_params = valid_create_params
+        create_params['content'] = [{'data': 'test title', 'id': 1}]
+        api.create(self, 'entries', params=create_params, user=self.student, status=400)
 
-        assert 1 == 2
+        # Check for assignment locked
+        self.journal.assignment.lock_date = date.today() - timedelta(1)
+        self.journal.assignment.save()
+        api.create(self, 'entries', params=create_params, user=self.student, status=400)
+        self.journal.assignment.lock_date = date.today() + timedelta(1)
+        self.journal.assignment.save()

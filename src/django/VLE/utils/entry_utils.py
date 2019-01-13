@@ -5,6 +5,9 @@ A library with utilities related to entries.
 """
 from VLE.utils import file_handling
 
+from VLE.utils.error_handling import VLEMissingRequiredField
+from VLE.models import Field
+
 
 def patch_entry_content(user, entry, old_content, field, data, assignment):
     """Creates new content for an entry, deleting the current content.
@@ -22,3 +25,11 @@ def patch_entry_content(user, entry, old_content, field, data, assignment):
 
     old_content.data = data
     old_content.save()
+
+
+def check_required_fields(template, content):
+    required_fields = Field.objects.filter(template=template, required=True)
+    recieved_ids = [field['id'] for field in content if field['data'] != '']
+    for field in required_fields:
+        if field.id not in recieved_ids:
+            raise VLEMissingRequiredField(field)

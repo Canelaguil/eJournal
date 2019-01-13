@@ -28,7 +28,7 @@ def names(request, course_id, assignment_id, journal_id):
     result = {}
     if course_id:
         course = Course.objects.get(pk=course_id)
-        request.user.check_participation(course)
+        request.user.check_can_view(course)
         result['course'] = course.name
 
     if assignment_id:

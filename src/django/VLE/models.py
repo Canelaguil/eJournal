@@ -14,7 +14,7 @@ from django.utils.timezone import now
 
 import VLE.permissions as permissions
 from VLE.utils import sanitization
-from VLE.utils.error_handling import (VLEParticipationError,
+from VLE.utils.error_handling import (VLEParticipationError, VLEMissingRequiredField,
                                       VLEPermissionError, VLEProgrammingError,
                                       VLEUnverifiedEmailError)
 from VLE.utils.file_handling import get_path
@@ -168,13 +168,13 @@ class User(AbstractUser):
             return permissions.has_assignment_permission(self, permission, obj)
         raise VLEProgrammingError("Permission object must be of type None, Course or Assignment.")
 
-    def check_participation(self, obj):
-        if not self.is_participant(obj):
-            raise VLEParticipationError(obj, self)
-
     def check_verified_email(self):
         if not self.verified_email:
             raise VLEUnverifiedEmailError()
+
+    def check_participation(self, obj):
+        if not self.is_participant(obj):
+            raise VLEParticipationError(obj, self)
 
     def is_participant(self, obj):
         if isinstance(obj, Course):
@@ -191,16 +191,20 @@ class User(AbstractUser):
         if self.is_superuser:
             return True
 
-        if isinstance(obj, Journal):
-            if obj.user != self:
-                return self.has_permission('can_view_all_journals', obj.assignment)
-            else:
-                return self.has_permission('can_have_journal', obj.assignment)
+        if isinstance(obj, Course):
+            return self.is_participant(obj)
         elif isinstance(obj, Assignment):
             if self.is_participant(obj):
                 return obj.is_published or self.has_permission('can_view_unpublished_assignment', obj)
             else:
                 return False
+        elif isinstance(obj, Journal):
+            if obj.user != self:
+                return self.has_permission('can_view_all_journals', obj.assignment)
+            else:
+                return self.has_permission('can_have_journal', obj.assignment)
+
+        return False
 
     def to_string(self, user=None):
         if user is None:
@@ -808,7 +812,7 @@ class Field(models.Model):
     required = models.BooleanField()
 
     def to_string(self, user=None):
-        return "Field"
+        return "{} ({})".format(self.title, self.id)
 
 
 class Content(models.Model):

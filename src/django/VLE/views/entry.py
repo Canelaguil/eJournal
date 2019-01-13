@@ -16,7 +16,7 @@ import VLE.utils.generic_utils as utils
 import VLE.utils.responses as response
 import VLE.validators as validators
 from VLE.models import Comment, Entry, Field, Journal, Node, Template
-from VLE.utils import file_handling
+from VLE.utils import file_handling, entry_utils
 
 
 class EntryView(viewsets.ViewSet):
@@ -48,6 +48,7 @@ class EntryView(viewsets.ViewSet):
         template = Template.objects.get(pk=template_id)
 
         request.user.check_permission('can_have_journal', assignment)
+        entry_utils.check_required_fields(template, content_list)
 
         if assignment.is_locked():
             return response.forbidden('The assignment is locked, no entries can be added.')

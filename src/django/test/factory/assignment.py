@@ -9,6 +9,7 @@ class AssignmentFactory(factory.django.DjangoModelFactory):
 
     name = 'Logboek'
     description = 'Logboek for all your logging purposes'
+    is_published = True
     author = factory.SubFactory('test.factory.user.TeacherFactory')
 
     format = factory.SubFactory('test.factory.format.FormatFactory')

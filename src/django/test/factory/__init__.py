@@ -6,6 +6,7 @@ from test.factory.entry import EntryFactory
 from test.factory.template import TemplateFactory
 from test.factory.group import GroupFactory, LtiGroupFactory
 from test.factory.lti import LtiFactory
+from test.factory.comment import CommentFactory
 from test.factory.participation import ParticipationFactory, GroupParticipationFactory
 from test.factory.journal import JournalFactory
 
@@ -29,5 +30,7 @@ GroupParticipation = GroupParticipationFactory
 
 Journal = JournalFactory
 Fromat = FormatFactory
-Entry = EntryFactory
 Template = TemplateFactory
+
+Entry = EntryFactory
+Comment = CommentFactory
