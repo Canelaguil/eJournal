@@ -12,12 +12,11 @@ import VLE.lti_grade_passback as lti_grade
 import VLE.serializers as serialize
 import VLE.timeline as timeline
 import VLE.utils.entry_utils as entry_utils
+import VLE.utils.file_handling as file_handling
 import VLE.utils.generic_utils as utils
 import VLE.utils.responses as response
 import VLE.validators as validators
 from VLE.models import Comment, Entry, Field, Journal, Node, Template
-from VLE.utils import entry_utils as entry_utils
-from VLE.utils import file_handling
 
 
 class EntryView(viewsets.ViewSet):

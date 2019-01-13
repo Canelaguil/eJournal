@@ -22,7 +22,7 @@ class EntryAPITest(TestCase):
             'template_id': self.format.available_templates.first().pk,
             'content': [{'data': 'test title', 'id': 1}, {'data': 'test summary', 'id': 2}]
         }
-        resp = api.create(self, 'entries', params=valid_create_params, user=self.student)
+        api.create(self, 'entries', params=valid_create_params, user=self.student)
 
         # Check if students cannot update journals without required parts filled in
         create_params = valid_create_params
