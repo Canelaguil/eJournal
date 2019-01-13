@@ -157,21 +157,19 @@ class GradePassBackRequest(object):
                 'description': description}
 
 
-def needs_grading(journal, node):
+def needs_grading(node):
     """Give the teacher a needs grading notification in lti instance."""
-    if journal.sourcedid is None or journal.grade_url is not None:
+    if node.journal.sourcedid is None or node.entry.vle_coupling != Entry.NEED_SUBMISSION:
         return
 
     secret = settings.LTI_SECRET
     key = settings.LTI_KEY
 
-    node_id = node.pk
-    journal_id = journal.pk
-    assignment_id = journal.assignment.pk
-    course_id = journal.assignment.courses.order_by('-startdate').first().pk
+    journal = node.journal
+    course = node.journal.assignment.courses.order_by('-startdate').first()
 
     result_data = {'url': '{0}/Home/Course/{1}/Assignment/{2}/Journal/{3}?nID={4}'.format(
-        settings.BASELINK, course_id, assignment_id, journal_id, node_id)}
+        settings.BASELINK, course.pk, journal.assignment.pk, journal.pk, node.pk)}
     grade_request = GradePassBackRequest(key, secret, journal, result_data=result_data,
                                          submitted_at=str(node.entry.last_edited))
 
@@ -179,6 +177,9 @@ def needs_grading(journal, node):
     if response['code_mayor'] == 'success':
         node.entry.vle_coupling = Entry.SEND_SUBMISSION
         node.entry.save()
+        return True
+    else:
+        return False
 
 
 def change_Entry_vle_coupling(journal, status):
@@ -216,4 +217,4 @@ def check_if_need_VLE_publish(assignment):
         if Entry.objects.filter(published=True, vle_coupling=Entry.GRADING):
             replace_result(journal)
         for node in Node.objects.filter(journal=journal, entry__vle_coupling=Entry.NEED_SUBMISSION):
-            needs_grading(journal, node)
+            needs_grading(node)

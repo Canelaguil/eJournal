@@ -67,7 +67,7 @@ class EntryView(viewsets.ViewSet):
             return response.forbidden('Entry template is not available.')
 
         # Notify teacher on new entry
-        lti_grade.needs_grading(journal, node)
+        lti_grade.needs_grading(node)
 
         for content in content_list:
             data, field_id = utils.required_params(content, 'data', 'id')

@@ -37,7 +37,8 @@
             ref="linkUserRef"
             title="Link to existing eJournal account"
             size="lg"
-            hide-footer>
+            hide-footer
+            no-enforce-focus>
                 <login-form @handleAction="handleLinked"/>
         </b-modal>
     </b-row>
