@@ -1,8 +1,9 @@
 import test.factory as factory
-from datetime import date, timedelta
 from test.utils import api
-
+from VLE.models import Field
 from django.test import TestCase
+
+from datetime import date, timedelta
 
 
 class EntryAPITest(TestCase):
@@ -16,16 +17,19 @@ class EntryAPITest(TestCase):
         self.format.available_templates.add(factory.Template())
         self.format.unused_templates.add(factory.Template())
 
-    def test_create(self):
-        valid_create_params = {
+        self.valid_create_params = {
             'journal_id': self.journal.pk,
             'template_id': self.format.available_templates.first().pk,
-            'content': [{'data': 'test title', 'id': 1}, {'data': 'test summary', 'id': 2}]
+            'content': []
         }
-        api.create(self, 'entries', params=valid_create_params, user=self.student)
+        fields = Field.objects.filter(template=self.format.available_templates.first())
+        self.valid_create_params['content'] = [{'data': 'test data', 'id': field.id} for field in fields]
+
+    def test_create(self):
+        api.create(self, 'entries', params=self.valid_create_params, user=self.student)
 
         # Check if students cannot update journals without required parts filled in
-        create_params = valid_create_params
+        create_params = self.valid_create_params
         create_params['content'] = [{'data': 'test title', 'id': 1}]
         api.create(self, 'entries', params=create_params, user=self.student, status=400)
 
