@@ -6,6 +6,11 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 import VLE.utils.responses as response
 
 
+class VLEBadRequest(Exception):
+    def __init___(self, message='Your browser performed a bad request.'):
+        super(VLEBadRequest, self).__init__(message)
+
+
 class VLEMissingRequiredKey(KeyError):
     pass
 
@@ -51,8 +56,12 @@ class ErrorMiddleware:
         return self.get_response(request)
 
     def process_exception(self, request, exception):
+        # Generic exception
+        if isinstance(exception, VLEBadRequest):
+            return response.bad_request(str(exception))
+
         # Django exceptions
-        if isinstance(exception, ObjectDoesNotExist):
+        elif isinstance(exception, ObjectDoesNotExist):
             return response.not_found('{0} does not exist.'.format(str(exception).split()[0]))
         elif isinstance(exception, ValidationError):
             return response.bad_request(exception.args[0])

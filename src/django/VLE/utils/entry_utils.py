@@ -3,10 +3,11 @@ Entry utilities.
 
 A library with utilities related to entries.
 """
-from VLE.models import Field
 import VLE.timeline as timeline
-from VLE.utils import file_handling, generic_utils
-from VLE.utils.error_handling import VLEMissingRequiredField
+from VLE import factory
+from VLE.models import Field, Node
+from VLE.utils import file_handling
+from VLE.utils.error_handling import VLEBadRequest, VLEMissingRequiredField
 
 
 def patch_entry_content(user, entry, old_content, field, data, assignment):
@@ -35,7 +36,23 @@ def get_node_index(journal, node, user):
 
 def check_required_fields(template, content):
     required_fields = Field.objects.filter(template=template, required=True)
-    recieved_ids = [field['id'] for field in content if field['data'] != '']
+    received_ids = [field['id'] for field in content if field['data'] != '']
     for field in required_fields:
-        if field.id not in recieved_ids:
+        if field.id not in received_ids:
             raise VLEMissingRequiredField(field)
+
+
+def add_entry_to_node(node, template):
+    if not (node.preset and node.preset.forced_template == template):
+        raise VLEBadRequest('Invalid template for preset node.')
+
+    if node.type != Node.ENTRYDEADLINE:
+        raise VLEBadRequest('Passed node is not an EntryDeadline node.')
+
+    if node.entry:
+        raise VLEBadRequest('Passed node already contains an entry.')
+
+    if node.preset.is_due():
+        raise VLEBadRequest('The deadline has already passed.')
+
+    return factory.make_entry(template)

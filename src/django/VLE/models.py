@@ -40,14 +40,14 @@ class UserFile(models.Model):
     - author: The user who uploaded the file.
     - file_name: The name of the file (no parts of the path to the file included).
     - creation_date: The time and date the file was uploaded.
-    - content_type: The mimetype supplied by the user (unvalidated).
+    - content_type: The content type supplied by the user (unvalidated).
     - assignment: The assignment that the UserFile is linked to.
     - node: The node that the UserFile is linked to.
     - entry: The entry that the UserFile is linked to.
     - content: The content that UserFile is linked to.
 
     Note that deleting the assignment, node or content will also delete the UserFile.
-    UserFiles uploaded initially have no node or content set, and are considered temporary untill the journal post
+    UserFiles uploaded initially have no node or content set, and are considered temporary until the journal post
     is made and the corresponding node and content are set.
     """
     file = models.FileField(
@@ -116,7 +116,7 @@ class User(AbstractUser):
 
     User is an entity in the database with the following features:
     - email: email of the user.
-    - verified_email: Boolean to indicate if the user has validated their email adress.
+    - verified_email: Boolean to indicate if the user has validated their email address.
     - USERNAME_FIELD: username of the username.
     - password: the hash of the password of the user.
     - lti_id: the DLO id of the user.
@@ -220,7 +220,7 @@ class Course(models.Model):
     A Course entity has the following features:
     - name: name of the course.
     - author: the creator of the course.
-    - abbrevation: a max three letter abbrevation of the course name.
+    - abbreviation: a max three letter abbreviation of the course name.
     - startdate: the date that the course starts.
     - lti_ids: the ids of the course linked over LTI.
     """
@@ -288,7 +288,7 @@ class Group(models.Model):
             return "Group"
         if not user.can_view(self.course):
             return "Group"
-        return self.name + " (" + str(self.pk) + ")"
+        return "{} ({})".format(self.name, self.pk)
 
 
 class Role(models.Model):
@@ -359,7 +359,7 @@ class Role(models.Model):
         if not user.can_view(self.course):
             return "Role"
 
-        return self.name + " (" + str(self.pk) + ")"
+        return "{} ({})".format(self.name, self.pk)
 
     class Meta:
         """Meta data for the model: unique_together."""
@@ -473,7 +473,7 @@ class Assignment(models.Model):
         if not user.can_view(self):
             return "Assignment"
 
-        return self.name + " (" + str(self.pk) + ")"
+        return "{} ({})".format(self.name, self.pk)
 
 
 class Journal(models.Model):

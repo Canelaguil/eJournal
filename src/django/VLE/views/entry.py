@@ -3,8 +3,6 @@ entry.py.
 
 In this file are all the entry api requests.
 """
-from datetime import datetime
-
 from rest_framework import viewsets
 from rest_framework.decorators import action
 
@@ -58,13 +56,11 @@ class EntryView(viewsets.ViewSet):
             return response.forbidden('Entry template is not available.')
 
         entry_utils.check_required_fields(template, content_list)
-        # Check if its an entry for a specific node
+        # Node specific entry
         if node_id:
             node = Node.objects.get(pk=node_id, journal=journal)
-            resp = self.add_entry_to_node(node, template)
-            if resp is not True:
-                return resp
-        # If not, check for available templates
+            entry = entry_utils.add_entry_to_node(node, template)
+        # Template specific entry
         else:
             entry = factory.make_entry(template)
             node = factory.make_node(journal, entry)
@@ -87,7 +83,7 @@ class EntryView(viewsets.ViewSet):
 
                 file_handling.make_permanent_file_content(user_file, created_content, node)
 
-        # Delete old userfiles
+        # Delete old user files
         file_handling.remove_temp_user_files(request.user)
 
         return response.created({
@@ -95,23 +91,6 @@ class EntryView(viewsets.ViewSet):
             'nodes': timeline.get_nodes(journal, request.user),
             'entry': serialize.EntrySerializer(entry, context={'user': request.user}).data
         })
-
-    def add_entry_to_node(self, node, template):
-        if not (node.preset and node.preset.forced_template == template):
-            return response.forbidden('Invalid template for preset node.')
-
-        if node.type != Node.ENTRYDEADLINE:
-            return response.bad_request('Passed node is not an EntryDeadline node.')
-
-        if node.entry:
-            return response.bad_request('Passed node already contains an entry.')
-
-        if node.preset.is_due():
-            return response.bad_request('The deadline has already passed.')
-
-        node.entry = factory.make_entry(template)
-        node.save()
-        return True
 
     def partial_update(self, request, *args, **kwargs):
         """Update an existing entry.
@@ -141,9 +120,7 @@ class EntryView(viewsets.ViewSet):
 
         if assignment.is_locked():
             return response.forbidden('The assignment is locked, no entries can changed.')
-
         request.user.check_permission('can_have_journal', assignment)
-
         if not (journal.user == request.user or request.user.is_superuser):
             return response.forbidden('You are not allowed to edit someone else\'s entry.')
         if entry.grade is not None:
@@ -153,33 +130,22 @@ class EntryView(viewsets.ViewSet):
 
         # Attempt to edit the entries content.
         for content in content_list:
-            field_id, data, content_id = utils.required_params(content, 'id', 'data', 'contentID')
+            field_id, content_id = utils.required_typed_params(content, (int, 'id'), (int, 'contentID'))
+            data, = utils.required_params(content, 'data')
             field = Field.objects.get(pk=field_id)
             old_content = entry.content_set.get(pk=content_id)
             validators.validate_entry_content(data, field)
 
-            if old_content.field.pk != int(field_id):
+            if old_content.field.pk != field_id:
                 return response.bad_request('The given content does not match the accompanying field type.')
-
             if not data:
                 old_content.delete()
                 continue
 
             entry_utils.patch_entry_content(request.user, entry, old_content, field, data, assignment)
-
             file_handling.remove_temp_user_files(request.user)
 
-        req_data = request.data
-        req_data.pop('content', None)
-        req_data.pop('published', None)
-        req_data.pop('grade', None)
-        req_data['last_edited'] = datetime.now()
-        serializer = serialize.EntrySerializer(entry, data=req_data, partial=True, context={'user': request.user})
-        if not serializer.is_valid():
-            return response.bad_request()
-        serializer.save()
-
-        return response.success({'entry': serializer.data})
+        return response.success({'entry': serialize.EntrySerializer(entry, context={'user': request.user}).data})
 
     def destroy(self, request, *args, **kwargs):
         """Delete an entry and the node it belongs to.
